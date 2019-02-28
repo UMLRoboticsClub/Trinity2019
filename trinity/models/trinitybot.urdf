@@ -1,0 +1,54 @@
+<robot name="trinity">
+   <link name="base_link">
+     <visual>
+       <geometry>
+         <cylinder length="0.05" radius="0.10"/>
+        </geometry>
+     </visual>
+  </link>
+
+  <link name="wheel1">
+      <visual>
+          <geometry>
+              <cylinder length=".02474" radius=".041275" />
+          </geometry>
+          <origin rpy="1.57075 1.57075 0" xyz="0 0 0"/>
+      </visual>
+  </link>
+
+  <link name="wheel2">
+      <visual>
+          <geometry>
+              <cylinder length=".02474" radius=".041275" />
+          </geometry>
+          <origin rpy="1.57075 1.57075 0" xyz="0 0 0"/>
+      </visual>
+  </link>
+
+  <link name="wheel3">
+      <visual>
+          <geometry>
+              <cylinder length=".02474" radius=".041275" />
+          </geometry>
+          <origin rpy="1.57075 1.57075 0" xyz="0 0 0"/>
+      </visual>
+  </link>
+
+  <joint name="wheelJoint1" type="continuous">
+      <parent link="base_link" />
+      <child link="wheel1" />
+      <origin rpy="0 0 1.570796" xyz=".11372 0 0"/>
+  </joint>
+
+  <joint name="wheelJoint2" type="continuous">
+      <parent link="base_link" />
+      <child link="wheel2" />
+      <origin rpy="0 0 0.5235986" xyz="-.05686 .09848 0"/>
+  </joint>
+
+  <joint name="wheelJoint3" type="continuous">
+      <parent link="base_link" />
+      <child link="wheel3" />
+      <origin rpy="0 0 -0.5235986" xyz="-.05686 -.09848 0"/>
+  </joint>
+</robot>
