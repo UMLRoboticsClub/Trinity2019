@@ -1,0 +1,12 @@
+# vi: syntax=xml
+<launch>
+	<node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen />
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find trinity)/config/local_costmap_params.yaml" command="load" />
+		<rosparam file="$(find trinity)/config/global_costmap_params.yaml" command="load" />
+		<rosparam file="$(find trinity)/config/base_local_planner_params.yaml" command="load" />
+	</node>
+</launch>
+	
