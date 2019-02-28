@@ -3,6 +3,9 @@
 #include <iostream>
 #include <pigpiod_if2.h>
 
+using std::cerr;
+using std::endl;
+
 Motor::Motor(unsigned pinA, unsigned pinB):
     pinA(pinA), pinB(pinB)
 {
@@ -17,10 +20,10 @@ Motor::~Motor(){
 
 void Motor::set(int power){
     if(power > 255){
-        std::cerr << "Error: motor power >255" << std::endl;
+        cerr << "Error: motor power >255" << endl;
         power = 255;
     } else if(power < -255){
-        std::cerr << "Error: motor power <-255" << std::endl;
+        cerr << "Error: motor power <-255" << endl;
         power = -255;
     }
 
