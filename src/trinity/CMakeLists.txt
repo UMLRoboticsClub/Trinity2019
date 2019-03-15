@@ -135,6 +135,7 @@ add_executable(motors_node
     src/gpio.cpp
 )
 add_executable(statuslight src/statuslight/statuslight.cpp)
+add_executable(ir src/ir/ir_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,6 +156,7 @@ set(gpio_LIBS "-lpthread -lpigpiod_if2")
 
 target_link_libraries(motors_node ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(statuslight ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(ir ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #############
 ## Testing ##

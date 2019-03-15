@@ -1,5 +1,4 @@
 #include "motor.h"
-#include "pins.h"
 #include "gpio.h"
 
 #include "ros/ros.h"
@@ -12,7 +11,7 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
 
     //exit if we can't connect to GPIO system
-    if(!gpioConnect()){ exit(1); }
+    if(!gpioConnect()){ return 1; }
 
     //init and set motor power to 0
     Motor motorA(MOTORA_PINA, MOTORA_PINB);
@@ -22,9 +21,9 @@ int main(int argc, char **argv){
     typedef std_msgs::UInt32::ConstPtr mtr_input_type;
     typedef boost::function<void (const mtr_input_type&)> callback_func;
 
-    callback_func mtrMsgA = [&motorA] (const mtr_input_type& vel){ motorA.set(vel->data); };
-    callback_func mtrMsgB = [&motorB] (const mtr_input_type& vel){ motorB.set(vel->data); };
-    callback_func mtrMsgC = [&motorC] (const mtr_input_type& vel){ motorC.set(vel->data); };
+    callback_func mtrMsgA = [&motorA](const mtr_input_type& vel){ motorA.set(vel->data); };
+    callback_func mtrMsgB = [&motorB](const mtr_input_type& vel){ motorB.set(vel->data); };
+    callback_func mtrMsgC = [&motorC](const mtr_input_type& vel){ motorC.set(vel->data); };
 
     //subscribe to motor messages
     ros::Subscriber sub_a = n.subscribe("mtr_a", 100, mtrMsgA);
