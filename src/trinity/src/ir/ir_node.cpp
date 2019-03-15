@@ -12,6 +12,8 @@ int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
     ros::NodeHandle n;
 
+    if(!gpioConnect()){ return 1; }
+
     ros::Publisher pub = n.advertise<std_msgs::Bool>(topic_name, 1);
     ros::Rate loop_rate(pub_hz);
 
