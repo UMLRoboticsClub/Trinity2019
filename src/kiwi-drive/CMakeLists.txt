@@ -19,8 +19,12 @@ include_directories(
 #add_executable(joystick_drive
 #    src/joystick_drive.cpp
 #)
+add_executable(twist_to_motors
+    src/twist_to_motors.cpp
+)
 
 # Linking:
 #target_link_libraries(joystick_drive ${catkin_LIBRARIES})
+target_link_libraries(twist_to_motors ${catkin_LIBRARIES})
 
 #set(gpio_LIBS "-lpthread -lpigpiod_if2")
