@@ -17,6 +17,7 @@
 #define MOTORC_ENCB 12
 //ir sensor
 #define IR_SENSOR   13
-//imu
+//imu - not used here
+//but for reference
 #define IMU_SCL     14
 #define IMU_SDA     15

@@ -8,10 +8,39 @@ add_compile_options(
     -Wfatal-errors
 )
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp)
+
+include_directories(
+    src
+# include
+# ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(motors_node
+    src/motors/motors_node.cpp
+    src/motors/motor.cpp
+    src/gpio.cpp
+)
+add_executable(statuslight src/statuslight/statuslight.cpp)
+add_executable(ir src/ir/ir_node.cpp)
+
+set(gpio_LIBS "-lpthread -lpigpiod_if2")
+
+target_link_libraries(motors_node ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(statuslight ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(ir ${catkin_LIBRARIES} ${gpio_LIBS})
+
+
+#####
+#example stuff:
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+
+## Declare a C++ executable
+## With catkin_make all packages are built within a single CMake context
+## The recommended prefix ensures that target names across packages don't collide
+# add_executable(${PROJECT_NAME}_node src/trinity_node.cpp)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -67,6 +96,10 @@ find_package(catkin REQUIRED COMPONENTS roscpp)
 #   std_msgs  # Or other packages containing msgs
 # )
 
+###########
+## Build ##
+###########
+
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
@@ -103,18 +136,6 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
-    src
-# include
-# ${catkin_INCLUDE_DIRS}
-)
-
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/trinity.cpp
@@ -124,19 +145,6 @@ include_directories(
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/trinity_node.cpp)
-add_executable(motors_node
-    src/motors/motors_node.cpp
-    src/motors/motor.cpp
-    src/gpio.cpp
-)
-add_executable(statuslight src/statuslight/statuslight.cpp)
-add_executable(ir src/ir/ir_node.cpp)
-
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -151,12 +159,6 @@ add_executable(ir src/ir/ir_node.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
-set(gpio_LIBS "-lpthread -lpigpiod_if2")
-
-target_link_libraries(motors_node ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(statuslight ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(ir ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #############
 ## Testing ##
