@@ -10,7 +10,7 @@ add_compile_options(
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 
-#Include directories:
+# Include directories:
 include_directories(
     src
 )
@@ -28,7 +28,7 @@ add_executable(ir
     src/ir/ir_node.cpp
 )
 
-#Linking:
+# Linking:
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
 target_link_libraries(motors_node ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(statuslight ${catkin_LIBRARIES} ${gpio_LIBS})
