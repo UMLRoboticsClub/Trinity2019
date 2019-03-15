@@ -10,22 +10,26 @@ add_compile_options(
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 
+#Include directories:
 include_directories(
     src
-# include
-# ${catkin_INCLUDE_DIRS}
 )
 
+# Executables:
 add_executable(motors_node
     src/motors/motors_node.cpp
     src/motors/motor.cpp
     src/gpio.cpp
 )
-add_executable(statuslight src/statuslight/statuslight.cpp)
-add_executable(ir src/ir/ir_node.cpp)
+add_executable(statuslight
+    src/statuslight/statuslight.cpp
+)
+add_executable(ir
+    src/ir/ir_node.cpp
+)
 
+#Linking:
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
-
 target_link_libraries(motors_node ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(statuslight ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(ir ${catkin_LIBRARIES} ${gpio_LIBS})
@@ -33,6 +37,11 @@ target_link_libraries(ir ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #####
 #example stuff:
+
+#include_directories(
+# include
+# ${catkin_INCLUDE_DIRS}
+#)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
