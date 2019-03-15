@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>trinity</name>
-  <version>0.0.0</version>
-  <description>The trinity package</description>
+  <version>0.0.1</version>
+  <description>Trinity 2019</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -49,7 +49,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-
+  <depend>roscpp</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
