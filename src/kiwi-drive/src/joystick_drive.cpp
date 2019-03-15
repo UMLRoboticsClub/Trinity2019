@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Joy.h>
+//#include <sensor_msgs/Joy.h>
 
 const char *node_name = "joystick_drive";
 const char *topic_name = "joystick_drive/cmd_vel";
@@ -12,6 +12,8 @@ static double ascale = 1;
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
+    ros::Publisher vel_pub;
+    ros::Subscriber joy_sub;
 
     ros::NodeHandle nh;
     nh.param("axis_linear",   linear,  linear);
@@ -27,8 +29,8 @@ int main(int argc, char **argv){
             vel_pub.publish(twist);
         };
 
-    auto vel_pub = nh.advertise<geometry_msgs::Twist>(topic_name, 1);
-    auto joy_sub = nh.subscribe<sensor_msgs::Joy>("joy", 10, callback);
+    vel_pub = nh.advertise<geometry_msgs::Twist>(topic_name, 1);
+    joy_sub = nh.subscribe<sensor_msgs::Joy>("joy", 10, callback);
 
     ros::spin();
 }
