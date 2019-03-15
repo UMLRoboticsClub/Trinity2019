@@ -5,9 +5,9 @@
 #include "std_msgs/Int64.h"
 
 const char *node_name = "encoders";
-const char *topic_nameA = "encoderA_pub";
-const char *topic_nameB = "encoderB_pub";
-const char *topic_nameC = "encoderC_pub";
+const char *topic_nameA = "enc_a";
+const char *topic_nameB = "enc_b";
+const char *topic_nameC = "enc_c";
 const unsigned pub_hz = 20; 
 
 int main(int argc, char **argv){
