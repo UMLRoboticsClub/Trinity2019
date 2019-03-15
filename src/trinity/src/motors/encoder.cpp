@@ -16,7 +16,7 @@ Encoder::Encoder(unsigned pinA, unsigned pinB): pinA(pinA), pinB(pinB){
             [](int, unsigned, unsigned, uint32_t, void *data){
                 Encoder &e = *static_cast<Encoder*>(data);
                 if(!gpio_read(0, e.pinA)){
-                    ++e.count; 
+                    --e.count; 
                 }
             },
             this);
