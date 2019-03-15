@@ -11,9 +11,14 @@ Motor::Motor(unsigned pinA, unsigned pinB):
 {
     set_mode(0, pinA, PI_OUTPUT);  
     set_mode(0, pinB, PI_OUTPUT);  
+    stop();
 }
 
 Motor::~Motor(){
+    stop();
+}
+
+void Motor::stop(){
     gpio_write(0, pinA, 0);
     gpio_write(0, pinB, 0);
 }
