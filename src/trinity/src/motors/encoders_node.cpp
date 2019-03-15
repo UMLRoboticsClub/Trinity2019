@@ -5,7 +5,9 @@
 #include "std_msgs/Int64.h"
 
 const char *node_name = "encoders";
-const char *topic_name = "encoders_pub";
+const char *topic_nameA = "encoderA_pub";
+const char *topic_nameB = "encoderB_pub";
+const char *topic_nameC = "encoderC_pub";
 const unsigned pub_hz = 20; 
 
 int main(int argc, char **argv){
@@ -19,19 +21,21 @@ int main(int argc, char **argv){
     Encoder encoderB(MOTORB_ENCA, MOTORB_ENCB);
     Encoder encoderC(MOTORC_ENCA, MOTORC_ENCB);
 
-    ros::Publisher pub = n.advertise<std_msgs::Int64>(topic_name, 1);
+    ros::Publisher pubA = n.advertise<std_msgs::Int64>(topic_nameA, 1000);
+    ros::Publisher pubB = n.advertise<std_msgs::Int64>(topic_nameB, 1000);
+    ros::Publisher pubC = n.advertise<std_msgs::Int64>(topic_nameC, 1000);
     ros::Rate loop_rate(pub_hz);
 
     std_msgs::Int64 c;
     while(ros::ok()){
         c.data = encoderA.count;
-        pub.publish(c);
+        pubA.publish(c);
 
         c.data = encoderB.count;
-        pub.publish(c);
+        pubB.publish(c);
 
         c.data = encoderC.count;
-        pub.publish(c);
+        pubC.publish(c);
 
         ros::spinOnce();
         loop_rate.sleep();
