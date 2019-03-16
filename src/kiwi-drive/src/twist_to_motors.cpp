@@ -44,7 +44,7 @@ int main(int argc, char **argv){
             mtrB_pub.publish(b);
             mtrC_pub.publish(c);
 
-            ROS_DEBUG("publishing: (%d, %d, %d)", va, vb, vc);
+            ROS_DEBUG("publishing: (%f, %f, %f)", va, vb, vc);
     };
 
     vel_sub = nh.subscribe<geometry_msgs::Twist>(topic_vel_src, bufferSize, callback);

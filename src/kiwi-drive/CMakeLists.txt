@@ -8,10 +8,16 @@ add_compile_options(
     -Wfatal-errors
 )
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    std_msgs    
+    sensor_msgs    
+    geometry_msgs    
+)
 
 # Include directories:
 include_directories(
+    ${catkin_INCLUDE_DIRS}
     src
 )
 
