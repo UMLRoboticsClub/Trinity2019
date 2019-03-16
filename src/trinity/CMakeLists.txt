@@ -39,6 +39,10 @@ add_executable(ir
     src/ir/ir_node.cpp
     src/gpio.cpp
 )
+add_executable(solenoid
+    src/solenoid/solenoid_node.cpp
+    src/gpio.cpp
+)
 
 # Linking:
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
@@ -46,6 +50,7 @@ target_link_libraries(motors_node   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(ir            ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 
 
 #####

@@ -21,3 +21,5 @@
 //but for reference
 #define IMU_SCL     14
 #define IMU_SDA     15
+//co2 solenoid
+#define SOLENOID    16
