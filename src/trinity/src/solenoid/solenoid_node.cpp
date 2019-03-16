@@ -25,5 +25,7 @@ int main(int argc, char **argv){
     //process callbacks
     ros::spin();
 
+    gpioDisconnect();
+
     return 0;
 }
