@@ -13,7 +13,7 @@ int main(int argc, char **argv){
     if(!gpioConnect()){ return 1; }
     
     //set up solenoid pin
-    set_mode(0, SOLENOID, PI_INPUT);
+    set_mode(0, SOLENOID, PI_OUTPUT);
 
     typedef std_msgs::Bool::ConstPtr input_type;
     typedef boost::function<void (const input_type&)> callback_func;
