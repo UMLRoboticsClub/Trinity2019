@@ -24,9 +24,10 @@
 //co2 solenoid
 #define SOLENOID    16
 //LEDs
-#define LED_FIRE    17
-#define LED_VIDEO   18
-#define LED_SND_ACT 19
+#define LED_STATUS  17
+#define LED_FIRE    18
+#define LED_VIDEO   19
+#define LED_SND_ACT 20
 
 //TODO: add sound activation script to project
 

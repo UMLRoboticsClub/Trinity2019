@@ -34,6 +34,7 @@ add_executable(encoders_node
 )
 add_executable(statuslight
     src/statuslight/statuslight.cpp
+    src/gpio.cpp
 )
 add_executable(ir
     src/ir/ir_node.cpp
