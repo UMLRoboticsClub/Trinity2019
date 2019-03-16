@@ -1,8 +1,8 @@
 #include "motor.h"
 #include "gpio.h"
 
-#include "ros/ros.h"
-#include "std_msgs/UInt32.h"
+#include <ros/ros.h>
+#include <std_msgs/UInt32.h>
 
 const char *node_name = "motors";
 

@@ -1,8 +1,8 @@
 #include "encoder.h"
 #include "gpio.h"
 
-#include "ros/ros.h"
-#include "std_msgs/Int64.h"
+#include <ros/ros.h>
+#include <std_msgs/Int64.h>
 
 const char *node_name = "encoders";
 const char *topic_nameA = "enc_a";
