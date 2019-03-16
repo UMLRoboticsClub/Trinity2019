@@ -1,5 +1,3 @@
-//convert twist to motor power
-
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
@@ -26,10 +24,10 @@ int main(int argc, char **argv){
     float &vb = b.data;
     float &vc = c.data;
 
-    boost::function<void (const geometry_msgs::Twist::ConstPtr &vel)> callback = 
-        [&](const geometry_msgs::Twist::ConstPtr &vel){
-            //for reference:
-            //https://stackoverflow.com/questions/3748037/how-to-control-a-kiwi-drive-robot
+    typedef geometry_msgs::Twist::ConstPtr inType;
+
+    boost::function<void (const inType&)> callback = 
+        [&](const inType &vel){
             //Coordinate systems in ROS are always in 3D,
             //and are right-handed, with X forward, Y left, and Z up. 
 
