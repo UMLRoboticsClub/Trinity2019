@@ -19,8 +19,8 @@ Motor::~Motor(){
 }
 
 void Motor::stop(){
-    gpio_write(0, pinA, 0);
-    gpio_write(0, pinB, 0);
+    gpio_write(0, pinA, PI_LOW);
+    gpio_write(0, pinB, PI_LOW);
 }
 
 void Motor::set(int power){

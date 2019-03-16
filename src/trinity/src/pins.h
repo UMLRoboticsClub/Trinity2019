@@ -23,3 +23,11 @@
 #define IMU_SDA     15
 //co2 solenoid
 #define SOLENOID    16
+//LEDs
+#define LED_FIRE    17
+#define LED_VIDEO   18
+#define LED_SND_ACT 19
+
+//TODO: add sound activation script to project
+
+//color sensor?
