@@ -9,7 +9,12 @@ const char *node_name = "motors";
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
     ros::NodeHandle n;
-
+	std::string topic_motorA;
+	std::string topic_motorB;
+	std::string topic_motorC;
+	n.getParam("motor1", topic_motorA);
+	n.getParam("motor2", topic_motorB);
+	n.getParam("motor3", topic_motorC);
     //exit if we can't connect to GPIO system
     if(!gpioConnect()){ return 1; }
 
@@ -26,9 +31,9 @@ int main(int argc, char **argv){
     callback_func mtrMsgC = [&motorC](const mtr_input_type& vel){ motorC.set(vel->data); };
 
     //subscribe to motor messages
-    ros::Subscriber sub_a = n.subscribe("mtr_a", 100, mtrMsgA);
-    ros::Subscriber sub_b = n.subscribe("mtr_b", 100, mtrMsgB);
-    ros::Subscriber sub_c = n.subscribe("mtr_c", 100, mtrMsgC);
+    ros::Subscriber sub_a = n.subscribe(topic_motorA, 100, mtrMsgA);
+    ros::Subscriber sub_b = n.subscribe(topic_motorB, 100, mtrMsgB);
+    ros::Subscriber sub_c = n.subscribe(topic_motorC, 100, mtrMsgC);
 
     //process callbacks
     ros::spin();
