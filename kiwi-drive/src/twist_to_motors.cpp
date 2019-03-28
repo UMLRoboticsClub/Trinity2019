@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 	nh.getParam("motor1", topic_motorA);
 	nh.getParam("motor2", topic_motorB);
 	nh.getParam("motor3", topic_motorC);
-    ROS_DEBUG("%s started", node_name);
+    ROS_DEBUG("%s started", node_name.c_str());
 	
     ros::Subscriber vel_sub;
     ros::Publisher mtrA_pub, mtrB_pub, mtrC_pub;
