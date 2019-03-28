@@ -27,6 +27,11 @@
 #define LED_FIRE    25 /*18*/
 #define LED_VIDEO   8  /*19*/
 #define LED_SND_ACT 7  /*20*/
-//unused pins: 12, 16, 20, 21
+
+#define DRIVE_MOTOR_ENABLE 12 /*21*/
+#define LIDAR_MOTOR_ENABLE 16 /*22*/
+
+#define SERVO1 20 /*23*/
+#define SERVO2 21 /*24*/
 
 //TODO: add sound activation script to project
