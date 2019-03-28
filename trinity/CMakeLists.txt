@@ -21,7 +21,7 @@ include_directories(
     src
 )
 
-# Executables:
+# Executables
 add_executable(motors_node
     src/motors/motors_node.cpp
     src/motors/motor.cpp

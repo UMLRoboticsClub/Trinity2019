@@ -1,0 +1,30 @@
+<launch>
+	<node pkg="kiwi-drive" type="twist_to_motors" name="twist_to_motors" output="screen">
+		<param name="motor1" value="wheel1_vtarget" />
+		<param name="motor2" value="wheel2_vtarget" />
+		<param name="motor3" value="wheel3_vtarget" />
+	</node>
+	<node ns="wheel1" pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity1" output="screen">
+		<param name="wheel" value="enc1" />
+		<param name="wheel_vtarget" value="wheel1_vtarget" />
+		<param name="motor_cmd" value="motor_cmd1" />
+		<param name="wheel_vel" value="wheel1_vel" />
+	</node>
+	<node ns="wheel2" pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity2" output="screen">
+		<param name="wheel" value="enc2" />
+		<param name="wheel_vtarget" value="wheel2_vtarget" />
+		<param name="motor_cmd" value="motor2_cmd" />
+		<param name="wheel_vel" value="wheel2_vel" />
+	</node>
+	<node ns="wheel3" pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity3" output="screen">
+		<param name="wheel" value="enc3" />
+		<param name="wheel_vtarget" value="wheel3_vtarget" />
+		<param name="motor_cmd" value="motor3_cmd" />
+		<param name="wheel_vel" value="wheel3_vel" />
+	</node>
+	<node pkg="kiwi-drive" type="diff_tf.py" name="diff_tf" output="screen">
+		<param name="encoder1" value="enc1" />
+		<param name="encoder2" value="enc2" />
+		<param name="encoder3" value="enc3" />
+	</node>
+</launch>

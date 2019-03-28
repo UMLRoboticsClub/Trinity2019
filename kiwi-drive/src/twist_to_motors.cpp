@@ -3,19 +3,21 @@
 #include <std_msgs/Float32.h>
 #include <ros/console.h>
 
-const char *node_name = "twist_to_motors";
-const char *topic_vel_src = "cmd_vel";
-const char *topic_motorA = "mtr_a_vel";
-const char *topic_motorB = "mtr_b_vel";
-const char *topic_motorC = "mtr_c_vel";
+const std::string node_name = "twist_to_motors";
 const int bufferSize = 1000;
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
     ros::NodeHandle nh;
-
+	std::string topic_vel_src = "/cmd_vel";
+	std::string topic_motorA;
+	std::string topic_motorB;
+	std::string topic_motorC;
+	nh.getParam("motor1", topic_motorA);
+	nh.getParam("motor2", topic_motorB);
+	nh.getParam("motor3", topic_motorC);
     ROS_DEBUG("%s started", node_name);
-
+	
     ros::Subscriber vel_sub;
     ros::Publisher mtrA_pub, mtrB_pub, mtrC_pub;
 

@@ -5,14 +5,18 @@
 #include <std_msgs/Int64.h>
 
 const char *node_name = "encoders";
-const char *topic_nameA = "enc_a";
-const char *topic_nameB = "enc_b";
-const char *topic_nameC = "enc_c";
 const unsigned pub_hz = 20; 
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
     ros::NodeHandle n;
+	std::string topic_nameA;
+	std::string topic_nameB;
+	std::string topic_nameC;
+
+	n.getParam("encoder1", topic_nameA);
+	n.getParam("encoder2", topic_nameB);
+	n.getParam("encoder3", topic_nameC);
 
     if(!gpioConnect()){ return 1; }
 

@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs    
 )
 
+catkin_package()
+
 # Include directories:
 include_directories(
     ${catkin_INCLUDE_DIRS}
