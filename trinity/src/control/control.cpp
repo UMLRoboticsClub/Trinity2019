@@ -1,13 +1,12 @@
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
-#include <nav_msgs/OccupancyGrid.h>
+#include "control.h"
+#include <nav_msgs/GetMap.h>
 
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-
-Control::Control(): gs(), targetPoints(), ac("move_base", true){
+Control::Control(ros::ServiceClient& mapClient): gs(), targetPoints(), ac("move_base", true){
 	//initialize the distance field
-	client = n.serviceClient<nav_msgs::GetMap>("GetMap");
+	client = mapClient;
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
         distanceField[i] = vector<int>(GRID_SIZE_CELLS);
@@ -17,25 +16,23 @@ Control::Control(): gs(), targetPoints(), ac("move_base", true){
     }
 }
 
-void Control::controlLoop(){
-	ros::init();
+void Control::controlLoop(const std_msgs::Bool::ConstPtr& sig){
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;
 	nav_msgs::GetMap occGridService;
 	while(!gs.done){
 		//ask for occupancy grid service call to get current map.  store in occGrid.
-		occGrid = client.call(occGridService);
+		client.call(occGridService);
+        occGrid = occGridService.response.map;
 		//determine target and type based on occGrid and gameState
-		Point target = findNextTarget(occGrid , robotAction);
+        geometry_msgs::Pose target = findNextTarget(robotAction);
 		//translate occGrid coords into moveBase coords
-		geometry_msgs::Pose origin = occGrid.MapMetaData.Origin;
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
 
 		goal.target_pose.header.frame_id = "/map";
 		goal.target_pose.header.stamp = ros::Time::now();
-		goal.target_pose.pose.position.x = target.x - origin.position.x;
-		goal.target_pose.pose.position.y = target.y - origin.position.y;
+		goal.target_pose.pose = target;
 
 		ac.sendGoal(goal);
 		ac.waitForResult();
@@ -59,23 +56,24 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
     }
 	geometry_msgs::Pose targetPose;
     //check if we have already found an important point where we need to go
-    vector<int> primaryTargets = state.getTargetType();
+    vector<int> primaryTargets = gs.getTargetType();
     for (const int type : primaryTargets) {
         // if we have a destination in mind
         if (targetPoints[type].size() > 0) {
             //update robotOps
             robotAction = determineRobotOp(type);
-			Point closestTarget = targetPoints[type][0];
-            removeTargetPoint(type, targetIndex);
-			targetPose.position.x = closestTarget.x;
-			targetPose.position.y = closestTarget.y;
+            geometry_msgs::Pose closestTarget = targetPoints[type][0];
+            int targetIndex = 0;
+			targetPoints[type].erase(targetPoints[type].begin()+targetIndex);
+            targetPose.position.x = closestTarget.position.x;
+			targetPose.position.y = closestTarget.position.y;
             return targetPose;
         }
     }
 
     //no important points already found, go to distance field and find an unknown
-    targetLocation = computeDistanceField();
-	geometry_msgs::Pose origin = occGrid.MapMetaData.Origin;
+    Point targetLocation = computeDistanceField();
+	geometry_msgs::Pose origin = occGrid.info.origin;
 	targetPose.position.x = targetLocation.x - origin.position.x;
 	targetPose.position.y = targetLocation.y - origin.position.y;
 	return targetPose;
@@ -89,7 +87,7 @@ Point Control::computeDistanceField() {
 	//also switch from vector to something circular
 
 	//get the robot position
-	robotPos = [GET_ROBOT_POS_SERVICE_CALL];
+    Point robotPos;// = [GET_ROBOT_POS_SERVICE_CALL];
 
     vector<Point> boundary;
     boundary.push_back(robotPos);

@@ -12,15 +12,18 @@ add_compile_options(
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-	roscpp
 	rospy
-	std_msgs
 	geometry_msgs
 	message_generation
 	move_base_msgs
 	actionlib
 	tf
+    roscpp
+    std_msgs
+    sensor_msgs    
 )
+
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -167,12 +170,10 @@ add_executable(color_sensor
     src/color_sensor/color_sensor_node.cpp
     src/color_sensor/TCS34725.cpp
 )
-#add_executable(control
-#    control/control.cpp
-#    etc...
-#    src/ir/ir.cpp
-#    src/gpio.cpp
-#)
+add_executable(control
+    src/control/control_node.cpp
+    src/control/control.cpp
+    )
 
 
 ## Add cmake target dependencies of the executable
@@ -187,7 +188,7 @@ target_link_libraries(color_sensor  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
-#target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #############
 ## Install ##
