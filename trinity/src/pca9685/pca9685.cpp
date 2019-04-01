@@ -1,4 +1,4 @@
-#include "PCA9685.h"
+#include "pca9685.h"
 
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
@@ -60,7 +60,7 @@ void PCA9685::reset(){
 
 void PCA9685::setDutyCycle(uint8_t pin, float percent){
     if(percent < 0 || percent > 1){ cerr << "bad input for duty cycle" << endl; }
-    setPin(pin, (uint16_t)(MAX_PWM * percent));
+    setPin(pin, (uint16_t)(PWM_MAX * percent));
 }
 
 //Sets the PWM frequency for the entire chip, up to ~1.6 KHz

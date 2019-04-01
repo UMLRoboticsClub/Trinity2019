@@ -34,6 +34,10 @@ add_executable(encoders_node
     src/motors/encoder.cpp
     src/gpio.cpp
 )
+add_executable(pca9685_node
+    src/pca9685/pca9685_node.cpp
+    src/pca9685/pca9685.cpp
+)
 add_executable(statuslight
     src/statuslight/statuslight.cpp
     src/gpio.cpp
@@ -55,6 +59,7 @@ add_executable(leds
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
 target_link_libraries(motors_node   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(ir            ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})

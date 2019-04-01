@@ -4,21 +4,23 @@
 #include <ros/ros.h>
 #include <std_msgs/UInt32.h>
 
+using std::string;
+
 const char *node_name = "motors";
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
     ros::NodeHandle n;
-	std::string topic_motorA;
-	std::string topic_motorB;
-	std::string topic_motorC;
+
+	string topic_motorA, topic_motorB, topic_motorC;
 	n.getParam("motor1", topic_motorA);
 	n.getParam("motor2", topic_motorB);
 	n.getParam("motor3", topic_motorC);
+
     //exit if we can't connect to GPIO system
     if(!gpioConnect()){ return 1; }
 
-    //init and set motor power to 0
+    //init motors
     Motor motorA(MOTORA_PINA, MOTORA_PINB);
     Motor motorB(MOTORB_PINA, MOTORB_PINB);
     Motor motorC(MOTORC_PINA, MOTORC_PINB);
