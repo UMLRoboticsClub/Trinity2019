@@ -9,6 +9,23 @@
 #include <chrono>
 #include <thread>
 
+#define PCA9685_SUBADR1  0x2
+#define PCA9685_SUBADR2  0x3
+#define PCA9685_SUBADR3  0x4
+
+#define PCA9685_MODE1    0x0
+#define PCA9685_PRESCALE 0xFE
+
+#define LED0_ON_L        0x6
+#define LED0_ON_H        0x7
+#define LED0_OFF_L       0x8
+#define LED0_OFF_H       0x9
+
+#define ALLLED_ON_L      0xFA
+#define ALLLED_ON_H      0xFB
+#define ALLLED_OFF_L     0xFC
+#define ALLLED_OFF_H     0xFD
+
 #define ENABLE_DEBUG_OUTPUT
 
 using std::cout;
@@ -31,7 +48,7 @@ PCA9685::PCA9685(const char *device, uint8_t addr): device(device), addr(addr) {
 }
 
 PCA9685::~PCA9685(){
-    setAllPWM(0, 4096);
+    setAllPWM(0, PWM_LOW);
     close(fd);
 }
 
@@ -39,6 +56,11 @@ PCA9685::~PCA9685(){
 void PCA9685::reset(){
     write8(PCA9685_MODE1, 0x80);
     sleep(10);
+}
+
+void PCA9685::setDutyCycle(uint8_t pin, float percent){
+    if(percent < 0 || percent > 1){ cerr << "bad input for duty cycle" << endl; }
+    setPin(pin, (uint16_t)(MAX_PWM * percent));
 }
 
 //Sets the PWM frequency for the entire chip, up to ~1.6 KHz
@@ -50,7 +72,7 @@ void PCA9685::setPWMFreq(float freq){
 
     freq *= 0.9;  // Correct for overshoot in the frequency setting
     float prescaleval = 25000000;
-    prescaleval /= 4096;
+    prescaleval /= PWM_MAX;
     prescaleval /= freq;
     prescaleval -= 1;
 
@@ -77,18 +99,18 @@ void PCA9685::setPWMFreq(float freq){
 }
 
 //Sets the PWM output of one of the PCA9685 pins
-//num: One of the PWM output pins, from 0 to 15
+//pin: One of the PWM output pins, from 0 to 15
 //on: At what point in the 4096-part cycle to turn the PWM output ON
 //off: At what point in the 4096-part cycle to turn the PWM output OFF
-void PCA9685::setPWM(uint8_t num, uint16_t on, uint16_t off){
+void PCA9685::setPWM(uint8_t pin, uint16_t on, uint16_t off){
 #ifdef ENABLE_DEBUG_OUTPUT
-    cout << "Setting PWM " << num << ": " << on << "->" << off << endl;
+    cout << "Setting PWM " << pin << ": " << on << "->" << off << endl;
 #endif
 
-    write8(LED0_ON_L  + 4*num, on);
-    write8(LED0_ON_H  + 4*num, on >> 8);
-    write8(LED0_OFF_L + 4*num, off);
-    write8(LED0_OFF_H + 4*num, off >> 8);
+    write8(LED0_ON_L  + 4*pin, on);
+    write8(LED0_ON_H  + 4*pin, on >> 8);
+    write8(LED0_OFF_L + 4*pin, off);
+    write8(LED0_OFF_H + 4*pin, off >> 8);
 }
 
 void PCA9685::setAllPWM(uint16_t on, uint16_t off){
@@ -103,21 +125,21 @@ void PCA9685::setAllPWM(uint16_t on, uint16_t off){
 }
 
 //Helper to set pin PWM output. Sets pin without having to deal with on/off tick placement and properly handles a zero value as completely off and 4095 as completely on.  Optional invert parameter supports inverting the pulse for sinking to ground.
-//num: One of the PWM output pins, from 0 to 15
-//val: The number of ticks out of 4096 to be active, should be a value from 0 to 4095 inclusive.
+//pin: One of the PWM output pins, from 0 to 15
+//val: The pinber of ticks out of 4096 to be active, should be a value from 0 to 4095 inclusive.
 
-void PCA9685::setPin(uint8_t num, uint16_t val){
+void PCA9685::setPin(uint8_t pin, uint16_t val){
     //clamp value between 0 and 4095 inclusive
     if(val > 4095){ val = 4095; }
 
     if (val == 4095) {
         // Special value for signal fully on.
-        setPWM(num, 4096, 0);
+        setPWM(pin, 4096, 0);
     } else if (val == 0) {
         // Special value for signal fully off.
-        setPWM(num, 0, 4096);
+        setPWM(pin, 0, 4096);
     } else {
-        setPWM(num, 0, val);
+        setPWM(pin, 0, val);
     }
 }
 

@@ -1,6 +1,6 @@
 CXX      = g++
 LDFLAGS  =
-CXXFLAGS = -std=c++14 -g -Wall -Wextra -Wfatal-errors -Wno-narrowing
+CXXFLAGS = -std=c++14 -g -Wall -Wextra -Wfatal-errors
 TARGET   = test
 SRCFILES = main.cpp PCA9685.cpp
 OBJECTS  = $(patsubst %.cpp, %.o, $(SRCFILES))
