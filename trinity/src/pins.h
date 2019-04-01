@@ -17,6 +17,8 @@
 #define SOLENOID    5
 //servo, hardware PWM pin
 #define SERVO1      13
+//status LED
+#define LED_STATUS  18
 
 //I2C bus (for reference)
 //#define SDA       2
@@ -48,7 +50,8 @@
 #define MOTORC_PINA PCA_4
 #define MOTORC_PINB PCA_5
 //LEDs
-#define LED_STATUS  PCA_6
 #define LED_FIRE    PCA_7
 #define LED_VIDEO   PCA_8
 #define LED_SND_ACT PCA_9
+
+//blink all the leds when program started
