@@ -20,7 +20,6 @@ int main(int argc, char **argv){
 
     if(!gpioConnect()){ return 1; }
 
-    //init and set motor power to 0
     Encoder encoderA(MOTORA_ENCA, MOTORA_ENCB);
     Encoder encoderB(MOTORB_ENCA, MOTORB_ENCB);
     Encoder encoderC(MOTORC_ENCA, MOTORC_ENCB);
