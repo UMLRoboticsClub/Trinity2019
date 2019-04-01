@@ -4,7 +4,7 @@
 
 //holy shit this is ugly
 Encoder::Encoder(unsigned pinA, unsigned pinB): pinA(pinA), pinB(pinB){
-    callbackA = callback_ex(0,pinA, RISING_EDGE,
+    callbackA = callback_ex(0, pinA, RISING_EDGE,
             [](int, unsigned, unsigned, uint32_t, void *data){
                 Encoder &e = *static_cast<Encoder*>(data);
                 if(!gpio_read(0, e.pinB)){
@@ -12,7 +12,7 @@ Encoder::Encoder(unsigned pinA, unsigned pinB): pinA(pinA), pinB(pinB){
                 }
             },
             this);
-    callbackB = callback_ex(0,pinB, RISING_EDGE,
+    callbackB = callback_ex(0, pinB, RISING_EDGE,
             [](int, unsigned, unsigned, uint32_t, void *data){
                 Encoder &e = *static_cast<Encoder*>(data);
                 if(!gpio_read(0, e.pinA)){
