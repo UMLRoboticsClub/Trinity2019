@@ -1,8 +1,8 @@
-#include "ros/ros.h"
-#include "std_msgs/Bool.h"
+#include <ros/ros.h>
+#include <std_msgs/Bool.h>
 
-#include <pigpiod_if2.h>
 #include "gpio.h"
+#include <pigpiod_if2.h>
 
 const char *node_name = "ir";
 const char *topic_name = "ir_pub";

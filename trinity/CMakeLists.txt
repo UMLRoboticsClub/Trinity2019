@@ -46,6 +46,10 @@ add_executable(solenoid
     src/solenoid/solenoid_node.cpp
     src/gpio.cpp
 )
+add_executable(servo
+    src/servo/servo_node.cpp
+    src/gpio.cpp
+)
 
 # Linking:
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
@@ -54,6 +58,7 @@ target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(ir            ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
 
 
 #####

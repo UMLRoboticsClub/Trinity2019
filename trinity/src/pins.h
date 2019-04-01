@@ -16,7 +16,7 @@
 //co2 solenoid
 #define SOLENOID    5
 //servo, hardware PWM pin
-#define SERVO1      13
+#define SERVO       13
 //status LED
 #define LED_STATUS  18
 
