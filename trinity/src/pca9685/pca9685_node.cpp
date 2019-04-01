@@ -73,10 +73,3 @@ int main(int argc, char **argv){
 
     return 0;
 }
-
-//typedef std_msgs::UInt32::ConstPtr input_type;
-//typedef boost::function<void (const input_type&)> callback_func;
-////TODO: fix type here
-//callback_func callback = [&pca](const input_type& val){ pca.setDutyCycle(0, 0.f); };
-
-//ros::Subscriber sub = n.subscribe(topic_name, 100, callback);

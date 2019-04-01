@@ -1,8 +1,5 @@
 #include "motor.h"
 
-#include <iostream>
-#include <pigpiod_if2.h>
-
 using std::cerr;
 using std::endl;
 

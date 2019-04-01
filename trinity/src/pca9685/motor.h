@@ -11,6 +11,8 @@ class Motor {
         void stop();
 
     private:
+        //handle to PWM chip
         PCA9685 &pca;
+        //pins for H-Bridge
         unsigned pinA, pinB;
 };
