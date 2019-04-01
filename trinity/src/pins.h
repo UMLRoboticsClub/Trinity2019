@@ -1,37 +1,54 @@
 #pragma once
+/* Pi GPIOs*/
 
-//motor A
-#define MOTORA_PINA 4  /*1*/
-#define MOTORA_PINB 17 /*2*/
-#define MOTORA_ENCA 27 /*3*/
-#define MOTORA_ENCB 22 /*4*/
-//motor B
-#define MOTORB_PINA 10 /*5*/
-#define MOTORB_PINB 9  /*6*/
-#define MOTORB_ENCA 11 /*7*/
-#define MOTORB_ENCB 5  /*8*/
-//motor C
-#define MOTORC_PINA 6  /*9*/
-#define MOTORC_PINB 13 /*10*/
-#define MOTORC_ENCA 19 /*11*/
-#define MOTORC_ENCB 26 /*12*/
+//motor A encoder
+#define MOTORA_ENCA 4
+#define MOTORA_ENCB 17
+//motor B encoder
+#define MOTORB_ENCA 27
+#define MOTORB_ENCB 22
+//motor C encoder
+#define MOTORC_ENCA 10
+#define MOTORC_ENCB 9
+
 //ir sensor
-#define IR_SENSOR   18 /*13*/
-//I2C for IMU and color sensor for reference
-//#define SDA       2  /*14*/
-//#define SCL       3  /*15*/
+#define IR_SENSOR   11
 //co2 solenoid
-#define SOLENOID    23 /*16*/
+#define SOLENOID    5
+//servo, hardware PWM pin
+#define SERVO1      13
+
+//I2C bus (for reference)
+//#define SDA       2
+//#define SCL       3
+
+/* PCA9685 pins */
+#define PCA_0  0
+#define PCA_1  1
+#define PCA_2  2
+#define PCA_3  3
+#define PCA_4  4
+#define PCA_5  5
+#define PCA_6  6
+#define PCA_7  7
+#define PCA_8  8
+#define PCA_9  9
+#define PCA_10 10
+#define PCA_11 11
+#define PCA_12 12
+#define PCA_13 13
+#define PCA_14 14
+#define PCA_15 15
+
+//motor control pins
+#define MOTORA_PINA PCA_0
+#define MOTORA_PINB PCA_1
+#define MOTORB_PINA PCA_2
+#define MOTORB_PINB PCA_3
+#define MOTORC_PINA PCA_4
+#define MOTORC_PINB PCA_5
 //LEDs
-#define LED_STATUS  24 /*17*/
-#define LED_FIRE    25 /*18*/
-#define LED_VIDEO   8  /*19*/
-#define LED_SND_ACT 7  /*20*/
-
-#define DRIVE_MOTOR_ENABLE 12 /*21*/
-#define LIDAR_MOTOR_ENABLE 16 /*22*/
-
-#define SERVO1 20 /*23*/
-#define SERVO2 21 /*24*/
-
-//TODO: add sound activation script to project
+#define LED_STATUS  PCA_6
+#define LED_FIRE    PCA_7
+#define LED_VIDEO   PCA_8
+#define LED_SND_ACT PCA_9
