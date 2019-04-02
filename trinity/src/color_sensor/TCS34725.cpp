@@ -1,3 +1,27 @@
+/*!
+ *  @file Adafruit_TCS34725.cpp
+ *
+ *  @mainpage Driver for the TCS34725 digital color sensors.
+ *
+ *  @section intro_sec Introduction
+ *
+ *  Adafruit invests time and resources providing this open source code,
+ *  please support Adafruit and open-source hardware by purchasing
+ *  products from Adafruit!
+ *
+ *  @section author Author
+ *
+ *  KTOWN (Adafruit Industries)
+ *
+ *  @section license License
+ *
+ *  BSD (see license.txt)
+ *
+ *  @section HISTORY
+ *
+ *  v1.0 - First release
+ */
+
 #include "TCS34725.h"
 
 #include <iostream>
