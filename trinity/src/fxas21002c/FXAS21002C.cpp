@@ -19,26 +19,35 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+//250, 500, 1000, 2000
+static const uint8_t range_ctrl_reg[]  = { 0x03, 0x02, 0x01, 0x00 };
+static const float range_sensitivity[] = { 0.0078125f, 0.015625f, 0.03125f, 0.0625f };
+
+//Raw register addresses used to communicate with the sensor.
+typedef enum {
+	GYRO_REGISTER_STATUS    = 0x00, /**< 0x00 */
+	GYRO_REGISTER_OUT_X_MSB = 0x01, /**< 0x01 */
+	GYRO_REGISTER_OUT_X_LSB = 0x02, /**< 0x02 */
+	GYRO_REGISTER_OUT_Y_MSB = 0x03, /**< 0x03 */
+	GYRO_REGISTER_OUT_Y_LSB = 0x04, /**< 0x04 */
+	GYRO_REGISTER_OUT_Z_MSB = 0x05, /**< 0x05 */
+	GYRO_REGISTER_OUT_Z_LSB = 0x06, /**< 0x06 */
+	GYRO_REGISTER_WHO_AM_I  = 0x0C, /**< 0x0C (default value = 0b11010111, read only) */
+	GYRO_REGISTER_CTRL_REG0 = 0x0D, /**< 0x0D (default value = 0b00000000, read/write) */
+	GYRO_REGISTER_CTRL_REG1 = 0x13, /**< 0x13 (default value = 0b00000000, read/write) */
+	GYRO_REGISTER_CTRL_REG2 = 0x14, /**< 0x14 (default value = 0b00000000, read/write) */
+} gyroRegisters_t;
+
 inline void sleep(int millis){
 	std::this_thread::sleep_for(std::chrono::milliseconds(millis));
 }
 
-/*!
-  @brief  Abstract away platform differences in Arduino wire library
-  @param reg The register address to write to
-  @param value The value to write to the specified register
-  */
-void FXAS21002C::write8(uint8_t addr, uint8_t value) {
-    uint8_t packet[2] = { addr, d };
+void FXAS21002C::write8(uint8_t addr, uint8_t val) {
+    uint8_t packet[2] = { addr, val };
     //if(write(fd, packet, 2) != 2){ cerr << "Write failed" << endl; }
     while(write(fd, packet, 2) != 2){ cerr << "write failed(1)" << endl; }
 }
 
-/*!
-  @brief  Abstract away platform differences in Arduino wire library
-  @param reg The register address to read from
-  @returns The uint8_t read from the I2C bus at the specified reg
-  */
 uint8_t FXAS21002C::read8(uint8_t addr) {
     while(write(fd, &addr, 1) != 1){ cerr << "write failed(2)" << endl; }
     while(read(fd, &addr, 1)  != 1){ cerr << "read failed(2)"  << endl; }
@@ -48,13 +57,7 @@ uint8_t FXAS21002C::read8(uint8_t addr) {
     return addr;
 }
 
-/**************************************************************************/
-/*!
-  @brief  Instantiates a new FXAS21002C class, including assigning
-  a unique ID to the gyroscope for logging purposes.
-  */
-/**************************************************************************/
-FXAS21002C::FXAS21002C(const char *device, Range_t range): range(range) {
+FXAS21002C::FXAS21002C(const char *device, Range range): range(range) {
     if((fd = open(device, O_RDWR)) < 0){ cerr << "Unable to open I2C device" << endl; }
     if(ioctl(fd, I2C_SLAVE, FXAS21002C_ADDRESS) < 0){ cerr << "Unable to connect to I2C device" << endl; }
 
@@ -74,17 +77,22 @@ FXAS21002C::FXAS21002C(const char *device, Range_t range): range(range) {
     sleep(100); // 60 ms + 1/ODR
 }
 
+FXAS21002C::~FXAS21002C(){
+    close(fd);
+}
+
 void FXAS21002C::read(){
-    /* Read 7 uint8_ts from the sensor */
+    /* Read 7 values from the sensor */
     union {
         struct {
-            uint8_t status;
-            uint8_t xhi;
-            uint8_t xlo;
-            uint8_t yhi;
-            uint8_t ylo;
-            uint8_t zhi;
-            uint8_t zlo;
+            uint8_t
+                status,
+                xhi,
+                xlo,
+                yhi,
+                ylo,
+                zhi,
+                zlo;
         };
         uint8_t data[7];
     };

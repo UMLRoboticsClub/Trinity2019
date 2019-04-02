@@ -1,29 +1,9 @@
-#ifndef __FXAS21002C_H__
-#define __FXAS21002C_H__
+#pragma once
 
 //Enum to define valid gyroscope range values
 typedef enum {
 	Range_250DPS = 0, Range_500DPS, Range_1000DPS, Range_2000DPS
-} Range_t;
-
-//250, 500, 1000, 2000
-const uint8_t range_ctrl_reg[]  = { 0x03, 0x02, 0x01, 0x00 };
-const float range_sensitivity[] = { 0.0078125f, 0.015625f, 0.03125f, 0.0625f };
-
-//Raw register addresses used to communicate with the sensor.
-typedef enum {
-	GYRO_REGISTER_STATUS    = 0x00, /**< 0x00 */
-	GYRO_REGISTER_OUT_X_MSB = 0x01, /**< 0x01 */
-	GYRO_REGISTER_OUT_X_LSB = 0x02, /**< 0x02 */
-	GYRO_REGISTER_OUT_Y_MSB = 0x03, /**< 0x03 */
-	GYRO_REGISTER_OUT_Y_LSB = 0x04, /**< 0x04 */
-	GYRO_REGISTER_OUT_Z_MSB = 0x05, /**< 0x05 */
-	GYRO_REGISTER_OUT_Z_LSB = 0x06, /**< 0x06 */
-	GYRO_REGISTER_WHO_AM_I  = 0x0C, /**< 0x0C (default value = 0b11010111, read only) */
-	GYRO_REGISTER_CTRL_REG0 = 0x0D, /**< 0x0D (default value = 0b00000000, read/write) */
-	GYRO_REGISTER_CTRL_REG1 = 0x13, /**< 0x13 (default value = 0b00000000, read/write) */
-	GYRO_REGISTER_CTRL_REG2 = 0x14, /**< 0x14 (default value = 0b00000000, read/write) */
-} gyroRegisters_t;
+} Range;
 
 typedef struct {
 	int16_t x, y, z;
@@ -32,19 +12,19 @@ typedef struct {
 //Sensor driver for the Adafruit FXAS21002C breakout.
 class FXAS21002C {
 	public:
-		FXAS21002C(const char *device, Range_t range = Range_250DPS);
+		FXAS21002C(const char *device, Range range = Range_250DPS);
+		~FXAS21002C();
         //update gyro values
         void read();
 
 		gyroData raw, data;
 
 	private:
-		void write8(uint8_t addr, uint8_t value);
+        int fd;
+		void write8(uint8_t addr, uint8_t val);
 		uint8_t read8(uint8_t addr);
-		Range_t range;
+		Range range;
 };
-
-#endif
 
 /*     Set CTRL_REG1 (0x13)
 	   ====================================================================
