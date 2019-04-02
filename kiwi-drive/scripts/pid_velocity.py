@@ -70,17 +70,21 @@ class PidVelocity():
         self.encoder_max = rospy.get_param('encoder_max', 32768)
         self.encoder_low_wrap = rospy.get_param('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min )
         self.encoder_high_wrap = rospy.get_param('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min )
+        self.wheel = rospy.get_param('wheel', 'wheel')
+        self.wheel_vtarget = rospy.get_param('wheel_vtarget', 'wheel_vtarget')
+        self.motor_cmd = rospy.get_param('motor_cmd', 'motor_cmd')
+        self.wheel_vel = rospy.get_param('wheel_vel', 'wheel_vel')
+
         self.prev_vel = [0.0] * self.rolling_pts
         self.wheel_latest = 0.0
         self.prev_pid_time = rospy.Time.now()
         rospy.logdebug("%s got Kp:%0.3f Ki:%0.3f Kd:%0.3f tpm:%0.3f" % (self.nodename, self.Kp, self.Ki, self.Kd, self.ticks_per_meter))
         
         #### subscribers/publishers 
-        rospy.Subscriber("wheel", Int16, self.wheelCallback) 
-        rospy.Subscriber("wheel_vtarget", Float32, self.targetCallback) 
-        self.pub_motor = rospy.Publisher('motor_cmd',Float32, queue_size=10) 
-        self.pub_vel = rospy.Publisher('wheel_vel', Float32, queue_size=10)
-   
+        rospy.Subscriber(self.wheel, Int16, self.wheelCallback) 
+        rospy.Subscriber(self.wheel_vtarget, Float32, self.targetCallback) 
+        self.pub_motor = rospy.Publisher(self.motor_cmd, Float32, queue_size=10) 
+        self.pub_vel = rospy.Publisher(self.wheel_vel, Float32, queue_size=10)
         
     #####################################################
     def spin(self):
@@ -223,3 +227,4 @@ if __name__ == '__main__':
         pidVelocity.spin()
     except rospy.ROSInterruptException:
         pass
+
