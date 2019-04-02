@@ -134,9 +134,7 @@ void PCA9685::setAllPWM(uint16_t on, uint16_t off){
 
 void PCA9685::setPin(uint8_t pin, uint16_t val){
     //clamp value between 0 and 4095 inclusive
-    if(val > 4095){ val = 4095; }
-
-    if (val == 4095) {
+    if (val >= 4095) {
         // Special value for signal fully on.
         setPWM(pin, 4096, 0);
     } else if (val == 0) {
