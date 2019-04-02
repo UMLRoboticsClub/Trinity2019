@@ -1,9 +1,6 @@
 [submodule "rplidar_ros"]
 	path = rplidar_ros
 	url = https://github.com/Slamtec/rplidar_ros.git
-[submodule "ros-imu-bno055-i2c"]
-	path = ros-imu-bno055-i2c
-	url = https://github.com/dheera/ros-imu-bno055-i2c.git
 [submodule "bno055_usb_stick"]
 	path = bno055_usb_stick
 	url = https://github.com/yoshito-n-students/bno055_usb_stick.git
