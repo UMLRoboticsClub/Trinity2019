@@ -15,6 +15,7 @@
 
 #define PCA9685_MODE1    0x0
 #define PCA9685_PRESCALE 0xFE
+#define PCA9685_RESET    0x6
 
 #define LED0_ON_L        0x6
 #define LED0_ON_H        0x7
@@ -43,6 +44,7 @@ PCA9685::PCA9685(const char *device, uint8_t addr): device(device), addr(addr) {
     if((fd = open(device, O_RDWR)) < 0){ cerr << "Unable to open I2C device"       << endl; }
     if(ioctl(fd, I2C_SLAVE, addr)  < 0){ cerr << "Unable to connect to I2C device" << endl; }
 
+    reset();
 	//set a default frequency
     setPWMFreq(default_freq);
 }
@@ -54,8 +56,10 @@ PCA9685::~PCA9685(){
 
 //Sends a reset command to the PCA9685 chip over I2C
 void PCA9685::reset(){
-    write8(PCA9685_MODE1, 0x80);
+    uint8_t val = PCA9685_RESET;
+    while(write(fd, &val, 1) != 1){ cerr << "write failed(0)" << endl; }
     sleep(10);
+    setAllPWM(0, 4096);
 }
 
 void PCA9685::setDutyCycle(uint8_t pin, float percent){
