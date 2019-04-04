@@ -1,8 +1,9 @@
 #pragma once
 
 class IRSensor {
-    IRSensor();
-    ~IRSensor();
+    public:
+        IRSensor();
+        ~IRSensor();
 
-    bool flameVisible();
+        bool flameVisible();
 }
