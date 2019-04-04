@@ -34,6 +34,14 @@ add_executable(pca9685_node
     src/pca9685/pca9685.cpp
     src/pca9685/motor.cpp
 )
+add_executable(fxas21002c_node
+    src/fxas21002c/fxas21002c_node.cpp
+    src/fxas21002c/FXAS21002C.cpp
+)
+add_executable(fxos8700_node
+    src/fxos8700/fxos8700_node.cpp
+    src/fxos8700/FXOS8700.cpp
+)
 add_executable(statuslight
     src/statuslight/statuslight.cpp
     src/gpio.cpp
