@@ -74,6 +74,7 @@ class PidVelocity():
         self.wheel_vtarget = rospy.get_param('wheel_vtarget', 'wheel_vtarget')
         self.motor_cmd = rospy.get_param('motor_cmd', 'motor_cmd')
         self.wheel_vel = rospy.get_param('wheel_vel', 'wheel_vel')
+
         self.prev_vel = [0.0] * self.rolling_pts
         self.wheel_latest = 0.0
         self.prev_pid_time = rospy.Time.now()
@@ -84,7 +85,6 @@ class PidVelocity():
         rospy.Subscriber(self.wheel_vtarget, Float32, self.targetCallback) 
         self.pub_motor = rospy.Publisher(self.motor_cmd, Float32, queue_size=10) 
         self.pub_vel = rospy.Publisher(self.wheel_vel, Float32, queue_size=10)
-   
         
     #####################################################
     def spin(self):

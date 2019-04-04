@@ -14,9 +14,9 @@ int main(int argc, char **argv){
 	std::string topic_nameB;
 	std::string topic_nameC;
 
-	nh.getParam("encoder1", topic_nameA);
-	nh.getParam("encoder2", topic_nameB);
-	nh.getParam("encoder3", topic_nameC);
+	n.getParam("encoder1", topic_nameA);
+	n.getParam("encoder2", topic_nameB);
+	n.getParam("encoder3", topic_nameC);
 
     if(!gpioConnect()){ return 1; }
 

@@ -84,6 +84,7 @@ class DiffTf:
         self.encoder_max = rospy.get_param('encoder_max', 32768)
         self.encoder_low_wrap = rospy.get_param('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min )
         self.encoder_high_wrap = rospy.get_param('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min )
+
         self.fwheel = rospy.get_param('encoder1', 'enc1')
         self.swheel = rospy.get_param('encoder2', 'enc2')
         self.twheel = rospy.get_param('encoder3', 'enc3') 
@@ -114,6 +115,7 @@ class DiffTf:
         rospy.Subscriber(self.wheel, Int16, self.fwheelCallback)
         rospy.Subscriber(self.swheel, Int16, self.swheelCallback)
         rospy.Subscriber(self.twheel, Int16, self.twheelCallback)
+
         self.odomPub = rospy.Publisher("odom", Odometry, queue_size=10)
         self.odomBroadcaster = TransformBroadcaster()
         

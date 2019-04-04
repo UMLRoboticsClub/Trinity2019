@@ -3,7 +3,7 @@
 #include <sensor_msgs/Joy.h>
 
 const char *node_name = "joystick_drive";
-const char *topic_name = "joystick_drive/cmd_vel";
+const char *topic_name = "cmd_vel";
 
 static int linear    = 1;
 static int angular   = 2;
