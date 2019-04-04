@@ -27,7 +27,7 @@ typedef enum ROBOT_OPS {
 
 class Control{
 public:
-    Control(ros::ServiceClient&, ros::Publisher);
+    Control(ros::ServiceClient&, ros::Publisher, ros::ServiceClient&);
 	void controlLoop(const std_msgs::Bool::ConstPtr& sig);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
 	void takeAction(RobotOp robotAction);
@@ -50,5 +50,6 @@ private:
 	vector<vector<int>> distanceField;
 	nav_msgs::OccupancyGrid occGrid;
 	MoveBaseClient ac;
-	ros::ServiceClient client;
+	ros::ServiceClient mapClient;
+    ros::ServiceClient robotPoseClient;
 };

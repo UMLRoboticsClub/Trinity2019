@@ -3,13 +3,10 @@
 #include <actionlib/client/simple_action_client.h>
 #include "control.h"
 #include <nav_msgs/GetMap.h>
-
-
+#include "gpio.h"
 /*
 TODO
-implement IR sensor function call
 implement robotPositionGet function call
-implement proper pose management instead of Points
 test this shit
 */
 
@@ -17,10 +14,11 @@ test this shit
 
 
 
-Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub): gs(), targetPoints(), ac("move_base", true){
+Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::ServiceClient& robotPoseClient): gs(), targetPoints(), ac("move_base", true){
 	//initialize the distance field
-	client = mapClient;
+	this->mapClient = mapClient;
     cmd_vel_pub = velPub;
+    this->robotPoseClient = robotPoseClient;
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
         distanceField[i] = vector<int>(GRID_SIZE_CELLS);
@@ -36,7 +34,7 @@ void Control::controlLoop(const std_msgs::Bool::ConstPtr& sig){
 	nav_msgs::GetMap occGridService;
 	while(!gs.done){
 		//ask for occupancy grid service call to get current map.  store in occGrid.
-		client.call(occGridService);
+		mapClient.call(occGridService);
         occGrid = occGridService.response.map;
 		//determine target and type based on occGrid and gameState
         geometry_msgs::Pose target = findNextTarget(robotAction);
@@ -206,8 +204,11 @@ RobotOp Control::determineRobotOp(int type){
 //robot already facing correct direction,
 void Control::extinguishCandle(){
 	//activate solenoid
-	//wait for however long
+	gpio_write(0, SOLENOID, 1);
+    //wait for however long
+    ros::Duration(1).sleep();
 	//deactivate solenoid
+    gpio_write(0, SOLENOID, 0);
 }
 
 bool Control::unknownLargeEnough(Point center){
@@ -267,7 +268,7 @@ geometry_msgs::Pose Control::getRobotPose(){
 }
 
 double Control::irSense(){
-    
+ return !gpio_read(0, IR_SENSOR); 
 }
 
 vector<double> Control::parseIrReadings(vector<double> readings){
@@ -296,7 +297,7 @@ vector<double> Control::parseIrReadings(vector<double> readings){
             if((i - sigStart)*2*3.1415926535/readings.size() > angleThreshold){
                 double midIndex = (i-1 - sigStart)/2;
                 double angle = midIndex/readings.size() * 2 * 3.1415926535;
-                candles.push_back(midIndex);
+                candles.push_back(angle);
             }
         }
     }
