@@ -25,9 +25,7 @@ class PCA9685 {
 
     private:
         int fd = 0;
-		const char *device;
-        uint8_t addr;
 
         inline uint8_t read8(uint8_t addr);
-        inline void write8(uint8_t addr, uint8_t d);
+        inline void write8(uint8_t addr, uint8_t val);
 };
