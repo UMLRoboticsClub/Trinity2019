@@ -3,4 +3,5 @@
 	<node pkg="tf" type="static_transform_publisher" name="laser_frame_broadcaster" args="0 0 0 0 0 0 map laser_frame 100" />
 	<node pkg="tf" type="static_transform_publisher" name="odom_broadcaster" args="0 0 0 0 0 0 map odom 100" />
 	<node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster" args="0 0 0 0 0 0 map base_link 100" />
+	<node pkg="tf" type="static_transform_publisher" name="imu_broadcaster" args="0 0 0 0 0 0 map imu 100" />
 </launch>
