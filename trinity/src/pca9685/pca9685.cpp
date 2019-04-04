@@ -15,6 +15,7 @@
 
 #define PCA9685_MODE1    0x0
 #define PCA9685_PRESCALE 0xFE
+#define PCA9685_RESET    0x6
 
 #define LED0_ON_L        0x6
 #define LED0_ON_H        0x7
@@ -49,6 +50,7 @@ PCA9685::PCA9685(const char *device, uint8_t addr){
         exit(1);
     }
 
+    reset();
 	//set a default frequency
     setPWMFreq(default_freq);
 }
@@ -60,8 +62,10 @@ PCA9685::~PCA9685(){
 
 //Sends a reset command to the PCA9685 chip over I2C
 void PCA9685::reset(){
-    write8(PCA9685_MODE1, 0x80);
+    uint8_t val = PCA9685_RESET;
+    while(write(fd, &val, 1) != 1){ cerr << "write failed(0)" << endl; }
     sleep(10);
+    setAllPWM(0, 4096);
 }
 
 void PCA9685::setDutyCycle(uint8_t pin, float percent){
@@ -136,9 +140,7 @@ void PCA9685::setAllPWM(uint16_t on, uint16_t off){
 
 void PCA9685::setPin(uint8_t pin, uint16_t val){
     //clamp value between 0 and 4095 inclusive
-    if(val > 4095){ val = 4095; }
-
-    if (val == 4095) {
+    if (val >= 4095) {
         // Special value for signal fully on.
         setPWM(pin, 4096, 0);
     } else if (val == 0) {
