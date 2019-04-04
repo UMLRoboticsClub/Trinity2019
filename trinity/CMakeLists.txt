@@ -50,11 +50,16 @@ add_executable(servo
     src/servo/servo_node.cpp
     src/gpio.cpp
 )
+add_executable(color_sensor
+    src/color_sensor/color_sensor_node.cpp
+    src/color_sensor/TCS34725.cpp
+)
 
 # Linking:
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
 target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
+target_link_libraries(color_sensor  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(ir            ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})

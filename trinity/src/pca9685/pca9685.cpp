@@ -40,9 +40,15 @@ inline void sleep(int millis){
 }
 
 //addr: The 7-bit I2C address to locate this chip, default is 0x40
-PCA9685::PCA9685(const char *device, uint8_t addr): device(device), addr(addr) {
-    if((fd = open(device, O_RDWR)) < 0){ cerr << "Unable to open I2C device"       << endl; }
-    if(ioctl(fd, I2C_SLAVE, addr)  < 0){ cerr << "Unable to connect to I2C device" << endl; }
+PCA9685::PCA9685(const char *device, uint8_t addr){
+    if((fd = open(device, O_RDWR)) < 0){
+        cerr << "Unable to open I2C interface" << endl;
+        exit(1);
+    }
+    if(ioctl(fd, I2C_SLAVE, addr)  < 0){
+        cerr << "Unable to connect to PCA9685" << endl;
+        exit(1);
+    }
 
     reset();
 	//set a default frequency
@@ -161,16 +167,16 @@ void PCA9685::setAllPins(uint16_t val){
 }
 
 uint8_t PCA9685::read8(uint8_t addr){
-    while(write(fd, &addr, 1) != 1){ cerr << "write failed(2)" << endl; }
-    while(read(fd, &addr, 1)  != 1){ cerr << "read failed(2)"  << endl; }
+    while(write(fd, &addr, 1) != 1){ cerr << "pca9685 write failed(2)" << endl; }
+    while(read(fd, &addr, 1)  != 1){ cerr << "pca9685 read failed(2)"  << endl; }
 
     //if(write(fd, &addr, 1) != 1){ cerr << "Read failed(1)" << endl; }
     //if(read(fd, &addr, 1)  != 1){ cerr << "Read failed(2)" << endl; }
     return addr;
 }
 
-void PCA9685::write8(uint8_t addr, uint8_t d) {
-    uint8_t packet[2] = { addr, d };
+void PCA9685::write8(uint8_t addr, uint8_t val) {
+    uint8_t packet[2] = { addr, val };
     //if(write(fd, packet, 2) != 2){ cerr << "Write failed" << endl; }
-    while(write(fd, packet, 2) != 2){ cerr << "write failed(1)" << endl; }
+    while(write(fd, packet, 2) != 2){ cerr << "pca9685 write failed(1)" << endl; }
 }
