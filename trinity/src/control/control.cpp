@@ -4,9 +4,23 @@
 #include "control.h"
 #include <nav_msgs/GetMap.h>
 
-Control::Control(ros::ServiceClient& mapClient): gs(), targetPoints(), ac("move_base", true){
+
+/*
+TODO
+implement IR sensor function call
+implement robotPositionGet function call
+implement proper pose management instead of Points
+test this shit
+*/
+
+
+
+
+
+Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub): gs(), targetPoints(), ac("move_base", true){
 	//initialize the distance field
 	client = mapClient;
+    cmd_vel_pub = velPub;
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
         distanceField[i] = vector<int>(GRID_SIZE_CELLS);
@@ -65,18 +79,12 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
             geometry_msgs::Pose closestTarget = targetPoints[type][0];
             int targetIndex = 0;
 			targetPoints[type].erase(targetPoints[type].begin()+targetIndex);
-            targetPose.position.x = closestTarget.position.x;
-			targetPose.position.y = closestTarget.position.y;
-            return targetPose;
+            return closestTarget;
         }
     }
 
     //no important points already found, go to distance field and find an unknown
-    Point targetLocation = computeDistanceField();
-	geometry_msgs::Pose origin = occGrid.info.origin;
-	targetPose.position.x = targetLocation.x - origin.position.x;
-	targetPose.position.y = targetLocation.y - origin.position.y;
-	return targetPose;
+    return pointToPose(computeDistanceField());
 }
 
 Point Control::computeDistanceField() {
@@ -87,7 +95,7 @@ Point Control::computeDistanceField() {
 	//also switch from vector to something circular
 
 	//get the robot position
-    Point robotPos;// = [GET_ROBOT_POS_SERVICE_CALL];
+    Point robotPos = poseToPoint(getRobotPose());
 
     vector<Point> boundary;
     boundary.push_back(robotPos);
@@ -103,7 +111,7 @@ Point Control::computeDistanceField() {
         for (Point neighbor : neighbors) {
             if(distanceField[neighbor.x][neighbor.y] == -1){//neighbor not already indexed by function
                 // if point is unknown, check to see if local area is made up of unknowns as well
-                if (occGrid.data[neighbor.x][neighbor.y] == -1 && unknownLargeEnough(neighbor)){
+                if (accessOccGrid(neighbor.x, neighbor.y) == -1 && unknownLargeEnough(neighbor)){
                     // this point actually does represent an unkown region`
                     distanceField[neighbor.x][neighbor.y] = currentDistance + 1;
                     return neighbor;
@@ -123,7 +131,7 @@ void Control::takeAction(RobotOp robotAction){
 	//update gameState accordingly
 	switch(robotAction){
 		case OP_STOP:
-			gs.done == true;
+			gs.done = true;
 			break;
 		case OP_HALLWAY_SIMPLE:
 			gs.secondArena = false;
@@ -136,31 +144,32 @@ void Control::takeAction(RobotOp robotAction){
 			extinguishCandle();
 			break;
 		case OP_SCANROOM:
-			//rotate in circle, ir and camera should actually be constantly gathering data.
-			move_base_msgs::MoveBaseGoal goal;
-			goal.target_pose.pose.rotation.w = 2*3.1415926535;
-			ac.sendGoal(goal);
-			while(!ac.getState().isDone()){
-				//query ir sensor, determine if there is a candle
-				//not sure how to do that, but whatever
-				//we can just look for local maxima I suppose.  Again, test consistency.
-				if(irSense()){
-					geometry_msgs::Pose robotPose = [GET_ROBOT_POSE];
-					double angle = robotPose.rotation.z;
-					//multiple candles can be in same room, this is hard now.
-					//experiment with ir sensor to determine how to do this.
-					//if analog, easy, record local maxima
-					//test consistency of flame sensor
-					//if super consistent, just detect regions of "on" and point to their centers.
-					//or we could literally use flame sensor to align properly once we figure stuff out.
-				}
-				//use angles w/ ir data to determine direction candles are in
-				//face candle, call takeRobotAction(extinguish)
-				//after extinguishing candle, repeat this call and check if there is still a candle
-
-				//alternatively, store robot pose in targets.
-			}
-			break;
+            {
+            //rotate in circle, ir and camera should actually be constantly gathering data.
+			vector<double> irReadings = vector<double>();
+            geometry_msgs::Twist rotCommand;
+            rotCommand.angular.z = 1;
+            geometry_msgs::Pose robotPose = getRobotPose();
+            geometry_msgs::Pose newRobotPose;
+            double delta = 0;
+            //while we haven't rotated 2*PI rads
+            while(delta < 2*3.1415926535){
+                irReadings.push_back(irSense());
+                cmd_vel_pub.publish(rotCommand);
+                newRobotPose = getRobotPose();
+                delta += newRobotPose.orientation.z - robotPose.orientation.z;
+                robotPose = newRobotPose;
+            }
+            //candles is vector of angle indices relative to robot orientation
+            vector<double> candles = parseIrReadings(irReadings);
+			for(double candle : candles){
+                geometry_msgs::Pose candlePose;
+                candlePose.position = robotPose.position;
+                candlePose.orientation.z = robotPose.orientation.z + candle;
+                targetPoints[FLAME].push_back(candlePose);
+            }
+            break;
+            }
 		case OP_EXIT_ROOM:
 			break; //why does this exist?
 		default:
@@ -168,7 +177,7 @@ void Control::takeAction(RobotOp robotAction){
 	}
 }
 
-Control::robotOps Control::determineRobotOp(int type){
+RobotOp Control::determineRobotOp(int type){
     switch(type){
         case START_ZONE:
             return OP_STOP;
@@ -205,8 +214,91 @@ bool Control::unknownLargeEnough(Point center){
 	int areaSize  = 2; // (2 results in an inclusive 3*3 grid)5
 	for(int i = center.x - (areaSize - 1); i < center.x + areaSize; i++){
 		for(int j = center.y - (areaSize - 1); j < center.y + areaSize; j++){
-			if(occGrid.getValue(i, j) != -1) return false; // something other than unknown has been found, so return false
+			if(accessOccGrid(i, j) != -1) return false; // something other than unknown has been found, so return false
 		}
 	}
 	return true;
+}
+
+vector<Point> Control::findOpenNeighbors(const Point &currentPos) {
+	vector<Point> openNeighbors;
+	for (int x_offset = -1; x_offset < 2; ++x_offset) {
+		for (int y_offset = -1; y_offset < 2; ++y_offset) {
+			if (!isDiag(x_offset, y_offset) &&
+					accessOccGrid(currentPos.x + x_offset, currentPos.y + y_offset) <= CLEAR_THRESHOLD) {
+				openNeighbors.push_back(Point(currentPos.x + x_offset, currentPos.y + y_offset));
+			}
+		}
+	}
+	return openNeighbors;
+}
+
+
+int Control::accessOccGrid(int x, int y){
+    return occGrid.data[x*occGrid.info.width + y];
+}
+
+bool Control::isDiag(int x, int y){
+    return (abs(x) + abs(y) != 1);
+}
+
+Point Control::poseToPoint(geometry_msgs::Pose pose){
+    //convert from real world pose to occGrid point.
+    int realX = int(pose.position.x/occGrid.info.resolution);
+    int realY = int(pose.position.y/occGrid.info.resolution);
+
+    return Point(realX-occGrid.info.origin.position.x, realY-occGrid.info.origin.position.y);
+}
+
+geometry_msgs::Pose Control::pointToPose(Point point){
+    int originizedX = point.x + occGrid.info.origin.position.x;
+    int originizedY = point.y + occGrid.info.origin.position.y;
+
+    geometry_msgs::Pose pose;
+    pose.position.x = originizedX*occGrid.info.resolution;
+    pose.position.y = originizedY*occGrid.info.resolution;
+
+    return pose;
+}
+
+geometry_msgs::Pose Control::getRobotPose(){
+    geometry_msgs::Pose pose;
+    return pose;
+}
+
+double Control::irSense(){
+    
+}
+
+vector<double> Control::parseIrReadings(vector<double> readings){
+    //find regions of HIGH readings, center of regions indicates a flame
+    //return vector of angles in radians for candle direction.
+    //just add a special case if it wraps around
+    double readingThreshold = 0.5;
+    int angleThreshold = 10;
+    vector<double> candles = vector<double>();
+    int endIndex = readings.size();
+
+    int sigStart;
+    if (readings[0] > readingThreshold){
+        //iterate in reverse to find start of region
+        int index = 0;
+        while(readings[--index+readings.size()] > readingThreshold);
+        sigStart = index+1;
+        endIndex = index;
+    }
+
+    for(int i = 1; i < endIndex; i ++){
+        if(readings[i] > readingThreshold && readings[i-1] < readingThreshold)
+            sigStart = i;
+        else if(readings[i] < readingThreshold && readings[i-1] > readingThreshold){
+            //end of candle reading range.
+            if((i - sigStart)*2*3.1415926535/readings.size() > angleThreshold){
+                double midIndex = (i-1 - sigStart)/2;
+                double angle = midIndex/readings.size() * 2 * 3.1415926535;
+                candles.push_back(midIndex);
+            }
+        }
+    }
+    return candles;
 }
