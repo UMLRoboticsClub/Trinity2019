@@ -16,5 +16,4 @@ Our project uses ROS, and is designed to run on a Raspberry Pi and communicate w
 
 ## ROS Packages Used
 * [RPLidar Node](https://github.com/Slamtec/rplidar_ros/)
-* [BNO055 Node](https://github.com/dheera/ros-imu-bno055/)
 * A heavily modified version of jfstepha's [differential-drive](https://github.com/jfstepha/differential-drive) to work with a kiwi drive configuration
