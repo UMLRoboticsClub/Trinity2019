@@ -71,6 +71,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
    FILES
    GetRobotPose.srv
+   GetInRoom.srv
 #   Service2.srv
 )
 

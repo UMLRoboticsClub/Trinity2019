@@ -7,6 +7,7 @@
 #include <map>
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/Bool.h>
+#include <trinity/GetRobotPose.h>
 #include <geometry_msgs/Twist.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;

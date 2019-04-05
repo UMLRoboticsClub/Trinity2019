@@ -263,8 +263,12 @@ geometry_msgs::Pose Control::pointToPose(Point point){
 }
 
 geometry_msgs::Pose Control::getRobotPose(){
-    geometry_msgs::Pose pose;
-    return pose;
+    trinity::GetRobotPose srv;
+   robotPoseClient.call(srv);
+   if (srv.response.pose.header.frame_id != occGrid.header.frame_id){
+       ROS_INFO("Oh shit frames are different need to fix");
+   }
+   return srv.response.pose.pose;
 }
 
 double Control::irSense(){
