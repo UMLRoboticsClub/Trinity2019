@@ -1,7 +1,7 @@
 #include "TCS34725.h"
 #include <ros/ros.h>
-#include <trinity/GetRobotPose.h>
-#include <trinity/GetInRoom.h>
+#include <trinity_pi/GetRobotPose.h>
+#include <trinity_pi/GetInRoom.h>
 
 #define WHITE_THRESHOLD 150
 #define COUNT_THRESHOLD 20
