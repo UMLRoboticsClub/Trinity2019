@@ -1,7 +1,7 @@
 #include "TCS34725.h"
 #include <ros/ros.h>
-#include <trinity/GetRobotPose.h>
-#include <trinity/GetInRoom.h>
+#include <trinity_pi/GetRobotPose.h>
+#include <trinity_pi/GetInRoom.h>
 
 #define WHITE_THRESHOLD 150
 #define COUNT_THRESHOLD 20
@@ -11,7 +11,7 @@ const char *interface = "/dev/i2c-1";
 
 bool inRoom = false;
 
-bool getInRoom(trinity::GetInRoom::Request& req, trinity::GetInRoom::Response& res){
+bool getInRoom(trinity_pi::GetInRoom::Request& req, trinity_pi::GetInRoom::Response& res){
     res.inRoom.data = inRoom;
     return true;
 }

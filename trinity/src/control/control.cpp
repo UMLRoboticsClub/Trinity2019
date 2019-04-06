@@ -263,7 +263,7 @@ geometry_msgs::Pose Control::pointToPose(Point point){
 }
 
 geometry_msgs::Pose Control::getRobotPose(){
-    trinity::GetRobotPose srv;
+    trinity_pi::GetRobotPose srv;
    robotPoseClient.call(srv);
    if (srv.response.pose.header.frame_id != occGrid.header.frame_id){
        ROS_INFO("Oh shit frames are different need to fix");
