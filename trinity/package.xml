@@ -59,6 +59,7 @@
 	<depend>move_base_msgs</depend>
 	<depend>actionlib</depend>
 	<depend>tf</depend>
+	<depend>trinity_pi</depend>
   <exec_depend>message_runtime</exec_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>

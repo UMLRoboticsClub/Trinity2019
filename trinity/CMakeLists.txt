@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     sensor_msgs
+	trinity_pi
 )
 
 
@@ -71,7 +72,7 @@ find_package(catkin REQUIRED COMPONENTS
 #   GetRobotPose.srv
 #   GetInRoom.srv
 #   Service2.srv
-)
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -118,7 +119,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES trinity
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs actionlib move_base_msgs message_runtime tf
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs actionlib move_base_msgs message_runtime tf trinity_pi
 #  DEPENDS system_lib
 )
 
@@ -171,10 +172,10 @@ include_directories(
 #    src/color_sensor/color_sensor_node.cpp
 #    src/color_sensor/TCS34725.cpp
 #)
-#add_executable(control
-#    src/control/control_node.cpp
-#    src/control/control.cpp
-#    )
+add_executable(control
+    src/control/control_node.cpp
+    src/control/control.cpp
+    )
 
 
 ## Add cmake target dependencies of the executable
