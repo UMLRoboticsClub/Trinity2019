@@ -4,11 +4,6 @@
 #include "control.h"
 #include <nav_msgs/GetMap.h>
 #include "gpio.h"
-/*
-TODO
-implement robotPositionGet function call
-test this shit
-*/
 
 
 
@@ -28,7 +23,7 @@ Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::Serv
     }
 }
 
-void Control::controlLoop(const std_msgs::Bool::ConstPtr& sig){
+void Control::controlLoop(const std_msgs::Bool::ConstPtr&){
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;
 	nav_msgs::GetMap occGridService;

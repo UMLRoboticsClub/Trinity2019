@@ -11,7 +11,7 @@ const char *interface = "/dev/i2c-1";
 
 bool inRoom = false;
 
-bool getInRoom(trinity::GetInRoom::Request& req, trinity::GetInRoom::Response& res){
+bool getInRoom(trinity::GetInRoom::Request&, trinity::GetInRoom::Response& res){
     res.inRoom.data = inRoom;
     return true;
 }
