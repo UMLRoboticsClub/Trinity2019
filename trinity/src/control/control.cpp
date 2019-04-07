@@ -3,17 +3,17 @@
 #include <actionlib/client/simple_action_client.h>
 #include "control.h"
 #include <nav_msgs/GetMap.h>
-#include "gpio.h"
 
 
 
 
-
-Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::ServiceClient& robotPoseClient): gs(), targetPoints(), ac("move_base", true){
+Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::ServiceClient& robotPoseClient, ros::ServiceClient& irClient, ros::ServiceClient& solenoidClient): gs(), targetPoints(), ac("move_base", true){
 	//initialize the distance field
 	this->mapClient = mapClient;
     cmd_vel_pub = velPub;
     this->robotPoseClient = robotPoseClient;
+    this->irClient = irClient;
+    this->solenoidClient = solenoidClient;
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
         distanceField[i] = vector<int>(GRID_SIZE_CELLS);
@@ -198,12 +198,9 @@ RobotOp Control::determineRobotOp(int type){
 
 //robot already facing correct direction,
 void Control::extinguishCandle(){
-	//activate solenoid
-	gpio_write(0, SOLENOID, 1);
-    //wait for however long
-    ros::Duration(1).sleep();
-	//deactivate solenoid
-    gpio_write(0, SOLENOID, 0);
+    std_srvs::Empty srv;
+    solenoidClient.call(srv);
+    return;
 }
 
 bool Control::unknownLargeEnough(Point center){
@@ -258,7 +255,7 @@ geometry_msgs::Pose Control::pointToPose(Point point){
 }
 
 geometry_msgs::Pose Control::getRobotPose(){
-    trinity::GetRobotPose srv;
+    trinity_pi::GetRobotPose srv;
    robotPoseClient.call(srv);
    if (srv.response.pose.header.frame_id != occGrid.header.frame_id){
        ROS_INFO("Oh shit frames are different need to fix");
@@ -267,7 +264,9 @@ geometry_msgs::Pose Control::getRobotPose(){
 }
 
 double Control::irSense(){
- return !gpio_read(0, IR_SENSOR); 
+    std_srvs::Trigger srv;
+    irClient.call(srv);
+    return srv.response.success;
 }
 
 vector<double> Control::parseIrReadings(vector<double> readings){

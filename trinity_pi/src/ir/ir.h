@@ -6,4 +6,4 @@ class IRSensor {
         ~IRSensor();
 
         bool flameVisible();
-}
+};

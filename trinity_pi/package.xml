@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>trinity</name>
-  <version>0.0.1</version>
-  <description>Trinity 2019</description>
+  <name>trinity_pi</name>
+  <version>0.0.0</version>
+  <description>The trinity_pi package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/trinity</url> -->
+  <!-- <url type="website">http://wiki.ros.org/trinity_pi</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -48,19 +48,16 @@
   <!--   <test_depend>gtest</test_depend> -->
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
-
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
   <depend>roscpp</depend>
-	<depend>rospy</depend>
-	<depend>sensor_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>geometry_msgs</depend>
-	<depend>move_base_msgs</depend>
-	<depend>actionlib</depend>
-	<depend>tf</depend>
-	<depend>trinity_pi</depend>
+  <depend>tf</depend>
   <exec_depend>message_runtime</exec_depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

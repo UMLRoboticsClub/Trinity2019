@@ -7,8 +7,10 @@
 #include <map>
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/Bool.h>
-#include <trinity/GetRobotPose.h>
+#include <trinity_pi/GetRobotPose.h>
 #include <geometry_msgs/Twist.h>
+#include <std_srvs/Trigger.h>
+#include <std_srvs/Empty.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -28,7 +30,7 @@ typedef enum ROBOT_OPS {
 
 class Control{
 public:
-    Control(ros::ServiceClient&, ros::Publisher, ros::ServiceClient&);
+    Control(ros::ServiceClient&, ros::Publisher, ros::ServiceClient&, ros::ServiceClient&, ros::ServiceClient&);
 	void controlLoop(const std_msgs::Bool::ConstPtr&);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
 	void takeAction(RobotOp robotAction);
@@ -53,4 +55,6 @@ private:
 	MoveBaseClient ac;
 	ros::ServiceClient mapClient;
     ros::ServiceClient robotPoseClient;
+    ros::ServiceClient irClient;
+    ros::ServiceClient solenoidClient;
 };
