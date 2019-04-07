@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(trinity_pi)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -Wall -Wextra -Wfatal-errors)
+set(CMAKE_CXX_STANDARD 11)
+add_compile_options(-Wall -Wextra -Wfatal-errors)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -138,6 +139,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/trinity_pi_node.cpp)
+
+#update this
 add_executable(encoders_node
         src/encoders/encoders_i2c.cpp
         #src/encoders/encoder.cpp
@@ -148,6 +151,19 @@ add_executable(pca9685_node
         src/pca9685/pca9685.cpp
         src/pca9685/motor.cpp
  )
+#add_executable(pwm_chip
+#        src/pwm_chip/pwm_chip_node.cpp
+#        src/pwm_chip/pca9685.cpp
+#        src/pwm_chip/motor.cpp
+#)
+#add_executable(gyro_chip
+#        src/gyro_chip/gyro_chip_node.cpp
+#        src/gyro_chip/fxas21002c.cpp
+#)
+add_executable(accel_mag_chip
+        src/accel_mag_chip/accel_mag_chip_node.cpp
+        src/accel_mag_chip/fxos8700.cpp
+)
 add_executable(statuslight
         src/statuslight/statuslight.cpp
         src/gpio.cpp
@@ -155,7 +171,7 @@ add_executable(statuslight
 add_executable(solenoid
         src/solenoid/solenoid_node.cpp
         src/gpio.cpp
- )
+)
 add_executable(servo
         src/servo/servo_node.cpp
         src/gpio.cpp
@@ -185,13 +201,16 @@ add_executable(ir_sensor
 #   ${catkin_LIBRARIES}
 # )
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
-target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
-target_link_libraries(color_sensor  ${catkin_LIBRARIES})
-target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(ir_sensor     ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(pwm_chip          ${catkin_LIBRARIES})
+target_link_libraries(gyro_chip         ${catkin_LIBRARIES})
+target_link_libraries(accel_mag_chip    ${catkin_LIBRARIES})
+target_link_libraries(color_sensor      ${catkin_LIBRARIES})
+#update this
+target_link_libraries(encoders_node     ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(statuslight       ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(solenoid          ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(servo             ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(ir_sensor         ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #############
 ## Install ##

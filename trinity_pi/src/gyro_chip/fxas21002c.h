@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 //Enum to define valid gyroscope range values
 typedef enum {
 	Range_250DPS = 0, Range_500DPS, Range_1000DPS, Range_2000DPS
