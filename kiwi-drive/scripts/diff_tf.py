@@ -155,12 +155,17 @@ class DiffTf:
             # distance traveled in x an y, rotation in z 
             x = (-2 * d_second + d_first + d_third) / -3
             y = (d_first - d_third) * math.sqrt(3) / -3
-            th = (d_first + d_second + d_third) / 3
-            self.x += x
-            self.y += y
+            th = ((d_first + d_second + d_third) / 3) / 0.113
             self.th += th
+            #print("theta: {0}".format(self.th))
+            #print("dist before ({0}, {1})".format(x, y))
+            new_x = x * math.cos(self.th) - y * math.sin(self.th)
+            new_y = x * math.sin(self.th) + y * math.cos(self.th)
+            print("dist after ({0}, {1})".format(x, y))
+            self.x += new_x
+            self.y += new_y
 
-            print("x dist: {0}, y dist: {1}".format(self.x, self.y))
+            #print("x dist: {0}, y dist: {1}".format(self.x, self.y))
             #print("time elapsed: {0}".format(elapsed))
             
             # calculate velocities
