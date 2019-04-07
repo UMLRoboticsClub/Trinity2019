@@ -1,4 +1,4 @@
-#include "FXAS21002C.h"
+#include "fxas21002c.h"
 
 #include <iostream>
 #include <chrono>

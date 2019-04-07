@@ -1,4 +1,4 @@
-#include "FXOS8700.h"
+#include "fxos8700.h"
 
 #include <iostream>
 #include <chrono>
