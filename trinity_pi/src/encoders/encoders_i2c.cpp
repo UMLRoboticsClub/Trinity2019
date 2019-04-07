@@ -67,7 +67,7 @@ void i2c_set_pointer(int address, int file) {
 //////////
 char * i2c_read(int add1, int nbytes,int file) {
     int n;
-    char* fail = "fail";
+    //char* fail = "fail";
  
     i2c_set_pointer(add1,file);
     
@@ -79,7 +79,8 @@ char * i2c_read(int add1, int nbytes,int file) {
             //printf("r_0x%0*x\n", 2, buf[n]);
         return buf;
     }
-    return fail;
+    //return fail;
+    return buf;
 }
 
 int main(int argc, char** argv){
