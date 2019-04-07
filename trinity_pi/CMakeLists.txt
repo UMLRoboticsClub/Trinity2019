@@ -139,40 +139,38 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/trinity_pi_node.cpp)
 
-#update this
-add_executable(encoders_node
-        src/encoders/encoders_node.cpp
-        src/encoders/encoder.cpp
-        src/gpio.cpp
+add_executable(encoders
+    src/encoders/encoders_i2c.cpp
+    #src/encoders/encoder.cpp
 )
 add_executable(pwm_chip
-        src/pwm_chip/pwm_chip_node.cpp
-        src/pwm_chip/pca9685.cpp
-        src/pwm_chip/motor.cpp
+    src/pwm_chip/pwm_chip_node.cpp
+    src/pwm_chip/pca9685.cpp
+    src/pwm_chip/motor.cpp
 )
 add_executable(gyro_chip
-        src/gyro_chip/gyro_chip_node.cpp
-        src/gyro_chip/fxas21002c.cpp
+    src/gyro_chip/gyro_chip_node.cpp
+    src/gyro_chip/fxas21002c.cpp
 )
 add_executable(accel_mag_chip
-        src/accel_mag_chip/accel_mag_chip_node.cpp
-        src/accel_mag_chip/fxos8700.cpp
+    src/accel_mag_chip/accel_mag_chip_node.cpp
+    src/accel_mag_chip/fxos8700.cpp
 )
 add_executable(statuslight
-        src/statuslight/statuslight.cpp
-        src/gpio.cpp
+    src/statuslight/statuslight.cpp
+    src/gpio.cpp
 )
 add_executable(solenoid
-        src/solenoid/solenoid_node.cpp
-        src/gpio.cpp
+    src/solenoid/solenoid_node.cpp
+    src/gpio.cpp
 )
 add_executable(servo
-        src/servo/servo_node.cpp
-        src/gpio.cpp
+    src/servo/servo_node.cpp
+    src/gpio.cpp
 )
 add_executable(color_sensor
-        src/color_sensor/color_sensor_node.cpp
-        src/color_sensor/TCS34725.cpp
+    src/color_sensor/color_sensor_node.cpp
+    src/color_sensor/TCS34725.cpp
 )
 add_executable(ir_sensor
     src/ir/ir_node.cpp
@@ -199,8 +197,7 @@ target_link_libraries(pwm_chip          ${catkin_LIBRARIES})
 target_link_libraries(gyro_chip         ${catkin_LIBRARIES})
 target_link_libraries(accel_mag_chip    ${catkin_LIBRARIES})
 target_link_libraries(color_sensor      ${catkin_LIBRARIES})
-#update this
-target_link_libraries(encoders_node     ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(encoders          ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(statuslight       ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid          ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(servo             ${catkin_LIBRARIES} ${gpio_LIBS})

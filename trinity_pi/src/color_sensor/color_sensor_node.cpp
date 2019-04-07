@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 	
     ros::ServiceServer server = colorNode.advertiseService("GetInRoom", getInRoom);
 
-    TCS34725 colorSensor(interface);
+    TCS34725 colorSensor(interface.c_str());
 
     int reading;
     int whiteCount = 0;

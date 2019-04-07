@@ -53,14 +53,14 @@ diff_controller.py - controller for a differential drive
 
 import rospy
 import roslib
-roslib.load_manifest('differential_drive')
-from math import sin, cos, pi
+#roslib.load_manifest('differential_drive')
+import math
 
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from tf.broadcaster import TransformBroadcaster
-from std_msgs.msg import Int16
+from std_msgs.msg import Int32
 
 #############################################################################
 class DiffTf:
@@ -75,13 +75,13 @@ class DiffTf:
         
         #### parameters #######
         self.rate = rospy.get_param('~rate',10.0)  # the rate at which to publish the transform
-        self.ticks_meter = float(rospy.get_param('ticks_meter', 50))  # The number of wheel encoder ticks per meter of travel
+        self.ticks_meter = float(rospy.get_param('ticks_meter', 540 / (0.0825*2*math.pi)))  # The number of wheel encoder ticks per meter of travel
         
         self.base_frame_id = rospy.get_param('~base_frame_id','base_link') # the name of the base frame of the robot
         self.odom_frame_id = rospy.get_param('~odom_frame_id', 'odom') # the name of the odometry reference frame
         
-        self.encoder_min = rospy.get_param('encoder_min', -32768)
-        self.encoder_max = rospy.get_param('encoder_max', 32768)
+        self.encoder_min = rospy.get_param('encoder_min', -2147483648)
+        self.encoder_max = rospy.get_param('encoder_max', 2147483647)
         self.encoder_low_wrap = rospy.get_param('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min )
         self.encoder_high_wrap = rospy.get_param('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min )
 
@@ -112,9 +112,9 @@ class DiffTf:
         self.then = rospy.Time.now()
         
         # subscriptions
-        rospy.Subscriber(self.wheel, Int16, self.fwheelCallback)
-        rospy.Subscriber(self.swheel, Int16, self.swheelCallback)
-        rospy.Subscriber(self.twheel, Int16, self.twheelCallback)
+        rospy.Subscriber(self.fwheel, Int32, self.fwheelCallback)
+        rospy.Subscriber(self.swheel, Int32, self.swheelCallback)
+        rospy.Subscriber(self.twheel, Int32, self.twheelCallback)
 
         self.odomPub = rospy.Publisher("odom", Odometry, queue_size=10)
         self.odomBroadcaster = TransformBroadcaster()
@@ -138,7 +138,7 @@ class DiffTf:
             elapsed = elapsed.to_sec()
             
             # calculate odometry
-            if self.enc_left == None:
+            if self.enc_first is None:
                 d_first = 0
                 d_second = 0
                 d_third = 0
@@ -149,17 +149,26 @@ class DiffTf:
             self.enc_first = self.first
             self.enc_second = self.second
             self.enc_third = self.third
+            #print("ticks per meter: {0}".format(self.ticks_meter))
+            #print("distances: {0}, {1}, {2}".format(d_first, d_second, d_third))
     
             # distance traveled in x an y, rotation in z 
-            self.x = (-2 * d_second + d_first + d_third) / -3
-            self.y = (d_first - d_third) * sqrt(3) / -3
-            self.th = (d_first + d_second + d_third) / 3
+            x = (-2 * d_second + d_first + d_third) / -3
+            y = (d_first - d_third) * math.sqrt(3) / -3
+            th = (d_first + d_second + d_third) / 3
+            self.x += x
+            self.y += y
+            self.th += th
+
+            print("x dist: {0}, y dist: {1}".format(self.x, self.y))
+            #print("time elapsed: {0}".format(elapsed))
             
             # calculate velocities
-            self.dx = self.x / elapsed
-            self.dy = self.y / elapsed
-            self.dr = self.th / elapsed
-           
+            self.dx = x / elapsed
+            self.dy = y / elapsed
+            self.dr = th / elapsed
+          
+            #print("velocities: {0}, {1}, {2}".format(self.dx, self.dy, self.dr))
              
            # if (d != 0):
             #    # calculate distance traveled in x and y
@@ -175,8 +184,8 @@ class DiffTf:
             quaternion = Quaternion()
             quaternion.x = 0.0
             quaternion.y = 0.0
-            quaternion.z = sin( self.th / 2 )
-            quaternion.w = cos( self.th / 2 )
+            quaternion.z = math.sin( self.th / 2 )
+            quaternion.w = math.cos( self.th / 2 )
             self.odomBroadcaster.sendTransform(
                 (self.x, self.y, 0),
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),

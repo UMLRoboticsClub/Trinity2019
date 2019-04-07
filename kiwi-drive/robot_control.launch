@@ -8,7 +8,7 @@
 	<node ns="wheel1" pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity1" output="screen">
 		<param name="wheel" value="enc1" />
 		<param name="wheel_vtarget" value="wheel1_vtarget" />
-		<param name="motor_cmd" value="motor_cmd1" />
+		<param name="motor_cmd" value="motor1_cmd" />
 		<param name="wheel_vel" value="wheel1_vel" />
 	</node>
 	<node ns="wheel2" pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity2" output="screen">
