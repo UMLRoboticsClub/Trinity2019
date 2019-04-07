@@ -1,6 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?> 
 <launch>
-    <rosparam param="robot_description" file="$(find trinity)/models/trinitybot.urdf" />
-    <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+    <rosparam param="robot_description" file="$(find trinity_pi)/models/trinitybot.urdf" />
+    <!--<include file="$(find rplidar_ros)/launch/rplidar.launch" />
+    <include file="$(find kiwi-drive)/launch/robot_control.launch" /> -->
     <node pkg="joint_state_publisher" type="joint_state_publisher" name="joints" output="screen" />
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_statea" output="screen" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state" output="screen" />
+    <node pkg="trinity_pi" type="encoders_node" name="encoders" output="screen">
+        <param name="encoder1" value="enc1" />
+        <param name="encoder2" value="enc2" />
+        <param name="encoder3" value="enc3" />
+        <param name="i2c_device" value="/dev/i2c-1" />
+        <param name="slave_address" value="3" />
+        <param name="pub_hz" value="20" />
+    </node>
+    <!--<node pkg="trinity_pi" type="color_sensor" name="color_sensor" output="screen">
+        <param name="i2c_device" value="/dev/i2c-1" />
+    </node>
+    <node pkg="trinity_pi" type="pca9685_node" name="motors" output="screen">
+        <param name="motor1" value="motor1_cmd" />
+        <param name="motor2" value="motor2_cmd" />
+        <param name="motor3" value="motor3_cmd" />
+    </node>
+    <node pkg="trinity_pi" type="statuslight" name="statuslight" output="screen" />
+    <node pkg="trinity_pi" type="solenoid" name="solenoid" output="screen" />
+    <node pkg="trinity_pi" type="servo" name="servo" output="screen">
+        <param name="servo" value="servo_cmd" />
+    </node> -->
 </launch>

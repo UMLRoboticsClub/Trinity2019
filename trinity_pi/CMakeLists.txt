@@ -139,9 +139,9 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/trinity_pi_node.cpp)
 add_executable(encoders_node
-        src/encoders/encoders_node.cpp
-        src/encoders/encoder.cpp
-        src/gpio.cpp
+        src/encoders/encoders_i2c.cpp
+        #src/encoders/encoder.cpp
+        #src/gpio.cpp
  )
 add_executable(pca9685_node
         src/pca9685/pca9685_node.cpp
