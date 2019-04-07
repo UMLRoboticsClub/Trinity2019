@@ -142,12 +142,20 @@ add_executable(encoders_node
         src/encoders/encoders_node.cpp
         src/encoders/encoder.cpp
         src/gpio.cpp
- )
-add_executable(pca9685_node
-        src/pca9685/pca9685_node.cpp
-        src/pca9685/pca9685.cpp
-        src/pca9685/motor.cpp
- )
+)
+add_executable(pwm_chip
+        src/pwm_chip/pwm_chip_node.cpp
+        src/pwm_chip/pca9685.cpp
+        src/pwm_chip/motor.cpp
+)
+//add_executable(gyro_chip
+//        src/gyro_chip/gyro_chip_node.cpp
+//        src/gyro_chip/fxas21002c.cpp
+//)
+//add_executable(accel_mag_chip
+//        src/accel_mag_chip_chip/accel_mag_chip_node.cpp
+//        src/accel_mag_chip_chip/fxos8700.cpp
+//)
 add_executable(statuslight
         src/statuslight/statuslight.cpp
         src/gpio.cpp
@@ -155,7 +163,7 @@ add_executable(statuslight
 add_executable(solenoid
         src/solenoid/solenoid_node.cpp
         src/gpio.cpp
- )
+)
 add_executable(servo
         src/servo/servo_node.cpp
         src/gpio.cpp
@@ -186,7 +194,7 @@ add_executable(ir_sensor
 # )
 set(gpio_LIBS "-lpthread -lpigpiod_if2")
 target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
+target_link_libraries(pwm_chip      ${catkin_LIBRARIES})
 target_link_libraries(color_sensor  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
