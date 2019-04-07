@@ -1,12 +1,12 @@
 #include "TCS34725.h"
 #include <ros/ros.h>
 #include <trinity_pi/GetInRoom.h>
+#include <iostream>
 
 #define WHITE_THRESHOLD 150
 #define COUNT_THRESHOLD 20
-const char *interface = "/dev/i2c-1";
 
-
+using std::string;
 
 bool inRoom = false;
 
@@ -21,9 +21,11 @@ int getColorReading(TCS34725 colorSensor);
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "color");
     ros::NodeHandle colorNode;
+	string interface;
+
     //ros::ServiceClient robotPoseClient = controlNode.serviceClient<trinity::GetRobotPose>("GetRobotPose");
-
-
+	colorNode.getParam("i2c_device", interface);
+	
     ros::ServiceServer server = colorNode.advertiseService("GetInRoom", getInRoom);
 
     TCS34725 colorSensor(interface);

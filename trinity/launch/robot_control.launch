@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?> 
 <launch>
 	<node pkg="kiwi-drive" type="twist_to_motors" name="twist_to_motors" output="screen">
 		<param name="motor1" value="wheel1_vtarget" />
