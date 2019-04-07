@@ -1,5 +1,6 @@
-/** \file FXOS8700.h */
 #pragma once
+
+#include <cstdint>
 
 //min_delay   = 0.01F;
 //max_value   = 1200.0F;
@@ -23,7 +24,7 @@ class FXOS8700 {
         ~FXOS8700();
 
         //update sensor values
-        void read();
+        void update();
         //puts device into/out of standby mode
         void standby(bool standby);
 

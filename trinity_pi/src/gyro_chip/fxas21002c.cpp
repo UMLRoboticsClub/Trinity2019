@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <climits>
+//#include <climits>
 
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
@@ -14,6 +14,7 @@
 #define FXAS21002C_ADDRESS       (0x21)       // 0100001
 /** Device ID for this sensor (used as a sanity check during init) */
 #define FXAS21002C_ID            (0xD7)       // 1101 0111
+#define SENSORS_DPS_TO_RADS (0.017453293F)
 
 using std::cout;
 using std::cerr;
@@ -50,7 +51,7 @@ void FXAS21002C::write8(uint8_t addr, uint8_t val) {
 
 uint8_t FXAS21002C::read8(uint8_t addr) {
     while(write(fd, &addr, 1) != 1){ cerr << "write failed(2)" << endl; }
-    while(read(fd, &addr, 1)  != 1){ cerr << "read failed(2)"  << endl; }
+    while(read(fd, &addr, 1) != 1){ cerr << "read failed(2)"  << endl; }
 
     //if(write(fd, &addr, 1) != 1){ cerr << "Read failed(1)" << endl; }
     //if(read(fd, &addr, 1)  != 1){ cerr << "Read failed(2)" << endl; }
@@ -61,12 +62,12 @@ FXAS21002C::FXAS21002C(const char *device, Range range): range(range) {
     if((fd = open(device, O_RDWR)) < 0){ cerr << "Unable to open I2C device" << endl; }
     if(ioctl(fd, I2C_SLAVE, FXAS21002C_ADDRESS) < 0){ cerr << "Unable to connect to I2C device" << endl; }
 
-	/* Make sure we have the correct chip ID since this checks
-	   for correct address and that the IC is properly connected */
-	if (read8(GYRO_REGISTER_WHO_AM_I) != FXAS21002C_ID) {
+    /* Make sure we have the correct chip ID since this checks
+       for correct address and that the IC is properly connected */
+    if (read8(GYRO_REGISTER_WHO_AM_I) != FXAS21002C_ID) {
         cerr << "Unable to connect to I2C device" << endl;
-		exit(1);
-	}
+        exit(1);
+    }
 
     /* Reset then switch to active mode with 100Hz output */
     //see FXAS21002C.h for more info on CTRL_REG
@@ -81,8 +82,7 @@ FXAS21002C::~FXAS21002C(){
     close(fd);
 }
 
-void FXAS21002C::read(){
-    /* Read 7 values from the sensor */
+void FXAS21002C::update(){
     union {
         struct {
             uint8_t
@@ -94,18 +94,20 @@ void FXAS21002C::read(){
                 zhi,
                 zlo;
         };
-        uint8_t data[7];
-    };
+        uint8_t buf[7];
+    } b;
 
+
+    /* Read 7 values from the sensor */
     uint8_t addr = GYRO_REGISTER_STATUS | 0x80;
     while(write(fd, &addr, 1) != 1){ cerr << "write failed(2)" << endl; }
-    while(read(fd, &data, 7)  != 7){ cerr << "read failed(2)"  << endl; }
+    while(read(fd, b.buf, 7)  != 7){ cerr << "read failed(2)"  << endl; }
 
     /* Shift values to create properly formed integer */
     data = raw = {
-        (xhi << 8) | xlo, //x
-        (yhi << 8) | ylo, //y
-        (zhi << 8) | zlo  //z
+        (int16_t)((b.xhi << 8) | b.xlo), //x
+        (int16_t)((b.yhi << 8) | b.ylo), //y
+        (int16_t)((b.zhi << 8) | b.zlo)  //z
     };
 
     /* Compensate values depending on the resolution */
@@ -114,9 +116,9 @@ void FXAS21002C::read(){
     data.z *= range_sensitivity[range];
 
     /* Convert values to rad/s */
-    event->gyro.x *= SENSORS_DPS_TO_RADS;
-    event->gyro.y *= SENSORS_DPS_TO_RADS;
-    event->gyro.z *= SENSORS_DPS_TO_RADS;
+    data.x *= SENSORS_DPS_TO_RADS;
+    data.y *= SENSORS_DPS_TO_RADS;
+    data.z *= SENSORS_DPS_TO_RADS;
 }
 
 /*!

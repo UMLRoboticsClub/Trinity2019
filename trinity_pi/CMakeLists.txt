@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(trinity_pi)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-Wall -Wextra -Wfatal-errors)
+add_compile_options(-std=c++11 -fms-extensions -Wall -Wextra -Wfatal-errors)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -146,15 +145,15 @@ add_executable(encoders_node
         src/encoders/encoder.cpp
         src/gpio.cpp
 )
-#add_executable(pwm_chip
-#        src/pwm_chip/pwm_chip_node.cpp
-#        src/pwm_chip/pca9685.cpp
-#        src/pwm_chip/motor.cpp
-#)
-#add_executable(gyro_chip
-#        src/gyro_chip/gyro_chip_node.cpp
-#        src/gyro_chip/fxas21002c.cpp
-#)
+add_executable(pwm_chip
+        src/pwm_chip/pwm_chip_node.cpp
+        src/pwm_chip/pca9685.cpp
+        src/pwm_chip/motor.cpp
+)
+add_executable(gyro_chip
+        src/gyro_chip/gyro_chip_node.cpp
+        src/gyro_chip/fxas21002c.cpp
+)
 add_executable(accel_mag_chip
         src/accel_mag_chip/accel_mag_chip_node.cpp
         src/accel_mag_chip/fxos8700.cpp

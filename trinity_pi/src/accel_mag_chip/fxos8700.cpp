@@ -18,6 +18,8 @@
 /** Macro for micro tesla (uT) per LSB (1 LSB = 0.1uT) */
 #define MAG_UT_LSB      (0.1F)
 
+#define GRAVITY (9.80665F) /**< Earth's gravity in m/s^2 */
+
 static const float mg_lsb[] = { 0.000244f, 0.000488f, 0.000976f };
 
 using std::cout;
@@ -87,7 +89,7 @@ FXOS8700::FXOS8700(const char *device, Range range): range(range){
 	write8(FXOS8700_REGISTER_CTRL_REG1, 0);
 
 	/* Configure the accelerometer */
-	switch (_range) {
+	switch (range) {
 		case (ACCEL_RANGE_2G):
 			write8(FXOS8700_REGISTER_XYZ_DATA_CFG, 0x00);
 			break;
@@ -114,7 +116,7 @@ FXOS8700::~FXOS8700(){
     close(fd);
 }
 
-bool FXOS8700::read(){
+void FXOS8700::update(){
     /* Read 13 values from the sensor */
 	/* Todo: Check status first! */
     union {
@@ -134,31 +136,31 @@ bool FXOS8700::read(){
                 mzhi,
                 mzlo;
         };
-        uint8_t data[13];
-    };
+        uint8_t buf[13];
+    } b;
 
     uint8_t addr = FXOS8700_REGISTER_STATUS | 0x80;
     while(write(fd, &addr, 1) != 1){ cerr << "write failed(2)" << endl; }
-    while(read(fd, &data, 13)  != 13){ cerr << "read failed(2)"  << endl; }
+    while(read(fd, b.buf, 13)  != 13){ cerr << "read failed(2)"  << endl; }
 
 	/* Shift values to create properly formed integers */
 	/* Note, accel data is 14-bit and left-aligned, so we shift two bit right */
     accel = accel_raw = {
-        ((axhi << 8) | axlo) >> 2,
-        ((ayhi << 8) | aylo) >> 2,
-        ((azhi << 8) | azlo) >> 2
+        (int16_t)(((b.axhi << 8) | b.axlo) >> 2),
+        (int16_t)(((b.ayhi << 8) | b.aylo) >> 2),
+        (int16_t)(((b.azhi << 8) | b.azlo) >> 2)
     };
 
     mag = mag_raw = {
-        (mxhi << 8) | mxlo,
-        (myhi << 8) | mylo,
-        (mzhi << 8) | mzlo
+        (int16_t)((b.mxhi << 8) | b.mxlo),
+        (int16_t)((b.myhi << 8) | b.mylo),
+        (int16_t)((b.mzhi << 8) | b.mzlo)
     };
 
     /* Convert accel values to m/s^2 */
-    accel.x *= mg_lsb[range] * SENSORS_GRAVITY_STANDARD;
-    accel.y *= mg_lsb[range] * SENSORS_GRAVITY_STANDARD;
-    accel.z *= mg_lsb[range] * SENSORS_GRAVITY_STANDARD;
+    accel.x *= mg_lsb[range] * GRAVITY;
+    accel.y *= mg_lsb[range] * GRAVITY;
+    accel.z *= mg_lsb[range] * GRAVITY;
 
     /* Convert mag values to uTesla */
     mag.x *= MAG_UT_LSB;

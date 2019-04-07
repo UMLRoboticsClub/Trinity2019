@@ -17,14 +17,14 @@ class FXAS21002C {
 		FXAS21002C(const char *device, Range range = Range_250DPS);
 		~FXAS21002C();
         //update gyro values
-        void read();
+        void update();
 
 		gyroData raw, data;
 
 	private:
-        int fd;
-		void write8(uint8_t addr, uint8_t val);
-		uint8_t read8(uint8_t addr);
+        int fd = 0;
+		inline void write8(uint8_t addr, uint8_t val);
+		inline uint8_t read8(uint8_t addr);
 		Range range;
 };
 
