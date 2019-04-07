@@ -16,3 +16,5 @@ IRSensor::~IRSensor(){
 bool IRSensor::flameVisible(){
     return !gpio_read(0, IR_SENSOR);
 }
+
+

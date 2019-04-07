@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
             geometry_msgs
             tf
             std_msgs
+            std_srvs
             sensor_msgs
             message_generation )
 
@@ -163,6 +164,11 @@ add_executable(color_sensor
         src/color_sensor/color_sensor_node.cpp
         src/color_sensor/TCS34725.cpp
 )
+add_executable(ir_sensor
+    src/ir/ir_node.cpp
+    src/ir/ir.cpp
+    src/gpio.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -185,6 +191,7 @@ target_link_libraries(color_sensor  ${catkin_LIBRARIES})
 target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
+target_link_libraries(ir_sensor     ${catkin_LIBRARIES} ${gpio_LIBS})
 
 #############
 ## Install ##

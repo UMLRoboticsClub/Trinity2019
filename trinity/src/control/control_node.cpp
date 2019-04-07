@@ -11,7 +11,9 @@ int main(int argc, char* argv[]){
     ros::Publisher velPub = controlNode.advertise<geometry_msgs::Twist>("cmd_vel", 1);
     ros::ServiceClient mapClient = controlNode.serviceClient<nav_msgs::GetMap>("getMap");
     ros::ServiceClient robotPoseClient = controlNode.serviceClient<trinity_pi::GetRobotPose>("GetRobotPose");
-    Control control(mapClient, velPub, robotPoseClient);
+    ros::ServiceClient irClient = controlNode.serviceClient<std_srvs::Trigger>("GetFlame");
+    ros::ServiceClient solenoidClient = controlNode.serviceClient<std_srvs::Empty>("Extinguish");
+    Control control(mapClient, velPub, robotPoseClient, irClient, solenoidClient);
     ros::Subscriber waitForSignal = controlNode.subscribe("startSignal", 100, &Control::controlLoop, &control);
     ros::spin();
 }

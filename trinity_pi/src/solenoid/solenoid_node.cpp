@@ -2,8 +2,15 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
-
+#include <std_srvs/Empty.h>
 const char *node_name = "solenoid";
+
+bool extinguish(std_srvs::Empty::Request&, std_srvs::Empty::Response&){
+    gpio_write(0, SOLENOID, 1);
+    ros::Duration(1).sleep();
+    gpio_write(0, SOLENOID, 0);
+    return true;
+}
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
@@ -15,15 +22,9 @@ int main(int argc, char **argv){
     //set up solenoid pin
     set_mode(0, SOLENOID, PI_OUTPUT);
 
-    typedef std_msgs::Bool::ConstPtr input_type;
-    typedef boost::function<void (const input_type&)> callback_func;
-
-    callback_func callback = [](const input_type& vel){ gpio_write(0, SOLENOID, vel->data); }; 
-    //subscribe to solenoid messages
-    ros::Subscriber sub_a = n.subscribe("solenoid", 100, callback);
+    ros::ServiceServer server = n.advertiseService("Extinguish", extinguish);
 
     //process callbacks
-    ros::spin();
 
     gpioDisconnect();
 
