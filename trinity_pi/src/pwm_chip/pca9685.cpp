@@ -50,7 +50,8 @@ PCA9685::PCA9685(const char *device, uint8_t addr){
         exit(1);
     }
 
-    reset();
+    //reset();
+
 	//set a default frequency
     setPWMFreq(default_freq);
 }
@@ -95,33 +96,48 @@ void PCA9685::setPWMFreq(float freq){
     cout << "Final pre-scale: " << prescale << endl;
 #endif
 
-    uint8_t oldmode = read8(PCA9685_MODE1);
-    uint8_t newmode = (oldmode&0x7F) | 0x10; // sleep
-    write8(PCA9685_MODE1, newmode); // go to sleep
-    write8(PCA9685_PRESCALE, prescale); // set the prescaler
-    write8(PCA9685_MODE1, oldmode);
-    sleep(5);
-    write8(PCA9685_MODE1, oldmode | 0xa0);  //  This sets the MODE1 register to turn on auto increment.
+    //uint8_t oldmode = read8(PCA9685_MODE1);
+    //uint8_t newmode = (oldmode & 0x7F) | 0x10; // sleep
+    //write8(PCA9685_MODE1, newmode);          // go to sleep
+    //write8(PCA9685_PRESCALE, prescale);      // set the prescaler
+    //write8(PCA9685_MODE1, oldmode);
+    //sleep(5);
+    //write8(PCA9685_MODE1, oldmode | 0xa0);   //  This sets the MODE1 register to turn on auto increment.
+
+    // Get settings and calc bytes for the different states.
+    int settings = read8(PCA9685_MODE1) & 0x7F;   // Set restart bit to 0
+    int sleep_m   = settings | 0x10;                                  // Set sleep bit to 1
+    int wake    = settings & 0xEF;                                  // Set sleep bit to 0
+    int restart = wake | 0x80;
+
+    // Go to sleep, set prescale and wake up again.
+    write8(PCA9685_MODE1, sleep_m);
+    write8(PCA9685_PRESCALE, prescale);
+    write8(PCA9685_MODE1, wake);
+
+    // Now wait a millisecond until oscillator finished stabilizing and restart PWM.
+    sleep(1);
+    write8(PCA9685_MODE1, restart);
 
 #ifdef ENABLE_DEBUG_OUTPUT
-    cout << "Mode now 0x" << std::hex << read8(PCA9685_MODE1) << endl;
+            cout << "Mode now 0x" << std::hex << read8(PCA9685_MODE1) << endl;
 #endif
-}
+            }
 
-//Sets the PWM output of one of the PCA9685 pins
-//pin: One of the PWM output pins, from 0 to 15
-//on: At what point in the 4096-part cycle to turn the PWM output ON
-//off: At what point in the 4096-part cycle to turn the PWM output OFF
-void PCA9685::setPWM(uint8_t pin, uint16_t on, uint16_t off){
+            //Sets the PWM output of one of the PCA9685 pins
+            //pin: One of the PWM output pins, from 0 to 15
+            //on: At what point in the 4096-part cycle to turn the PWM output ON
+            //off: At what point in the 4096-part cycle to turn the PWM output OFF
+            void PCA9685::setPWM(uint8_t pin, uint16_t on, uint16_t off){
 #ifdef ENABLE_DEBUG_OUTPUT
-    cout << "Setting PWM " << pin << ": " << on << "->" << off << endl;
+            cout << "Setting PWM " << pin << ": " << on << "->" << off << endl;
 #endif
 
-    write8(LED0_ON_L  + 4*pin, on);
-    write8(LED0_ON_H  + 4*pin, on >> 8);
-    write8(LED0_OFF_L + 4*pin, off);
-    write8(LED0_OFF_H + 4*pin, off >> 8);
-}
+            write8(LED0_ON_L  + 4*pin, on);
+            write8(LED0_ON_H  + 4*pin, on >> 8);
+            write8(LED0_OFF_L + 4*pin, off);
+            write8(LED0_OFF_H + 4*pin, off >> 8);
+            }
 
 void PCA9685::setAllPWM(uint16_t on, uint16_t off){
 #ifdef ENABLE_DEBUG_OUTPUT
