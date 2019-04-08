@@ -104,9 +104,8 @@ float powf(const float x, const float y) {
  *  @param  addr
  *  @param  d
  */
-void TCS34725::write8(uint8_t addr, uint8_t val) {
-    uint8_t packet[2] = { addr, val };
-    //if(write(fd, packet, 2) != 2){ cerr << "Write failed" << endl; }
+void TCS34725::write8(uint8_t reg, uint8_t val) {
+    uint8_t packet[2] = { TCS34725_COMMAND_BIT | reg, val & 0xFF };
     while(write(fd, packet, 2) != 2){ cerr << "tcs34725 write failed(1)" << endl; }
 }
 
@@ -115,7 +114,8 @@ void TCS34725::write8(uint8_t addr, uint8_t val) {
  *  @param  addr
  *  @return value
  */
-uint8_t TCS34725::read8(uint8_t addr){
+uint8_t TCS34725::read8(uint8_t reg){
+    uint8_t addr = TCS34725_COMMAND_BIT | reg;
     while(write(fd, &addr, 1) != 1){ cerr << "tcs23725 write failed(2)" << endl; }
     while(read(fd, &addr, 1)  != 1){ cerr << "tcs34725 read failed(2)"  << endl; }
 

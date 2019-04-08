@@ -14,10 +14,15 @@ int main(){
     float r, g, b;
 
     while(true){
-        getRGB(&r, &g, &b);
+        colorSensor.getRGB(&r, &g, &b);
         float avg = (r + g + b)/3.f;
+        /*cout
+            << "r[" << r << "]"
+            << "g[" << g << "]"
+            << "b[" << b << "]"
+            << endl;
 
-        cout << avg << endl;
+        cout << "avg:" << avg << endl;*/
     }
 
     return 0;
