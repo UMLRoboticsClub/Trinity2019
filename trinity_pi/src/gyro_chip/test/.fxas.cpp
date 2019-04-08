@@ -49,15 +49,9 @@ void FXAS21002C::write8(uint8_t addr, uint8_t val) {
 }
 
 uint8_t FXAS21002C::read8(uint8_t addr) {
-    //printf("Looking at address: %x\n", addr);
     uint8_t packet[1] = { addr };
-    //printf("Packet: %x\n", packet[0]);
-    //printf("in read: %d\n", fd);
     while(write(fd, packet, 1) != 1){ cerr << "write failed(2)" << endl; }
     while(read(fd, packet, 1) != 1){ cerr << "read failed(2)"  << endl; }
-    if(packet[0] > 0){
-        printf("Found: 0x%x at 0x%x\n", packet[0], addr);
-    }
 
     //if(write(fd, &addr, 1) != 1){ cerr << "Read failed(1)" << endl; }
     //if(read(fd, &addr, 1)  != 1){ cerr << "Read failed(2)" << endl; }
@@ -65,26 +59,19 @@ uint8_t FXAS21002C::read8(uint8_t addr) {
 }
 
 FXAS21002C::FXAS21002C(const char *device, Range range): range(range) {
-    printf("before open: %d\n", fd);
-    printf("device: %s\n", device);
-    printf("i2c slave: 0x%x, address: 0x%x\n", I2C_SLAVE, FXAS21002C_ADDRESS);
     if((fd = open(device, O_RDWR)) < 0){
         cerr << "Unable to open I2C device" << endl;
         exit(1);
     }
-    if(ioctl(fd, I2C_SLAVE, 0x21) < 0){
+    if(ioctl(fd, I2C_SLAVE, FXAS21002C_ADDRESS) < 0){
         cerr << "Unable to connect to I2C device" << endl;
         exit(1);
     }
-    //printf("after open: %d\n", fd);
+
     /* Make sure we have the correct chip ID since this checks
        for correct address and that the IC is properly connected */
-    //printf("At address 2: %d\n", read8(0x02));
-    uint8_t id = read8(0x8c);
+    uint8_t id = read8(GYRO_REGISTER_WHO_AM_I);
     printf("0x%x\n", id);
-    for(int i = 0; i < 255; i++){
-        read8(i);
-    }
     if (id != FXAS21002C_ID) {
         cerr << "whoami response incorrect" << endl;
         exit(1);
