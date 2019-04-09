@@ -3,6 +3,7 @@ import smbus
 import time
 import sys
 import rospy
+import numpy as np
 from geometry_msgs.msg import Vector3
 
 class FXAS21002C:
@@ -57,19 +58,22 @@ class FXAS21002C:
             self.offset.x += self.vel.x
             self.offset.y += self.vel.y
             self.offset.z += self.vel.z
-            rospy.loginfo(self.vel.z)
+            #rospy.loginfo(self.vel.z)
+            print("."),
             time.sleep(0.05)
 
         self.offset.x /= 100
         self.offset.y /= 100
         self.offset.z /= 100
         self.calibrated = True
+        print()
+        rospy.loginfo("calibration complete")
 
     def update(self):
         data = self.bus.read_i2c_block_data(self.ADDR, self.STATUS | 0x80, 7)
         #rospy.loginfo(hex(self.STATUS | 0x80))
         #rospy.loginfo(data)
-        raw = [(data[1] << 8) | data[2], (data[3] << 8) | data[4], (data[5] << 8) | data[6]]
+        raw = [(np.int16(data[1] << 8) | data[2]), np.int16((data[3] << 8) | data[4]), np.int16((data[5] << 8) | data[6])]
         #rospy.loginfo(raw)
         self.vel.x = raw[0] * self.RANGE_SENSITIVITY[self.range]
         self.vel.y = raw[1] * self.RANGE_SENSITIVITY[self.range]
@@ -80,11 +84,11 @@ class FXAS21002C:
         self.vel.z *= self.SENSORS_DPS_TO_RADS
 
         if(self.calibrated):
-            rospy.loginfo("velocity before: {0}, {1}, {2}".format(self.vel.x, self.vel.y, self.vel.z))
+            #rospy.loginfo("velocity before: {0}, {1}, {2}".format(self.vel.x, self.vel.y, self.vel.z))
             self.vel.x -= self.offset.x
             self.vel.y -= self.offset.y
             self.vel.z -= self.offset.z
-            rospy.loginfo("subtracted offset: {0}, {1}, {2}".format(self.offset.x, self.offset.y, self.offset.z))
+            #rospy.loginfo("subtracted offset: {0}, {1}, {2}".format(self.offset.x, self.offset.y, self.offset.z))
     
     def close(self):
         self.bus.close()
@@ -100,7 +104,7 @@ def main():
 
     while not rospy.is_shutdown():
         gyro.update()
-        rospy.loginfo("x: {0}, y: {1}, z: {2}".format(gyro.vel.x, gyro.vel.y, gyro.vel.z))
+        rospy.loginfo("x: {0:+.3f}, y: {1:+.3f}, z: {2:+.3f}".format(gyro.vel.x, gyro.vel.y, gyro.vel.z))
         pub.publish(gyro.vel)
         rate.sleep()
     
