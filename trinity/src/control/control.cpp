@@ -6,11 +6,11 @@
 
 
 
-
-Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::ServiceClient& robotPoseClient, ros::ServiceClient& irClient, ros::ServiceClient& solenoidClient): gs(), targetPoints(), ac("move_base", true){
+Control::Control(ros::Publisher pointPub, ros::Publisher velPub, ros::Publisher goalPub, ros::ServiceClient& robotPoseClient, ros::ServiceClient& irClient, ros::ServiceClient& solenoidClient): gs(), targetPoints(), ac("move_base", true){
 	//initialize the distance field
-	this->mapClient = mapClient;
     cmd_vel_pub = velPub;
+	goal_pub = goalPub;
+	point_pub = pointPub;
     this->robotPoseClient = robotPoseClient;
     this->irClient = irClient;
     this->solenoidClient = solenoidClient;
@@ -21,18 +21,23 @@ Control::Control(ros::ServiceClient& mapClient, ros::Publisher velPub, ros::Serv
             distanceField[i][j] = -1;
         }
     }
+	start = false;
+	ROS_INFO("Done initializing");
 }
 
-void Control::controlLoop(const std_msgs::Bool::ConstPtr&){
+void Control::startFunc(const std_msgs::Bool::ConstPtr&){
+	start = true;
+}
+
+void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
+	occGrid = *grid;
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;
-	nav_msgs::GetMap occGridService;
-	while(!gs.done){
-		//ask for occupancy grid service call to get current map.  store in occGrid.
-		mapClient.call(occGridService);
-        occGrid = occGridService.response.map;
+	ROS_INFO("In control loop");
+	if(start && !gs.done){
 		//determine target and type based on occGrid and gameState
         geometry_msgs::Pose target = findNextTarget(robotAction);
+		ROS_INFO("finished find next target");
 		//translate occGrid coords into moveBase coords
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
@@ -40,10 +45,18 @@ void Control::controlLoop(const std_msgs::Bool::ConstPtr&){
 		goal.target_pose.header.frame_id = "/map";
 		goal.target_pose.header.stamp = ros::Time::now();
 		goal.target_pose.pose = target;
+		goal.target_pose.pose.orientation.w = 1;
+		geometry_msgs::PoseStamped psGoal;
+		psGoal.pose = target;
+		psGoal.header = goal.target_pose.header;
+		goal_pub.publish(psGoal);
+		ros::spinOnce();
+		ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
+		ROS_INFO("Found goal, publishing...");
 
 		ac.sendGoal(goal);
 		ac.waitForResult();
-
+		
 		//perform necessary action at targetLoc.
 		//if we entered a room, update robotAction accordingly
 		//update robot action in case we entered a room
@@ -75,7 +88,7 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
             return closestTarget;
         }
     }
-
+	ROS_INFO("At end of find next target");
     //no important points already found, go to distance field and find an unknown
     return pointToPose(computeDistanceField());
 }
@@ -88,17 +101,38 @@ Point Control::computeDistanceField() {
 	//also switch from vector to something circular
 
 	//get the robot position
-    Point robotPos = poseToPoint(getRobotPose());
-
+    //Point robotPos = poseToPoint(getRobotPose());
+	geometry_msgs::Pose origin;
+	geometry_msgs::PoseStamped robot_point;
+	origin.position.x = 0.05;
+	origin.position.y = -0.05;
+	origin.position.z = 0;
+	//robot_point.point.x = origin.position.x;
+	//robot_point.point.y = origin.position.y;
+	//robot_point.point.z = 0;
+	robot_point.pose = origin;
+	robot_point.header.stamp = ros::Time::now();
+	robot_point.header.frame_id = "/map";
+	//point_pub.publish(robot_point);
+	//goal_pub.publish(robot_point);
+	//ROS_INFO("publishing robot point...");
+	//ros::spinOnce();
+	Point robotPos = poseToPoint(origin);
+	ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
+	
     vector<Point> boundary;
     boundary.push_back(robotPos);
     vector<Point> neighbors;
     distanceField[robotPos.x][robotPos.y] = 0;
     Point currentCell;
     int currentDistance;
-
+	
+	ROS_INFO("Computing distance field");
     while (!boundary.empty()) {
+		//ROS_INFO("Inside while loop");
         currentCell = boundary.front();
+		//ROS_INFO("Current cell: (%d, %d)", currentCell.x, currentCell.y);
+		//ROS_INFO("Cell value: %d", accessOccGrid(currentCell.x, currentCell.y));
         neighbors = findOpenNeighbors(currentCell);
         currentDistance = distanceField[currentCell.x][currentCell.y];
         for (Point neighbor : neighbors) {
@@ -228,7 +262,10 @@ vector<Point> Control::findOpenNeighbors(const Point &currentPos) {
 
 
 int Control::accessOccGrid(int x, int y){
-    return occGrid.data[x*occGrid.info.width + y];
+	if(x < 0 || x >= occGrid.info.width || y < 0 || y >= occGrid.info.height){
+		return 100;
+	}
+    return occGrid.data[y*occGrid.info.width + x];
 }
 
 bool Control::isDiag(int x, int y){
@@ -237,19 +274,22 @@ bool Control::isDiag(int x, int y){
 
 Point Control::poseToPoint(geometry_msgs::Pose pose){
     //convert from real world pose to occGrid point.
-    int realX = int(pose.position.x/occGrid.info.resolution);
-    int realY = int(pose.position.y/occGrid.info.resolution);
-
-    return Point(realX-occGrid.info.origin.position.x, realY-occGrid.info.origin.position.y);
+	ROS_INFO("pose - origin: %.3f", pose.position.x - occGrid.info.origin.position.x);
+	ROS_INFO("divided by res: %d", int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution));
+    int realX = int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution);
+    int realY = int((pose.position.y - occGrid.info.origin.position.y)/occGrid.info.resolution);
+	
+	ROS_INFO("(realX, realY): (%d, %d)", realX, realY);
+	Point p = Point(realX, realY);
+	ROS_INFO("(p.x, p.y): (%d, %d)", p.x, p.y);	
+    return p;
 }
 
 geometry_msgs::Pose Control::pointToPose(Point point){
-    int originizedX = point.x + occGrid.info.origin.position.x;
-    int originizedY = point.y + occGrid.info.origin.position.y;
 
     geometry_msgs::Pose pose;
-    pose.position.x = originizedX*occGrid.info.resolution;
-    pose.position.y = originizedY*occGrid.info.resolution;
+    pose.position.x = point.x*occGrid.info.resolution + occGrid.info.origin.position.x;
+    pose.position.y = point.y*occGrid.info.resolution + occGrid.info.origin.position.y;
 
     return pose;
 }

@@ -9,6 +9,7 @@
 #include <std_msgs/Bool.h>
 #include <trinity_pi/GetRobotPose.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/PointStamped.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/Empty.h>
 
@@ -30,8 +31,9 @@ typedef enum ROBOT_OPS {
 
 class Control{
 public:
-    Control(ros::ServiceClient&, ros::Publisher, ros::ServiceClient&, ros::ServiceClient&, ros::ServiceClient&);
-	void controlLoop(const std_msgs::Bool::ConstPtr&);
+    Control(ros::Publisher, ros::Publisher, ros::Publisher, ros::ServiceClient&, ros::ServiceClient&, ros::ServiceClient&);
+	void controlLoop(const nav_msgs::OccupancyGrid::ConstPtr&);
+	void startFunc(const std_msgs::Bool::ConstPtr&);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
 	void takeAction(RobotOp robotAction);
     Point computeDistanceField();
@@ -46,14 +48,16 @@ public:
     geometry_msgs::Pose getRobotPose();
     double irSense();
     vector<double> parseIrReadings(vector<double>);
+	bool start;
 private:
     ros::Publisher cmd_vel_pub;
+    ros::Publisher goal_pub;
+	ros::Publisher point_pub;
     GameState gs;
     std::map<int, vector<geometry_msgs::Pose>> targetPoints;
 	vector<vector<int>> distanceField;
 	nav_msgs::OccupancyGrid occGrid;
 	MoveBaseClient ac;
-	ros::ServiceClient mapClient;
     ros::ServiceClient robotPoseClient;
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
