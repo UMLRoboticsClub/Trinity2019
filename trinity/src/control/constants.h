@@ -2,7 +2,7 @@
 
 #pragma once
 
-static const float CLEAR_THRESHOLD = 0.25;
+static const float CLEAR_THRESHOLD = 85;
 static const int RESOLUTION = 1;
 
 constexpr static const int ARENA_LENGTH_CM = 244;
