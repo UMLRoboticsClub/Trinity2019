@@ -25,12 +25,17 @@
 //#define SCL       3
 
 /* PCA9685 pins */
+
+//motor A
 #define PCA_0  0
 #define PCA_1  1
-#define PCA_2  2
-#define PCA_3  3
+//motor B
+#define PCA_2  3
+#define PCA_3  2
+//motor C
 #define PCA_4  4
 #define PCA_5  5
+
 #define PCA_6  6
 #define PCA_7  7
 #define PCA_8  8
