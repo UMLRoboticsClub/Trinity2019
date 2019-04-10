@@ -95,8 +95,8 @@ class FXAS21002C:
 
 def main():
     rospy.init_node('gyro')
-    pub_hz = rospy.get_param("pub_hz", 20)
-    gyro_topic = rospy.get_param("gyro_topic", "/gyro")
+    pub_hz = rospy.get_param("~pub_hz", 20)
+    gyro_topic = rospy.get_param("~gyro_topic", "/gyro")
 
     rate = rospy.Rate(pub_hz)
     pub = rospy.Publisher(gyro_topic, Vector3, queue_size=10)

@@ -1,9 +1,5 @@
-/*
-A user-space program to get data from an I2C device.
-                Gustavo Zamboni
-*/
 #include <errno.h>
-#include <string.h>
+#include <cstring>
 #include <stdio.h>
 #include <cstdint>
 #include <stdlib.h>
@@ -24,17 +20,13 @@ char buf[12];
 union Encoders{
     uint8_t b[12];
     int32_t enc[3];
-};
+} enc;
  
-//////////
-// Init I2Cdevice
-//////////
 int i2c_init(const char* filename, int addr) {
     int file;
  
     if ((file = open(filename,O_RDWR)) < 0) {
         printf("Failed to open the bus.");
-        /* ERROR HANDLING; you can check errno to see what went wrong */
         exit(1);
     }
  
@@ -85,11 +77,10 @@ char * i2c_read(int add1, int nbytes,int file) {
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "encoders");
-    ros::NodeHandle n;
-    string topic_nameA = "enc1", topic_nameB = "enc2", topic_nameC = "enc3", i2c_device = "/dev/i2c-1";
-    int slave_address = 0x03, file, pub_hz = 20;
+    ros::NodeHandle n("~");
+    string topic_nameA, topic_nameB, topic_nameC, i2c_device;
+    int slave_address, file, pub_hz;
     char* buffer;
-    Encoders enc;
 
     n.getParam("encoder1", topic_nameA);
     n.getParam("encoder2", topic_nameB);
@@ -97,6 +88,7 @@ int main(int argc, char** argv){
     n.getParam("i2c_device", i2c_device);
     n.getParam("slave_address", slave_address);
     n.getParam("pub_hz", pub_hz);
+    ROS_INFO("encoders node / encoder1: %s, encoder2: %s, encoder3: %s, i2c_device: %s, slave_address: 0x%x, pub_hz: %d", topic_nameA.c_str(), topic_nameB.c_str(), topic_nameC.c_str(), i2c_device.c_str(), slave_address, pub_hz);
 	file = i2c_init(i2c_device.c_str(), slave_address);
     ROS_INFO("Opened i2c bus on address %x", slave_address);
     //printf("%s, %d\n", i2c_device, slave_address);

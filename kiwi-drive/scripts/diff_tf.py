@@ -85,9 +85,9 @@ class DiffTf:
         self.encoder_low_wrap = rospy.get_param('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min )
         self.encoder_high_wrap = rospy.get_param('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min )
 
-        self.fwheel = rospy.get_param('encoder1', 'enc1')
-        self.swheel = rospy.get_param('encoder2', 'enc2')
-        self.twheel = rospy.get_param('encoder3', 'enc3') 
+        self.fwheel = rospy.get_param('~encoder1', 'enc1')
+        self.swheel = rospy.get_param('~encoder2', 'enc2')
+        self.twheel = rospy.get_param('~encoder3', 'enc3') 
         self.t_delta = rospy.Duration(1.0/self.rate)
         self.t_next = rospy.Time.now() + self.t_delta
         
@@ -161,7 +161,7 @@ class DiffTf:
             #print("dist before ({0}, {1})".format(x, y))
             new_x = x * math.cos(self.th) - y * math.sin(self.th)
             new_y = x * math.sin(self.th) + y * math.cos(self.th)
-            print("dist after ({0}, {1})".format(x, y))
+            #print("dist after ({0}, {1})".format(x, y))
             self.x += new_x
             self.y += new_y
 

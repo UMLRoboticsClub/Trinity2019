@@ -25,7 +25,7 @@ int main(int argc, char **argv){
     ros::ServiceServer server = n.advertiseService("Extinguish", extinguish);
 
     //process callbacks
-
+    ros::spin();
     gpioDisconnect();
 
     return 0;

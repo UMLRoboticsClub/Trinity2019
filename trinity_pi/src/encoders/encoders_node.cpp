@@ -11,7 +11,7 @@ const unsigned pub_hz = 20;
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
-    ros::NodeHandle n;
+    ros::NodeHandle n("~");
 	string topic_nameA, topic_nameB, topic_nameC;
 
 	n.getParam("encoder1", topic_nameA);

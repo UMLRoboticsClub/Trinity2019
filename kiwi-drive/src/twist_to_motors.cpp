@@ -8,7 +8,7 @@ const int bufferSize = 1000;
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name);
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 	std::string topic_vel_src = "/cmd_vel";
 	std::string topic_motorA;
 	std::string topic_motorB;
@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 	nh.getParam("motor1", topic_motorA);
 	nh.getParam("motor2", topic_motorB);
 	nh.getParam("motor3", topic_motorC);
-    ROS_DEBUG("%s started", node_name.c_str());
+    ROS_INFO("%s started", node_name.c_str());
 	
     ros::Subscriber vel_sub;
     ros::Publisher mtrA_pub, mtrB_pub, mtrC_pub;
@@ -32,6 +32,7 @@ int main(int argc, char **argv){
         [&](const inType &vel){
             //Coordinate systems in ROS are always in 3D,
             //and are right-handed, with X forward, Y left, and Z up. 
+            //ROS_INFO("got a cmd_vel command");
 
             float vx = vel->linear.x;
             float vy = vel->linear.y;
@@ -44,7 +45,7 @@ int main(int argc, char **argv){
             mtrB_pub.publish(b);
             mtrC_pub.publish(c);
 
-            ROS_DEBUG("publishing: (%f, %f, %f)", va, vb, vc);
+            //ROS_INFO("publishing: (%f, %f, %f)", a.data, b.data, c.data);
     };
 
     vel_sub = nh.subscribe<geometry_msgs::Twist>(topic_vel_src, bufferSize, callback);

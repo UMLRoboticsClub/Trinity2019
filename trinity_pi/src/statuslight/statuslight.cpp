@@ -10,7 +10,7 @@ const int maxBrightness = 128;
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, nodeName);
-
+    ros::NodeHandle n;
     if(!gpioConnect()){ return 1; }
 
     set_mode(0, LED_STATUS, PI_OUTPUT);  

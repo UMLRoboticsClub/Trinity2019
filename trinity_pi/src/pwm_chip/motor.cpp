@@ -14,6 +14,7 @@ void Motor::stop(){
 }
 
 void Motor::set(float power){
+    printf("got power: %.3f", power);
     if(power < 0){
         pca.setDutyCycle(pinA, 0);
         pca.setDutyCycle(pinB, -power);

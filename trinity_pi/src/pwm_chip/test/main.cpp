@@ -24,11 +24,11 @@ inline void sleep(int millis){
 #define FULL_OFF 0
 
 int main(void) {
-    printf("PCA9685 LED example\n");
+    printf("PCA9685 test\n");
     signal(SIGINT, signal_handler);
 
     PCA9685 pca("/dev/i2c-1");
-    pca.setPWMFreq(500);
+    //pca.setPWMFreq(500);
 
     unsigned delta = 32;
     while (running) {

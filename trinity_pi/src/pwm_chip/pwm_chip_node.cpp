@@ -10,7 +10,7 @@
 
 using std::string;
 
-const char *node_name = "pca9685_node";
+const char *node_name = "motors";
 const char *i2c_interface = "/dev/i2c-1";
 const int msgBufSize = 100;
 
@@ -22,16 +22,20 @@ static Motor motorC(pca, MOTORC_PINA, MOTORC_PINB);
 
 static ros::Subscriber s_mtrA, s_mtrB, s_mtrC, s_ledF, s_ledV, s_ledS;
 
+void motorA_callback(std_msgs::Float32::ConstPtr cmd){
+    ROS_INFO("got command 2: %.3f", cmd->data);
+}
+
 void init_motors(ros::NodeHandle &n){
     string topic_motorA, topic_motorB, topic_motorC;
     n.getParam("motor1", topic_motorA);
     n.getParam("motor2", topic_motorB);
     n.getParam("motor3", topic_motorC);
-
+    ROS_INFO("%s, %s, %s", topic_motorA.c_str(), topic_motorB.c_str(), topic_motorC.c_str());
     typedef std_msgs::Float32::ConstPtr mtr_input_type;
     typedef boost::function<void (const mtr_input_type&)> callback_func;
 
-    callback_func mtrMsgA = [](const mtr_input_type& vel){ motorA.set(vel->data); };
+    callback_func mtrMsgA = [](const mtr_input_type& vel){ ROS_INFO("got command: %.3f", vel->data); motorA.set(vel->data); };
     callback_func mtrMsgB = [](const mtr_input_type& vel){ motorB.set(vel->data); };
     callback_func mtrMsgC = [](const mtr_input_type& vel){ motorC.set(vel->data); };
 
@@ -63,7 +67,7 @@ void init_leds(ros::NodeHandle &n){
 
 int main(int argc, char **argv){
     ros::init(argc, argv, node_name); 
-    ros::NodeHandle n;
+    ros::NodeHandle n("~");
 
     init_motors(n);
     init_leds(n);

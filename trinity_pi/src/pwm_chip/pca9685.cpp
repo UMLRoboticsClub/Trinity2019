@@ -27,7 +27,7 @@
 #define ALLLED_OFF_L     0xFC
 #define ALLLED_OFF_H     0xFD
 
-#define ENABLE_DEBUG_OUTPUT
+//#define ENABLE_DEBUG_OUTPUT
 
 using std::cout;
 using std::cerr;
@@ -64,7 +64,7 @@ PCA9685::~PCA9685(){
 //Sends a reset command to the PCA9685 chip over I2C
 void PCA9685::reset(){
     uint8_t val = PCA9685_RESET;
-    while(write(fd, &val, 1) != 1){ cerr << "write failed(0)" << endl; }
+    if(write(fd, &val, 1) != 1){ cerr << "pca reset: write failed" << endl; }
     sleep(10);
     setAllPWM(0, 4096);
 }
@@ -150,10 +150,6 @@ void PCA9685::setAllPWM(uint16_t on, uint16_t off){
     write8(ALLLED_OFF_H, off >> 8);
 }
 
-//Helper to set pin PWM output. Sets pin without having to deal with on/off tick placement and properly handles a zero value as completely off and 4095 as completely on.  Optional invert parameter supports inverting the pulse for sinking to ground.
-//pin: One of the PWM output pins, from 0 to 15
-//val: The pinber of ticks out of 4096 to be active, should be a value from 0 to 4095 inclusive.
-
 void PCA9685::setPin(uint8_t pin, uint16_t val){
     //clamp value between 0 and 4095 inclusive
     if (val >= 4095) {
@@ -183,16 +179,21 @@ void PCA9685::setAllPins(uint16_t val){
 }
 
 uint8_t PCA9685::read8(uint8_t addr){
-    while(write(fd, &addr, 1) != 1){ cerr << "pca9685 write failed(2)" << endl; }
-    while(read(fd, &addr, 1)  != 1){ cerr << "pca9685 read failed(2)"  << endl; }
+    if(write(fd, &addr, 1) != 1){
+        cerr << "read: pca write failed" << endl;
+        return 0;
+    }
+    if(read(fd, &addr, 1)  != 1){
+        cerr << "read: pca read failed" << endl;
+        return 0;
+    }
 
-    //if(write(fd, &addr, 1) != 1){ cerr << "Read failed(1)" << endl; }
-    //if(read(fd, &addr, 1)  != 1){ cerr << "Read failed(2)" << endl; }
     return addr;
 }
 
 void PCA9685::write8(uint8_t addr, uint8_t val) {
     uint8_t packet[2] = { addr, val };
-    //if(write(fd, packet, 2) != 2){ cerr << "Write failed" << endl; }
-    while(write(fd, packet, 2) != 2){ cerr << "pca9685 write failed(1)" << endl; }
+    if(write(fd, packet, 2) != 2){
+        cerr << "pca9685 write failed(1)" << endl;
+    }
 }

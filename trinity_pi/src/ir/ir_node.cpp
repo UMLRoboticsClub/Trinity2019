@@ -12,6 +12,6 @@ bool getIr(std_srvs::Trigger::Request&, std_srvs::Trigger::Response& res){
 int main(int argc, char* argv[]){
     flameSensor = IRSensor();
     ros::init(argc, argv, "ir");
-    ros::NodeHandle irNode;
+    ros::NodeHandle irNode("");
     ros::ServiceServer server = irNode.advertiseService("GetFlame", getIr);
 }

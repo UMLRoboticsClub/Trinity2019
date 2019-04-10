@@ -20,11 +20,11 @@ int getColorReading(TCS34725 &colorSensor);
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "color");
-    ros::NodeHandle colorNode;
+    ros::NodeHandle colorNode("");
 	string interface = "/dev/i2c-1";
 
     //ros::ServiceClient robotPoseClient = controlNode.serviceClient<trinity::GetRobotPose>("GetRobotPose");
-	colorNode.getParam("i2c_device", interface);
+	colorNode.getParam("~i2c_device", interface);
 	
     ros::ServiceServer server = colorNode.advertiseService("GetInRoom", getInRoom);
     TCS34725 colorSensor(interface.c_str());

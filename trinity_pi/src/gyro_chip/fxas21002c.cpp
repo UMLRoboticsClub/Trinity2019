@@ -44,8 +44,9 @@ inline void sleep(int millis){
 
 void FXAS21002C::write8(uint8_t addr, uint8_t val) {
     uint8_t packet[2] = { addr, val };
-    while(write(fd, packet, 2) != 2){ cerr << "write failed(1)" << endl; }
-    //if(write(fd, packet, 2) != 2){ cerr << "Write failed" << endl; }
+    if(write(fd, packet, 2) != 2){
+        cerr << "write failed(1)" << endl;
+    }
 }
 
 uint8_t FXAS21002C::read8(uint8_t addr) {
