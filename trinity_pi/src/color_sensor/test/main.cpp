@@ -16,13 +16,13 @@ int main(){
     while(true){
         colorSensor.getRGB(&r, &g, &b);
         float avg = (r + g + b)/3.f;
-        /*cout
+        cout
             << "r[" << r << "]"
             << "g[" << g << "]"
             << "b[" << b << "]"
             << endl;
 
-        cout << "avg:" << avg << endl;*/
+        cout << "avg:" << avg << endl;
     }
 
     return 0;

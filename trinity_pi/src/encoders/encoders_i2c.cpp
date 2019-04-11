@@ -62,15 +62,46 @@ char * i2c_read(int add1, int nbytes,int file) {
     //char* fail = "fail";
  
     i2c_set_pointer(add1,file);
+    uint8_t startByte = 170;
+    uint8_t endByte = 169;
     
-    int ret = read(file, buf, nbytes);
+    uint8_t byte;
+    bool done = false;
+    while(ros::ok() && !done){
+        //ROS_INFO("WTF");
+        read(file, &byte, 1);
+        int count = 0;
+        while(ros::ok() && byte != startByte)
+        {
+            count++;
+            //ROS_INFO("byte is: %d", byte);
+            //ROS_INFO("%d", byte == startByte);
+            int num = read(file, &byte, 1); 
+            if(count > 13){
+                return 0;
+            }
+        }
+    
+        if(read(file, buf, nbytes) != nbytes){
+            //ROS_ERROR("read failed");
+            continue;
+        } 
+        if(read(file, &byte, 1), byte != endByte){
+            //ROS_INFO("end byte not found!");
+            continue;
+        } else {
+            done = true;
+        }
+    }
+
+    /*int ret = read(file, buf, nbytes);
     if(ret != nbytes) {
         fprintf(stderr, "Error reading %i bytes\n",nbytes);
     } else {
         for (n=0;n<nbytes;n++)
             //printf("r_0x%0*x\n", 2, buf[n]);
         return buf;
-    }
+    }*/
     //return fail;
     return buf;
 }
@@ -99,9 +130,17 @@ int main(int argc, char** argv){
     ros::Rate loop_rate(pub_hz);
     std_msgs::Int32 c;
     
+    i2c_set_pointer(0x07, file);
+
     ROS_INFO("Publishing encoder values");
     while(ros::ok()){
         buffer = i2c_read(0x05, 12, file); //read at address 0x05
+        if(buffer == 0){
+            close(file);
+            file = i2c_init(i2c_device.c_str(), slave_address);
+            loop_rate.sleep();
+            continue;
+        }
         for(int i = 0; i < 12; i++){
             enc.b[i] = buffer[i];
         }

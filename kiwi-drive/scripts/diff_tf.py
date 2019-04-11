@@ -75,7 +75,7 @@ class DiffTf:
         
         #### parameters #######
         self.rate = rospy.get_param('~rate',10.0)  # the rate at which to publish the transform
-        self.ticks_meter = float(rospy.get_param('ticks_meter', 540 / (0.0825*2*math.pi)))  # The number of wheel encoder ticks per meter of travel
+        self.ticks_meter = float(rospy.get_param('ticks_meter', 560 / (0.0825*math.pi)))  # The number of wheel encoder ticks per meter of travel
         
         self.base_frame_id = rospy.get_param('~base_frame_id','base_link') # the name of the base frame of the robot
         self.odom_frame_id = rospy.get_param('~odom_frame_id', 'odom') # the name of the odometry reference frame
@@ -90,7 +90,13 @@ class DiffTf:
         self.twheel = rospy.get_param('~encoder3', 'enc3') 
         self.t_delta = rospy.Duration(1.0/self.rate)
         self.t_next = rospy.Time.now() + self.t_delta
-        
+       
+        print(self.fwheel)
+        print(self.swheel)
+        print(self.twheel)
+        print(self.base_frame_id)
+        print(self.odom_frame_id)
+
         # internal data
         self.enc_first = None        # wheel encoder readings
         self.enc_second = None
@@ -153,7 +159,7 @@ class DiffTf:
             #print("distances: {0}, {1}, {2}".format(d_first, d_second, d_third))
     
             # distance traveled in x an y, rotation in z 
-            x = (-2 * d_second + d_first + d_third) / -3
+            x = (-2 * d_second + d_first + d_third) / 3
             y = (d_first - d_third) * math.sqrt(3) / -3
             th = ((d_first + d_second + d_third) / 3) / 0.113
             self.th += th
@@ -198,6 +204,7 @@ class DiffTf:
                 self.base_frame_id,
                 self.odom_frame_id
                 )
+            #print("sent transform from %s to %s" % (self.base_frame_id, self.odom_frame_id))
             
             odom = Odometry()
             odom.header.stamp = now

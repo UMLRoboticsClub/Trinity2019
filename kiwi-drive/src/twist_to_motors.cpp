@@ -34,7 +34,7 @@ int main(int argc, char **argv){
             //and are right-handed, with X forward, Y left, and Z up. 
             //ROS_INFO("got a cmd_vel command");
 
-            float vx = vel->linear.x;
+            float vx = vel->linear.x * -1;
             float vy = vel->linear.y;
             float theta = vel->angular.z;
             vc = -0.5f * vx - sqrt(3)/2 * vy+theta;

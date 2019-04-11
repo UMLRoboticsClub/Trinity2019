@@ -35,7 +35,7 @@ void init_motors(ros::NodeHandle &n){
     typedef std_msgs::Float32::ConstPtr mtr_input_type;
     typedef boost::function<void (const mtr_input_type&)> callback_func;
 
-    callback_func mtrMsgA = [](const mtr_input_type& vel){ ROS_INFO("got command: %.3f", vel->data); motorA.set(vel->data); };
+    callback_func mtrMsgA = [](const mtr_input_type& vel){ motorA.set(vel->data); };
     callback_func mtrMsgB = [](const mtr_input_type& vel){ motorB.set(vel->data); };
     callback_func mtrMsgC = [](const mtr_input_type& vel){ motorC.set(vel->data); };
 

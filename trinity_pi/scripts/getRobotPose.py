@@ -3,21 +3,22 @@
 from GetRobotPose.srv import *
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
+from nav_msgs.msg import Odometry
+import tf
 
 pose = PoseStamped()
 
-def main():
+if __name__=='__main__':
 	rospy.init_node('GetRobotPoseNode')
-	rospy.Subscriber("odom", PoseWithCovarianceStamped, callback)
+	rospy.Subscriber("odom", Odometry, callback)
 	s = rospy.Service('GetRobotPose', GetRobotPose, handle_get_robot_pose)
+        listener = tf.TransformListener()
 	rospy.spin()
 
 def handle_get_robot_pose(req):
 	return GetRobotPoseResponse(pose)
 
 def callback(data):
-	pose.pose = data.pose.pose
-	pose.header.seq = data.header.seq
-	pose.header.stamp = rospy.Time.now()
-	pose.header.frame_id = data.header.frame_id
+        tf.waitForTransform('/map', '/odom', rospy.Time.now())
+        pose = transformPose('/map', data.pose)
 

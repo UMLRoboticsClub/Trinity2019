@@ -21,6 +21,7 @@
 
 import rospy
 import roslib
+import math
 
 from std_msgs.msg import Int32
 from std_msgs.msg import Float32
@@ -56,15 +57,15 @@ class PidVelocity():
         self.prev_encoder = 0
         
         ### get parameters #### 
-        self.Kp = rospy.get_param('~Kp',0.2)
-        self.Ki = rospy.get_param('~Ki',0)
+        self.Kp = rospy.get_param('~Kp',1)
+        self.Ki = rospy.get_param('~Ki',0.001)
         self.Kd = rospy.get_param('~Kd',0)
         self.out_min = rospy.get_param('~out_min',-1)
         self.out_max = rospy.get_param('~out_max',1)
         self.rate = rospy.get_param('~rate',30)
         self.rolling_pts = rospy.get_param('~rolling_pts',2)
         self.timeout_ticks = rospy.get_param('~timeout_ticks',4)
-        self.ticks_per_meter = rospy.get_param('ticks_meter', 20)
+        self.ticks_per_meter = float(rospy.get_param('ticks_meter', 560 / (0.0825*math.pi)))  # The number of wheel encoder ticks per meter of travel
         self.vel_threshold = rospy.get_param('~vel_threshold', 0.001)
         self.encoder_min = rospy.get_param('encoder_min', -2147483647)
         self.encoder_max = rospy.get_param('encoder_max', 2147483647)
@@ -114,7 +115,7 @@ class PidVelocity():
             self.calcVelocity()
             #rospy.loginfo("done calculating velocity...");
             self.doPid()
-            rospy.loginfo("motor cmd: {0}".format(self.motor))
+            #rospy.loginfo("motor cmd: {0}".format(self.motor))
             self.pub_motor.publish(self.motor)
             self.r.sleep()
             self.ticks_since_target += 1
@@ -193,7 +194,7 @@ class PidVelocity():
         if (self.target == 0):
             self.motor = 0
     
-        rospy.logdebug("vel:%0.2f tar:%0.2f err:%0.2f int:%0.2f der:%0.2f ## motor:%d " % 
+        rospy.loginfo("vel:%0.2f tar:%0.2f err:%0.2f int:%0.2f der:%0.2f ## motor:%d " % 
                       (self.vel, self.target, self.error, self.integral, self.derivative, self.motor))
     
     

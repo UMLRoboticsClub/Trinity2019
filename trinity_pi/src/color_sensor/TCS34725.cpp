@@ -1,27 +1,3 @@
-/*!
- *  @file Adafruit_TCS34725.cpp
- *
- *  @mainpage Driver for the TCS34725 digital color sensors.
- *
- *  @section intro_sec Introduction
- *
- *  Adafruit invests time and resources providing this open source code,
- *  please support Adafruit and open-source hardware by purchasing
- *  products from Adafruit!
- *
- *  @section author Author
- *
- *  KTOWN (Adafruit Industries)
- *
- *  @section license License
- *
- *  BSD (see license.txt)
- *
- *  @section HISTORY
- *
- *  v1.0 - First release
- */
-
 #include "TCS34725.h"
 
 #include <iostream>
@@ -105,8 +81,8 @@ float powf(const float x, const float y) {
  *  @param  d
  */
 void TCS34725::write8(uint8_t reg, uint8_t val) {
-    uint8_t packet[2] = { TCS34725_COMMAND_BIT | reg, val & 0xFF };
-    while(write(fd, packet, 2) != 2){ cerr << "tcs34725 write failed(1)" << endl; }
+    uint8_t packet[2] = { (uint8_t)(TCS34725_COMMAND_BIT | reg), (uint8_t)(val & 0xFF) };
+    if(write(fd, packet, 2) != 2){ cerr << "tcs34725 write failed(1)" << endl; }
 }
 
 /*!
@@ -116,11 +92,15 @@ void TCS34725::write8(uint8_t reg, uint8_t val) {
  */
 uint8_t TCS34725::read8(uint8_t reg){
     uint8_t addr = TCS34725_COMMAND_BIT | reg;
-    while(write(fd, &addr, 1) != 1){ cerr << "tcs23725 write failed(2)" << endl; }
-    while(read(fd, &addr, 1)  != 1){ cerr << "tcs34725 read failed(2)"  << endl; }
+    if(write(fd, &addr, 1) != 1){
+        cerr << "read: tcs write failed" << endl;
+        return 0;
+    }
+    if(read(fd, &addr, 1)  != 1){
+        cerr << "read: tcs read failed" << endl;
+        return 0;
+    }
 
-    //if(write(fd, &addr, 1) != 1){ cerr << "Read failed(1)" << endl; }
-    //if(read(fd, &addr, 1)  != 1){ cerr << "Read failed(2)" << endl; }
     return addr;
 }
 
@@ -131,10 +111,16 @@ uint8_t TCS34725::read8(uint8_t reg){
  */
 uint16_t TCS34725::read16(uint8_t reg) {
     uint8_t addr = TCS34725_COMMAND_BIT | reg;
-    while(write(fd, &addr, 1) != 1){ cerr << "tcs23725 write failed(3)" << endl; }
+    if(write(fd, &addr, 1) != 1){
+        cerr << "tcs23725 write failed(3)" << endl;
+        return 0;
+    }
 
     uint8_t buf[2];
-    while(read(fd, buf, 2)  != 2){ cerr << "tcs34725 read failed(2)"  << endl; }
+    if(read(fd, buf, 2) != 2){
+        cerr << "tcs34725 read failed(2)"  << endl;
+        return 0;
+    }
 
     //sends high 8 bits, then low
     return buf[0] << 8 | buf[1];
@@ -516,7 +502,9 @@ void TCS34725::setInterrupt(bool i) {
  */
 void TCS34725::clearInterrupt() {
     uint8_t cmd = TCS34725_COMMAND_BIT | 0x66; 
-    while(write(fd, &cmd, 1) != 1){ cerr << "tcs23725 write failed(2)" << endl; }
+    if(write(fd, &cmd, 1) != 1){
+        cerr << "tcs23725 write failed(2)" << endl;
+    }
 }
 
 /*!
@@ -532,4 +520,28 @@ void TCS34725::setIntLimits(uint16_t low, uint16_t high) {
 	write8(0x06, high & 0xFF);
 	write8(0x07, high >> 8);
 }
+
+/*!
+ *  @file Adafruit_TCS34725.cpp
+ *
+ *  @mainpage Driver for the TCS34725 digital color sensors.
+ *
+ *  @section intro_sec Introduction
+ *
+ *  Adafruit invests time and resources providing this open source code,
+ *  please support Adafruit and open-source hardware by purchasing
+ *  products from Adafruit!
+ *
+ *  @section author Author
+ *
+ *  KTOWN (Adafruit Industries)
+ *
+ *  @section license License
+ *
+ *  BSD (see license.txt)
+ *
+ *  @section HISTORY
+ *
+ *  v1.0 - First release
+ */
 
