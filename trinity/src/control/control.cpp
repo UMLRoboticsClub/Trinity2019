@@ -101,24 +101,24 @@ Point Control::computeDistanceField() {
 	//also switch from vector to something circular
 
 	//get the robot position
-    //Point robotPos = poseToPoint(getRobotPose());
-	geometry_msgs::Pose origin;
-	geometry_msgs::PoseStamped robot_point;
-	origin.position.x = 0.05;
-	origin.position.y = -0.05;
-	origin.position.z = 0;
+    Point robotPos = poseToPoint(getRobotPose());
+	//geometry_msgs::Pose origin;
+	//geometry_msgs::PoseStamped robot_point;
+	//origin.position.x = 0.05;
+	//origin.position.y = -0.05;
+	//origin.position.z = 0;
 	//robot_point.point.x = origin.position.x;
 	//robot_point.point.y = origin.position.y;
 	//robot_point.point.z = 0;
-	robot_point.pose = origin;
-	robot_point.header.stamp = ros::Time::now();
-	robot_point.header.frame_id = "/map";
+	//robot_point.pose = origin;
+	//robot_point.header.stamp = ros::Time::now();
+	//robot_point.header.frame_id = "/map";
 	//point_pub.publish(robot_point);
 	//goal_pub.publish(robot_point);
 	//ROS_INFO("publishing robot point...");
 	//ros::spinOnce();
-	Point robotPos = poseToPoint(origin);
-	ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
+	//Point robotPos = poseToPoint(origin);
+	//ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
 	
     vector<Point> boundary;
     boundary.push_back(robotPos);
@@ -168,7 +168,7 @@ void Control::takeAction(RobotOp robotAction){
 			gs.secondArena = true;
 			break;
 		case OP_EXTINGUISH:
-			extinguishCandle();
+			//extinguishCandle();
 			break;
 		case OP_SCANROOM:
             {
@@ -197,7 +197,7 @@ void Control::takeAction(RobotOp robotAction){
                 candlePose.position = robotPose.position;
                 candlePose.orientation.z = robotPose.orientation.z + candle;
                 targetPoints[FLAME].push_back(candlePose);
-				extinguish(candlePose);
+				extinguishCandle(candlePose);
             }
 			//now we extinguish
             break;
