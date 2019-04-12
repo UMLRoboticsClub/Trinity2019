@@ -12,10 +12,30 @@ Control::Control(ros::NodeHandle* nodeHandle){
 	initializePublishers();
 	initializeServices();
 	ac = new MoveBaseClient(nh, "move_base", true);
-	while(!ac->waitForServer(ros::Duration(5.0))){
-    	ROS_INFO("Waiting for the move_base action server to come up");
-  	}	
-
+	//while(!ac->waitForServer(ros::Duration(5.0))){
+    //	ROS_INFO("Waiting for the move_base action server to come up");
+  	//}	
+	ros::Duration(5).sleep();
+    geometry_msgs::Twist rotCommand;
+    rotCommand.angular.z = .1;
+    geometry_msgs::Pose robotPose = getRobotPose();
+    geometry_msgs::Pose newRobotPose;
+    double delta = 0;
+    //while we haven't rotated 2*PI rads
+	
+	ROS_INFO("wiggling");    
+	while(ros::ok() && delta < 1.5){
+		ROS_INFO("wiggle: %.2f", delta);
+        cmd_vel_pub.publish(rotCommand);
+        newRobotPose = getRobotPose();
+        double diff = (newRobotPose.orientation.z - robotPose.orientation.z);
+		if(diff < 0)
+			diff += 2*3.1415926535;
+		delta += diff;
+        robotPose = newRobotPose;
+    }
+	ROS_INFO("done wiggling");
+	
 	//initialize the distance field
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
@@ -64,25 +84,24 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		//translate occGrid coords into moveBase coords
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
-
 		goal.target_pose.header.frame_id = "/map";
 		goal.target_pose.header.stamp = ros::Time::now();
 		goal.target_pose.pose = target;
 		goal.target_pose.pose.orientation.w = 1;
-		geometry_msgs::PoseStamped psGoal;
-		psGoal.pose = target;
-		psGoal.header = goal.target_pose.header;
-		goal_pub.publish(psGoal);
-		ros::spinOnce();
-		ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
-		ROS_INFO("Found goal, publishing...");
+		//geometry_msgs::PoseStamped psGoal;
+		//psGoal.pose = target;
+		//psGoal.header = goal.target_pose.header;
+		//goal_pub.publish(psGoal);
+		//ros::spinOnce();
+		//ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
+		//ROS_INFO("Found goal, publishing...");
 		
 		ac->sendGoal(goal);
 		ac->waitForResult();
-		
+		robotAction = OP_SCANROOM;
 		//perform necessary action at targetLoc.
 		//if we entered a room, update robotAction accordingly
-		//update robot action in case we entered a room
+		//`update robot action in case we entered a room
 		takeAction(robotAction);
 	}
 }
@@ -97,9 +116,9 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
             distanceField[i][j] = -1;
         }
     }
-	geometry_msgs::Pose targetPose;
+	//geometry_msgs::Pose targetPose;
     //check if we have already found an important point where we need to go
-    vector<int> primaryTargets = gs.getTargetType();
+    /*vector<int> primaryTargets = gs.getTargetType();
     for (const int type : primaryTargets) {
         // if we have a destination in mind
         if (targetPoints[type].size() > 0) {
@@ -113,7 +132,8 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
     }
 	ROS_INFO("At end of find next target");
     //no important points already found, go to distance field and find an unknown
-    return pointToPose(computeDistanceField());
+ `i */
+	return pointToPose(computeDistanceField());
 }
 
 Point Control::computeDistanceField() {
@@ -124,24 +144,24 @@ Point Control::computeDistanceField() {
 	//also switch from vector to something circular
 
 	//get the robot position
-    //Point robotPos = poseToPoint(getRobotPose());
-	geometry_msgs::Pose origin;
-	geometry_msgs::PoseStamped robot_point;
-	origin.position.x = 0.05;
-	origin.position.y = -0.05;
-	origin.position.z = 0;
+    Point robotPos = poseToPoint(getRobotPose());
+	//geometry_msgs::Pose origin;
+	//geometry_msgs::PoseStamped robot_point;
+	//origin.position.x = 0.05;
+	//origin.position.y = -0.05;
+	//origin.position.z = 0;
 	//robot_point.point.x = origin.position.x;
 	//robot_point.point.y = origin.position.y;
 	//robot_point.point.z = 0;
-	robot_point.pose = origin;
-	robot_point.header.stamp = ros::Time::now();
-	robot_point.header.frame_id = "/map";
+	//robot_point.pose = origin;
+	//robot_point.header.stamp = ros::Time::now();
+	//robot_point.header.frame_id = "/map";
 	//point_pub.publish(robot_point);
 	//goal_pub.publish(robot_point);
 	//ROS_INFO("publishing robot point...");
 	//ros::spinOnce();
-	Point robotPos = poseToPoint(origin);
-	ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
+	//Point robotPos = poseToPoint(origin);
+	//ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
 	
     vector<Point> boundary;
     boundary.push_back(robotPos);
@@ -191,7 +211,7 @@ void Control::takeAction(RobotOp robotAction){
 			gs.secondArena = true;
 			break;
 		case OP_EXTINGUISH:
-			extinguishCandle();
+			//extinguishCandle();
 			break;
 		case OP_SCANROOM:
             {
@@ -203,11 +223,14 @@ void Control::takeAction(RobotOp robotAction){
             geometry_msgs::Pose newRobotPose;
             double delta = 0;
             //while we haven't rotated 2*PI rads
+			//this should ahve a ROS rate
             while(delta < 2*3.1415926535){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
-                delta += newRobotPose.orientation.z - robotPose.orientation.z;
+                delta += (newRobotPose.orientation.z - robotPose.orientation.z);
+				if(delta < 0)
+					delta += 2*3.1415926535;
                 robotPose = newRobotPose;
             }
             //candles is vector of angle indices relative to robot orientation
@@ -217,7 +240,9 @@ void Control::takeAction(RobotOp robotAction){
                 candlePose.position = robotPose.position;
                 candlePose.orientation.z = robotPose.orientation.z + candle;
                 targetPoints[FLAME].push_back(candlePose);
+				extinguishCandle(candlePose);
             }
+			//now we extinguish
             break;
             }
 		case OP_EXIT_ROOM:
@@ -254,7 +279,15 @@ RobotOp Control::determineRobotOp(int type){
 }
 
 //robot already facing correct direction,
-void Control::extinguishCandle(){
+void Control::extinguishCandle(geometry_msgs::Pose candlePose){
+	//move to the correct pose
+
+	move_base_msgs::MoveBaseGoal goal;
+	goal.target_pose.header.frame_id = "/map";
+	goal.target_pose.header.stamp = ros::Time::now();
+	goal.target_pose.pose = candlePose;
+	ac->sendGoal(goal);
+	ac->waitForResult();
     std_srvs::Empty srv;
     solenoidClient.call(srv);
     return;
