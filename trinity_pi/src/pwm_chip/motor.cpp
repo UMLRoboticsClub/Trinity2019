@@ -14,6 +14,7 @@ void Motor::stop(){
 }
 
 void Motor::set(float power){
+    if(power == lastVal){ return; };
     //printf("got power: %.3f", power);
     if(power < 0){
         pca.setDutyCycle(pinA, 0);
@@ -22,4 +23,5 @@ void Motor::set(float power){
         pca.setDutyCycle(pinB, 0);
         pca.setDutyCycle(pinA, power);
     }
+    lastVal = power;
 }

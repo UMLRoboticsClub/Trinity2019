@@ -58,7 +58,7 @@ void i2c_set_pointer(int address, int file) {
 // Read n bytes
 //////////
 char * i2c_read(int add1, int nbytes,int file) {
-    int n;
+    //int n;
     //char* fail = "fail";
  
     i2c_set_pointer(add1,file);
@@ -74,20 +74,20 @@ char * i2c_read(int add1, int nbytes,int file) {
         while(ros::ok() && byte != startByte)
         {
             count++;
-            //ROS_INFO("byte is: %d", byte);
+            ROS_INFO("byte is: %d", byte);
             //ROS_INFO("%d", byte == startByte);
-            int num = read(file, &byte, 1); 
+            read(file, &byte, 1); 
             if(count > 13){
                 return 0;
             }
         }
     
         if(read(file, buf, nbytes) != nbytes){
-            //ROS_ERROR("read failed");
+            ROS_ERROR("read failed");
             continue;
         } 
         if(read(file, &byte, 1), byte != endByte){
-            //ROS_INFO("end byte not found!");
+            ROS_INFO("end byte not found!");
             continue;
         } else {
             done = true;
@@ -124,9 +124,9 @@ int main(int argc, char** argv){
     ROS_INFO("Opened i2c bus on address %x", slave_address);
     //printf("%s, %d\n", i2c_device, slave_address);
 
-    ros::Publisher pubA = n.advertise<std_msgs::Int32>(topic_nameA, 1000);
-    ros::Publisher pubB = n.advertise<std_msgs::Int32>(topic_nameB, 1000);
-    ros::Publisher pubC = n.advertise<std_msgs::Int32>(topic_nameC, 1000);
+    ros::Publisher pubA = n.advertise<std_msgs::Int32>(topic_nameA, 1);
+    ros::Publisher pubB = n.advertise<std_msgs::Int32>(topic_nameB, 1);
+    ros::Publisher pubC = n.advertise<std_msgs::Int32>(topic_nameC, 1);
     ros::Rate loop_rate(pub_hz);
     std_msgs::Int32 c;
     

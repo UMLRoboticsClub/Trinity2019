@@ -11,6 +11,7 @@ class Motor {
         void stop();
 
     private:
+        float lastVal = 0;
         //handle to PWM chip
         PCA9685 &pca;
         //pins for H-Bridge
