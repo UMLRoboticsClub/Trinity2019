@@ -1,0 +1,120 @@
+RUN:
+master:
+	(1) roscore
+	(2a) roslaunch trinity debug.launch (if using joystick)
+	(2b) roslaunch trinity static_transforms.launch (if using no joystick)
+	(3) roslaunch kiwi-drive robot_control.launch
+	(4) roslaunch trinity navigation.launch
+pi: 
+	(1) roslaunch trinity_pi robot_config.launch
+
+debugging info:
+	- rosrun rqt_plot rqt_plot: for graphing values
+	- rosrun rqt_tf_tree rqt_tf_tree: get the tf tree
+	- rosconsole: set log level and view all messages coming from nodes, filter etc (use the config button to set the topic to /rosout)
+	- rostopic pub -r 10 /cmd_vel [double tab]: publish a /cmd_vel, defaults to 0 so you can hopefully stop the motors if it goes insane
+
+
+List of packages:
+rplidar_ros
+kiwi-drive
+joint_state_publisher
+robot_state_publisher
+trinity_pi
+trinity
+
+List of launch files:
+robot_config.launch: Only launchfile run on the pi. Runs the
+	- robot description (ros parameter)
+	- joint state publisher
+	- robot state publisher
+	- encoders
+		- encoder 1 topic (/enc1)
+		- encoder 2 topic (/enc2)
+		- encoder 3 topic (/enc3)
+		- i2c_device (/dev/i2c-1)
+		- slave_address (0x3)
+		- pub_hz (20)
+	- color sensor
+		- i2c device (/dev/i2c-1)
+	- pwm_chip
+		- motor 1 topic (/motor1_cmd)
+		- motor 2 topic (/motor2_cmd)
+		- motor 3 topic (/motor3_cmd)
+	- status light
+	- solenoid
+	- servo
+	- gyro node
+	- sound start
+robot_control.launch
+	- twist to motors
+		- motor 1 velocity target (/wheel1_vtarget)
+		- motor 2 velocity target (/wheel2_vtarget)
+		- motor 3 velocity target (/wheel3_vtarget)
+	- pid_velocity (1)
+	- pid_velocity (2)
+	- pid_velocity (3)
+		- encoder topic (/encX)
+		- wheel velocity target (/wheelX_vtarget)
+		- motor X topic (motor command) (/motorX_cmd)
+		- wheel velocity (/wheelX_vel)
+	- diff tf
+		- encoder 1 topic (/enc1)
+		- encoder 2 topic (/enc2)
+		- encoder 3 topic (/enc3)
+	- robot pose ekf (not currently tested)
+navigation.launch
+	- hector mapping
+	- rviz
+		- includes custom config file
+	- control
+	- move base
+static_transforms.launch
+	- map -> laser 
+	- map -> laser_frame
+	- map -> odom (published by gmapping)
+	- map -> base_link (NOT PUBLISHED, base_link -> odom should be published by diff_tf)
+	- map -> imu (published by IMU)
+	- TODO change initial topic to base link not map 
+
+Transforms
+	- map -> odom (navigation.launch)
+	- odom -> base_link (robot_control.launch)
+	- base_link -> laser (static_transforms.launch)
+	- base_link -> imu (currently: static_transforms, will be gyro node later)
+	- base_link -> wheels (robot_state_publisher)
+
+List of topics:
+/encX
+	- Publishers: encoders
+	- Subscribers: pid_velocity, diff_tf
+/motorX_cmd
+	- Publishers: pid_velocity
+	- Subscribers: pwm_chip
+/wheelX_vtarget
+	- Publishers: twist_to_motors
+	- Subscribers: pid_velocity
+/wheelX_vel
+	- Publishers: pid_velocity
+	- Subscribers: none
+/scan
+	- Publishers: rplidar_ros
+	- Subscribers: hector_mapping, rviz
+/map
+	- Publishers: hector_mapping
+	- Subscribers: move_base, rviz
+/move_base/global_costmap/costmap
+	- Publsihers: move_base
+	- Subscribers: control, rviz
+/odom
+	- Publishers: diff_tf
+	- Subscribers: robot_pose_ekf, rviz
+/move_base/goal
+	- Publishers: control (through actionlib)
+	- Subscribers: move_base, rviz
+/cmd_vel
+	- Publishers: move_base
+	- Subscribers: twist_to_motors
+/sound_start
+	- Publishers: sound_start
+	- Subscribers: control
