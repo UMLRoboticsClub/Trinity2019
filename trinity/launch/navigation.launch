@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find trinity)/config/custom_rosconsole.conf"/>-->
-	<node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
+	<node pkg="trinity" type="gmapping_without_output.sh" name="gmapping_no_output" />
+	<!--<node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen" args="2>/dev/nulll">
 		<param name="map_update_interval" value="1.0" />
 		<param name="delta" value="0.01" />
 		<param name="xmin" value="-5.0" />
@@ -11,13 +12,15 @@
 		<param name="angularUpdate" value="0.0" />
 		<param name="linearUpdate" value="0.0" />
 		<param name="temporalUpdate" value="0.1" />
-	</node> 
-	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	</node>-->
+	<node pkg="rviz" type="rviz" name="trinity_rviz" args="-d $(find trinity)/config/trinity.rviz" />
+	<!--<node pkg="trinity" type="control" name="control" output="screen" />-->
+	<!--<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
 		<rosparam file="$(find trinity)/config/local_costmap_params.yaml" command="load" />
 		<rosparam file="$(find trinity)/config/global_costmap_params.yaml" command="load" />
 		<rosparam file="$(find trinity)/config/base_local_planner_params.yaml" command="load" />
-	</node>
+	</node>-->
 </launch>
 	

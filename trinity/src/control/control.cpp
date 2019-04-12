@@ -6,14 +6,17 @@
 
 
 
-Control::Control(ros::Publisher pointPub, ros::Publisher velPub, ros::Publisher goalPub, ros::ServiceClient& robotPoseClient, ros::ServiceClient& irClient, ros::ServiceClient& solenoidClient): gs(), targetPoints(), ac("move_base", true){
+Control::Control(ros::NodeHandle* nodeHandle){
+	nh = *nodeHandle;
+	initializeSubscribers();
+	initializePublishers();
+	initializeServices();
+	ac = new MoveBaseClient(nh, "move_base", true);
+	while(!ac->waitForServer(ros::Duration(5.0))){
+    	ROS_INFO("Waiting for the move_base action server to come up");
+  	}	
+
 	//initialize the distance field
-    cmd_vel_pub = velPub;
-	goal_pub = goalPub;
-	point_pub = pointPub;
-    this->robotPoseClient = robotPoseClient;
-    this->irClient = irClient;
-    this->solenoidClient = solenoidClient;
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
         distanceField[i] = vector<int>(GRID_SIZE_CELLS);
@@ -21,8 +24,28 @@ Control::Control(ros::Publisher pointPub, ros::Publisher velPub, ros::Publisher 
             distanceField[i][j] = -1;
         }
     }
-	start = false;
+	start = true;
 	ROS_INFO("Done initializing");
+}
+
+void Control::initializeSubscribers(){
+	map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::controlLoop, this);
+	wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
+	ROS_INFO("done initializing subscribers");
+}
+
+void Control::initializePublishers(){
+	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+	goal_pub = nh.advertise<geometry_msgs::PoseStamped>("goal", 1);
+	point_pub = nh.advertise<geometry_msgs::PointStamped>("robot_point", 1);
+	ROS_INFO("done initializing publishers");
+}
+
+void Control::initializeServices(){
+	robotPoseClient = nh.serviceClient<trinity_pi::GetRobotPose>("GetRobotPose");
+	irClient = nh.serviceClient<std_srvs::Trigger>("GetFlame");
+	solenoidClient = nh.serviceClient<std_srvs::Empty>("Extinguish");
+	ROS_INFO("done initializing services");
 }
 
 void Control::startFunc(const std_msgs::Bool::ConstPtr&){
@@ -53,9 +76,9 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		ros::spinOnce();
 		ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
 		ROS_INFO("Found goal, publishing...");
-
-		ac.sendGoal(goal);
-		ac.waitForResult();
+		
+		ac->sendGoal(goal);
+		ac->waitForResult();
 		
 		//perform necessary action at targetLoc.
 		//if we entered a room, update robotAction accordingly

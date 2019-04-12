@@ -176,6 +176,9 @@ add_executable(control
     src/control/control_node.cpp
     src/control/control.cpp
     )
+add_executable(fake_node
+	src/control/fake_node.cpp
+	)
 
 
 ## Add cmake target dependencies of the executable
@@ -191,7 +194,7 @@ set(gpio_LIBS "-lpthread -lpigpiod_if2")
 #target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 #target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
-
+target_link_libraries(fake_node		${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

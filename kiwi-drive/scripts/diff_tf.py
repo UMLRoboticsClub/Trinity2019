@@ -218,7 +218,7 @@ class DiffTf:
             odom.twist.twist.linear.y = self.dy
             odom.twist.twist.angular.z = self.dr
             self.odomPub.publish(odom)
-            
+            print("robot pose is: ", self.x, self.y)            
             
 
 

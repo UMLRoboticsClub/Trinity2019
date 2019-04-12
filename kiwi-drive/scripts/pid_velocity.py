@@ -57,8 +57,8 @@ class PidVelocity():
         self.prev_encoder = 0
         
         ### get parameters #### 
-        self.Kp = rospy.get_param('~Kp',1)
-        self.Ki = rospy.get_param('~Ki',0.001)
+        self.Kp = rospy.get_param('~Kp',0)
+        self.Ki = rospy.get_param('~Ki',3)
         self.Kd = rospy.get_param('~Kd',0)
         self.out_min = rospy.get_param('~out_min',-1)
         self.out_max = rospy.get_param('~out_max',1)
@@ -140,7 +140,7 @@ class PidVelocity():
                 self.calcRollingVel()
             else:
                 rospy.logdebug("-D- %s above threshold cur_vel=%0.3f" % (self.nodename, cur_vel))
-                if abs(cur_vel) < self.vel:
+                if False: #abs(cur_vel) < self.vel:
                     rospy.logdebug("-D- %s cur_vel < self.vel" % self.nodename)
                     # we know we're slower than what we're currently publishing as a velocity
                     self.appendVel(cur_vel)
@@ -155,6 +155,7 @@ class PidVelocity():
             self.wheel_prev = self.wheel_latest
             self.then = rospy.Time.now()
             
+        #rospy.loginfo("publishing: %.3f" % self.vel)
         self.pub_vel.publish(self.vel)
         
     #####################################################
@@ -177,6 +178,7 @@ class PidVelocity():
         self.prev_pid_time = rospy.Time.now()
         
         self.error = self.target - self.vel
+        #rospy.loginfo(self.error)
         self.integral = self.integral + (self.error * pid_dt)
         #rospy.loginfo("i = i + (e * dt):  %0.3f = %0.3f + (%0.3f * %0.3f)" % (self.integral, self.integral, self.error, pid_dt))
         self.derivative = (self.error - self.previous_error) / pid_dt
@@ -194,8 +196,8 @@ class PidVelocity():
         if (self.target == 0):
             self.motor = 0
     
-        rospy.loginfo("vel:%0.2f tar:%0.2f err:%0.2f int:%0.2f der:%0.2f ## motor:%d " % 
-                      (self.vel, self.target, self.error, self.integral, self.derivative, self.motor))
+        #rospy.loginfo("vel:%0.2f tar:%0.2f err:%0.2f int:%0.2f der:%0.2f ## motor:%d " % 
+                      #(self.vel, self.target, self.error, self.integral, self.derivative, self.motor))
     
     
 
