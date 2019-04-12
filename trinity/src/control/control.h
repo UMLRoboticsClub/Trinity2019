@@ -38,7 +38,7 @@ public:
 	void takeAction(RobotOp robotAction);
     Point computeDistanceField();
 	RobotOp determineRobotOp(int);
-	void extinguishCandle();
+	void extinguishCandle(geometry_msgs::Pose candlePose);
 	bool unknownLargeEnough(Point center);
     vector<Point> findOpenNeighbors(const Point &currentPos);
     int accessOccGrid(int x, int y);
