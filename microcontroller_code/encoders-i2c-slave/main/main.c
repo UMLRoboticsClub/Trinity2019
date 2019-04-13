@@ -8,15 +8,24 @@
 #include <stdlib.h>
 #include <esp_task_wdt.h>
 
+#include <driver/i2c.h>
+#include <esp_log.h>
+
 #include "sdkconfig.h"
-#include "i2c.h"
+
+#define I2C_SLAVE_1_SCL         19
+#define I2C_SLAVE_1_SDA         18
+#define I2C_SLAVE_1_TX_BUF_LEN  (1024)
+#define I2C_SLAVE_1_RX_BUF_LEN  (1024)
 
 #define ENC1_A GPIO_NUM_27
 #define ENC1_B GPIO_NUM_14
 #define ENC2_A GPIO_NUM_22
 #define ENC2_B GPIO_NUM_23
-#define ENC3_A GPIO_NUM_4
-#define ENC3_B GPIO_NUM_21
+#define ENC3_A GPIO_NUM_21
+#define ENC3_B GPIO_NUM_4
+//#define I2C_SLAVE_1_SCL 19
+//#define I2C_SLAVE_1_SDA 18
 
 union Data {
     int32_t counter[3];
@@ -30,17 +39,40 @@ void IRAM_ATTR enc2_b(void *arg){ gpio_get_level(ENC2_A) == gpio_get_level(ENC2_
 void IRAM_ATTR enc3_a(void *arg){ gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? --d.counter[2] : ++d.counter[2]; }
 void IRAM_ATTR enc3_b(void *arg){ gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? ++d.counter[2] : --d.counter[2]; }
 
-//already set to 240mHz again
+void i2c_slave_init(uint8_t address){
+    int i2c_slave_port = I2C_NUM_0;
+    ESP_LOGI("i2c", "Starting I2C slave 1 at port %d.", i2c_slave_port);
 
-/*
-#define NTOHL(n) ((((n & 0xFF))       << 24) | \
-              (((n & 0xFF00))     << 8)  | \
-              (((n & 0xFF0000))   >> 8)  | \
-              (((n & 0xFF000000)) >> 24))
-*/
+    i2c_config_t conf;
+    conf.sda_io_num          = I2C_SLAVE_1_SDA;
+    conf.sda_pullup_en       = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num          = I2C_SLAVE_1_SCL;
+    conf.scl_pullup_en       = GPIO_PULLUP_ENABLE;
+    conf.mode                = I2C_MODE_SLAVE;
+    conf.slave.addr_10bit_en = 0;
+    conf.slave.slave_addr    = address;
+
+    ESP_ERROR_CHECK(i2c_param_config(i2c_slave_port, &conf));
+    ESP_ERROR_CHECK(i2c_driver_install(
+        i2c_slave_port,
+        conf.mode,
+        I2C_SLAVE_1_RX_BUF_LEN,
+        I2C_SLAVE_1_TX_BUF_LEN,
+        0
+    ));
+}
+
+void i2c_slave_uninit(){
+    ESP_ERROR_CHECK(i2c_driver_delete(I2C_NUM_0));
+}
 
 void i2c_slave_task(void *params){
     esp_task_wdt_deinit();
+
+    uint8_t startByte = 170;
+    uint8_t endByte   = 169;
+
+    const int waitTicks = 1000;
 
     uint8_t addr;
     while(1){
@@ -49,30 +81,46 @@ void i2c_slave_task(void *params){
             uint8_t packet = 0xFF;
             switch(addr){
                 case 0x05:
-                    i2c_slave_write_buffer(I2C_NUM_0, d.buf, 12, 1000);
+                    i2c_slave_write_buffer(I2C_NUM_0, &startByte, 1, waitTicks);
+                    i2c_slave_write_buffer(I2C_NUM_0, d.buf, 12, waitTicks);
+                    i2c_slave_write_buffer(I2C_NUM_0, &endByte, 1, waitTicks);
                     break;
                 case 0x06:
-                    i2c_slave_write_buffer(I2C_NUM_0, &addr, 1, 1000);
+                    i2c_slave_write_buffer(I2C_NUM_0, &addr, 1, waitTicks);
+                    break;
+                case 0x07:
+                    i2c_slave_uninit();
+                    d.counter[0] = d.counter[1] = d.counter[2] = 0;
+                    vTaskDelay(2 / portTICK_RATE_MS);
+                    i2c_slave_init(0x03);
                     break;
                 default:
-                    i2c_slave_write_buffer(I2C_NUM_0, &packet, 1, 1000);
+                    i2c_slave_write_buffer(I2C_NUM_0, &packet, 1, waitTicks);
             }
         }
-        vTaskDelay(5 / portTICK_RATE_MS);
+        vTaskDelay(2 / portTICK_RATE_MS);
     }
 
     vTaskDelete(NULL);
 }
 
-void printy(void *arg){
-     while(1){
-        printf("%d, %d, %d\n", d.counter[0], d.counter[1], d.counter[2]);
-        vTaskDelay(200 / portTICK_RATE_MS);
-     }
-}
+//void printy(void *arg){
+//     while(1){
+//        printf("%d, %d, %d\n", d.counter[0], d.counter[1], d.counter[2]);
+//        //printf("1A:%d, 1B:%d\n", gpio_get_level(ENC1_A), gpio_get_level(ENC1_B));
+//        //printf("2A:%d, 2B:%d\n", gpio_get_level(ENC2_A), gpio_get_level(ENC2_B));
+//        //printf("3A:%d, 3B:%d\n", gpio_get_level(ENC3_A), gpio_get_level(ENC3_B));
+//        vTaskDelay(200 / portTICK_RATE_MS);
+//     }
+//}
 
-void app_main(){
-    memset(d.counter, 0, 3*sizeof(uint32_t));
+void init_gpio(void *params){
+    ESP_ERROR_CHECK(gpio_set_direction(ENC1_A, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(ENC1_B, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(ENC2_A, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(ENC2_B, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(ENC3_A, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(ENC3_B, GPIO_MODE_INPUT));
 
     ESP_ERROR_CHECK(gpio_set_intr_type(ENC1_A, GPIO_INTR_ANYEDGE));
     ESP_ERROR_CHECK(gpio_set_intr_type(ENC1_B, GPIO_INTR_ANYEDGE));
@@ -97,8 +145,17 @@ void app_main(){
     ESP_ERROR_CHECK(gpio_isr_handler_add(ENC3_A, enc3_a, NULL));
     ESP_ERROR_CHECK(gpio_isr_handler_add(ENC3_B, enc3_b, NULL));
 
+    while(1){ vTaskDelay(100000 / portTICK_RATE_MS); }
+}
+
+void app_main(){
+    d.counter[0] = d.counter[1] = d.counter[2] = 0;
+
+    xTaskCreatePinnedToCore(init_gpio, "init_gpio", 1024, NULL, 1, NULL, 1);
+    vTaskDelay(100 / portTICK_RATE_MS);
+
     i2c_slave_init(0x03);
-    xTaskCreatePinnedToCore(i2c_slave_task, "I2C", 2048, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(i2c_slave_task, "i2c_slave", 1024, NULL, 2, NULL, 0);
 
     //xTaskCreatePinnedToCore(printy, "printy", 2048, NULL, 2, NULL, 1);
 }
