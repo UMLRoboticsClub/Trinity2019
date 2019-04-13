@@ -3,38 +3,22 @@
 #include <actionlib/client/simple_action_client.h>
 #include "control.h"
 #include <nav_msgs/GetMap.h>
+#include <iostream>
 
-
+using std::cin;
+using std::cout;
 
 Control::Control(ros::NodeHandle* nodeHandle){
 	nh = *nodeHandle;
+	ROS_INFO("initializing");
 	initializeSubscribers();
 	initializePublishers();
 	initializeServices();
+	ROS_INFO("ros initialized");
 	ac = new MoveBaseClient(nh, "move_base", true);
-	//while(!ac->waitForServer(ros::Duration(5.0))){
-    //	ROS_INFO("Waiting for the move_base action server to come up");
-  	//}	
-	ros::Duration(5).sleep();
-    geometry_msgs::Twist rotCommand;
-    rotCommand.angular.z = .1;
-    geometry_msgs::Pose robotPose = getRobotPose();
-    geometry_msgs::Pose newRobotPose;
-    double delta = 0;
-    //while we haven't rotated 2*PI rads
-	
-	ROS_INFO("wiggling");    
-	while(ros::ok() && delta < 1.5){
-		ROS_INFO("wiggle: %.2f", delta);
-        cmd_vel_pub.publish(rotCommand);
-        newRobotPose = getRobotPose();
-        double diff = (newRobotPose.orientation.z - robotPose.orientation.z);
-		if(diff < 0)
-			diff += 2*3.1415926535;
-		delta += diff;
-        robotPose = newRobotPose;
-    }
-	ROS_INFO("done wiggling");
+	while(!ac->waitForServer(ros::Duration(5.0))){
+    	ROS_INFO("Waiting for the move_base action server to come up");
+  	}	
 	
 	//initialize the distance field
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
@@ -44,6 +28,7 @@ Control::Control(ros::NodeHandle* nodeHandle){
             distanceField[i][j] = -1;
         }
     }
+	//ros::Duration(7).sleep();
 	start = true;
 	ROS_INFO("Done initializing");
 }
@@ -88,21 +73,25 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		goal.target_pose.header.stamp = ros::Time::now();
 		goal.target_pose.pose = target;
 		goal.target_pose.pose.orientation.w = 1;
-		//geometry_msgs::PoseStamped psGoal;
-		//psGoal.pose = target;
-		//psGoal.header = goal.target_pose.header;
-		//goal_pub.publish(psGoal);
-		//ros::spinOnce();
+		geometry_msgs::PoseStamped psGoal;
+		psGoal.pose = target;
+		psGoal.header = goal.target_pose.header;
+		goal_pub.publish(psGoal);
+		ros::spinOnce();
 		//ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
 		//ROS_INFO("Found goal, publishing...");
-		
-		ac->sendGoal(goal);
-		ac->waitForResult();
-		robotAction = OP_SCANROOM;
-		//perform necessary action at targetLoc.
-		//if we entered a room, update robotAction accordingly
-		//`update robot action in case we entered a room
-		takeAction(robotAction);
+		char yn;
+		cout << "Accept this goal? (y/n)" << endl;
+		cin >> yn;
+		if(yn == 'y'){	
+			ac->sendGoal(goal);
+			ac->waitForResult();
+			robotAction = OP_SCANROOM;
+			//perform necessary action at targetLoc.
+			//if we entered a room, update robotAction accordingly
+			//`update robot action in case we entered a room
+			takeAction(robotAction);
+		}
 	}
 }
 
@@ -171,7 +160,7 @@ Point Control::computeDistanceField() {
     int currentDistance;
 	
 	ROS_INFO("Computing distance field");
-    while (!boundary.empty()) {
+    while (ros::ok() && !boundary.empty()) {
 		//ROS_INFO("Inside while loop");
         currentCell = boundary.front();
 		//ROS_INFO("Current cell: (%d, %d)", currentCell.x, currentCell.y);
@@ -224,7 +213,7 @@ void Control::takeAction(RobotOp robotAction){
             double delta = 0;
             //while we haven't rotated 2*PI rads
 			//this should ahve a ROS rate
-            while(delta < 2*3.1415926535){
+            while(ros::ok() && delta < 2*3.1415926535){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
@@ -294,7 +283,7 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 }
 
 bool Control::unknownLargeEnough(Point center){
-	int areaSize  = 2; // (2 results in an inclusive 3*3 grid)5
+	int areaSize  = 5; // (2 results in an inclusive 3*3 grid)5
 	for(int i = center.x - (areaSize - 1); i < center.x + areaSize; i++){
 		for(int j = center.y - (areaSize - 1); j < center.y + areaSize; j++){
 			if(accessOccGrid(i, j) != -1) return false; // something other than unknown has been found, so return false
@@ -353,6 +342,7 @@ geometry_msgs::Pose Control::pointToPose(Point point){
 geometry_msgs::Pose Control::getRobotPose(){
     trinity_pi::GetRobotPose srv;
    robotPoseClient.call(srv);
+	ROS_INFO("pose frame: %s, map frame: %s", srv.response.pose.header.frame_id.c_str(), occGrid.header.frame_id.c_str());
    if (srv.response.pose.header.frame_id != occGrid.header.frame_id){
        ROS_INFO("Oh shit frames are different need to fix");
    }
