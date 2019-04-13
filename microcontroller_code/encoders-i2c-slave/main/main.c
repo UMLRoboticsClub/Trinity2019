@@ -13,6 +13,11 @@
 
 #include "sdkconfig.h"
 
+#define REG_GETVAL   0x05 
+#define REG_ECHO     0x06 
+#define REG_CLEARVAL 0x07 
+#define REG_RESET    0x08 
+
 #define I2C_SLAVE_1_SCL         19
 #define I2C_SLAVE_1_SDA         18
 #define I2C_SLAVE_1_TX_BUF_LEN  (1024)
@@ -80,17 +85,19 @@ void i2c_slave_task(void *params){
         if(i2c_slave_read_buffer(I2C_NUM_0, &addr, 1, 0) > 0){
             uint8_t packet = 0xFF;
             switch(addr){
-                case 0x05:
+                case REG_GETVAL:
                     i2c_slave_write_buffer(I2C_NUM_0, &startByte, 1, waitTicks);
                     i2c_slave_write_buffer(I2C_NUM_0, d.buf, 12, waitTicks);
                     i2c_slave_write_buffer(I2C_NUM_0, &endByte, 1, waitTicks);
                     break;
-                case 0x06:
+                case REG_ECHO:
                     i2c_slave_write_buffer(I2C_NUM_0, &addr, 1, waitTicks);
                     break;
-                case 0x07:
-                    i2c_slave_uninit();
+                case REG_CLEARVAL:
                     d.counter[0] = d.counter[1] = d.counter[2] = 0;
+                    break;
+                case REG_RESET:
+                    i2c_slave_uninit();
                     vTaskDelay(2 / portTICK_RATE_MS);
                     i2c_slave_init(0x03);
                     break;
