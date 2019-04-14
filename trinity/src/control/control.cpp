@@ -4,6 +4,7 @@
 #include "control.h"
 #include <nav_msgs/GetMap.h>
 #include <iostream>
+#include <cmath>
 
 using std::cin;
 using std::cout;
@@ -85,8 +86,9 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		cout << "Accept this goal? (y/n)" << endl;
 		cin >> yn;
 		if(yn == 'y'){	
-			ac->sendGoal(goal);
-			ac->waitForResult();
+			goToGoal(goal);
+			//ac->sendGoal(goal);
+			//ac->waitForResult();
 			robotAction = OP_SCANROOM;
 			//perform necessary action at targetLoc.
 			//if we entered a room, update robotAction accordingly
@@ -94,6 +96,84 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 			takeAction(robotAction);
 		}
 	}
+}
+
+vector<Point> Control::createTargetPath(Point target) {//distance field already created
+    //start at target which has a specific val in distancie field, locate neighbor with distVal 1 less, repeat.
+    //when the direction changes, push the current point into the moves list.
+    vector<Point> moves;
+    //distance of target from robot position
+    int distVal = distanceField[target.x][target.y];
+    vector<Point> neighbors;//used for calculating path
+    Point direction(0, 0);  //used for detecting changes in direction, which are recorded as waypoints
+    //until we get back to the robot
+    while(distVal != 0){
+        neighbors = findOpenNeighbors(target); //grab all neighboring cells
+        for(Point neighbor : neighbors){   //find a cell one unit closer to the robot then the current one
+            if(distanceField[neighbor.x][neighbor.y] == distVal -1){
+                if(neighbor-target != direction){
+                    //change in direction, add to moves
+                    moves.push_back(target);
+                    direction = neighbor-target;
+                }
+                target = neighbor;
+                distVal--;
+                break;
+            }
+        }
+    }
+    //we went backwards so gotta reverse to get list of moves from robot
+    std::reverse(moves.begin(), moves.end());
+    return moves;
+}
+
+
+void Control::goToGoal(geometry_msgs::Pose goal){
+	moves = createTargetPath(poseToPoint(goal));
+	for(move : moves){
+		goal = pointToPose(move);
+		double angle = atan2((goal.position.y-getRobotPose().position.y), (goal.position.x-getRobotPose().position.x));
+		//rotate to angle
+        geometry_msgs::Twist rotCommand;
+        rotCommand.angular.z = 0;
+        geometry_msgs::Pose robotPose = getRobotPose();
+        //while we haven't rotated 2*PI rads
+		//this should ahve a ROS rate
+		double angleTolerance = .1;
+        while(ros::ok() && sqrt(robotPose.position.x - goal.position.x)*(robotPose.position.x - goal.position.x) + (robotPose.position.y - goal.position.y)*(robotPose.position.y - goal.position.y) > .05){
+			robotPose = getRobotPose();
+			angle = atan2((goal.position.y-robotPose.position.y), (goal.position.x-robotPose.position.x));
+			if (abs(robotPose.orientation.z - angle) > angleTolerance){
+		   		diff = angle - robotPose.orientation.z;
+		   		if (diff < -3.1415926535){
+		   	 		diff += 6.2831;
+		   		}
+		   	 	double v = .4*diff;
+		   	 	if (v > .5){
+		   	 		v = 0.5;
+		   	 	}
+		   	 	else if (v < 0.35){
+		   	 		v = 0.35;
+		   	 	}
+		   	 	rotCommand.angular.z = v;
+           	 	cmd_vel_pub.publish(rotCommand);
+			}
+			else {
+				//angle good, distance bad, drive forwards
+				rotCommand.angular.z = 0;
+				rotCommand.linear.x = 0.35;
+				cmd_vel_pub.publish(rotCommand);
+			}
+		}
+	}
+}
+
+std::vector<geometry_msgs::Pose> Control::pathToPlan(vector<Point> path){
+	vector<geometry_msgs::Pose> plan;
+	for(Point wayPoint : path){
+		plan.push_back(pointToPose(wayPoint));
+	}
+	return plan;
 }
 
 //modify this to return a pose instead of a point

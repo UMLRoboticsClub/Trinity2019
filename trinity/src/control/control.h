@@ -12,6 +12,8 @@
 #include <geometry_msgs/PointStamped.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/Empty.h>
+#include <vector>
+using std::vector
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -48,6 +50,9 @@ public:
     geometry_msgs::Pose getRobotPose();
     double irSense();
     vector<double> parseIrReadings(vector<double>);
+	vector<Point> Control::createTargetPath(Point target);
+	void goToGoal(geometry_msgs::Pose goal);
+	std::vector<geometry_msgs::Pose> pathToPlan(vector<Point> path);
 	bool start;
 private:
     ros::Publisher cmd_vel_pub;
@@ -64,7 +69,7 @@ private:
     ros::ServiceClient robotPoseClient;
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
-
+	ros::ServiceClient inRoomClient;
 	void initializeSubscribers();
 	void initializePublishers();
 	void initializeServices();
