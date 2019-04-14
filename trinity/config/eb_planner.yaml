@@ -1,12 +1,4 @@
 EBandPlannerROS:
-    yaw_goal_tolerance: 6.28
+    yaw_goal_tolerance: 0.2
     xy_goal_tolerance: 0.05
-    max_vel_th: 0.02
-    differential_drive: true
-    max_translational_acceleration: 1
-    eband_min_relative_overlap: 0.5
-    Ctrl_Rate: 100
-    k_prop: 6
-    internal_force_gain: 5
-    external_force_gain: 8
-    costmap_weight: 25
+    max_vel_th: 0.05

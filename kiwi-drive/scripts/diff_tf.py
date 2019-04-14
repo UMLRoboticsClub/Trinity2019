@@ -152,16 +152,22 @@ class DiffTf:
                 d_first = (self.first - self.enc_first) / self.ticks_meter
                 d_second = (self.second - self.enc_second) / self.ticks_meter
                 d_third = (self.third - self.enc_third) / self.ticks_meter
+            
             self.enc_first = self.first
             self.enc_second = self.second
             self.enc_third = self.third
+            
+            #print(d_first, d_second, d_third)
+            if(abs(d_first) > 0.1 or abs(d_second) > 0.1 or abs(d_third) > 0.1):
+                #print("caught bad encoder values")
+                return
             #print("ticks per meter: {0}".format(self.ticks_meter))
             #print("distances: {0}, {1}, {2}".format(d_first, d_second, d_third))
     
             # distance traveled in x an y, rotation in z 
             x = (-2 * d_second + d_first + d_third) / 3
             y = (d_first - d_third) * math.sqrt(3) / -3
-            th = ((d_first + d_second + d_third) / 3) / 0.113
+            th = ((d_first + d_second + d_third) / 3) / -0.113
             self.th += th
             #print("theta: {0}".format(self.th))
             #print("dist before ({0}, {1})".format(x, y))
@@ -179,6 +185,7 @@ class DiffTf:
             self.dy = y / elapsed
             self.dr = th / elapsed
           
+            #print("x, y, th: %.2f %.2f %.2f" % (self.x, self.y, self.th))
             #print("velocities: {0}, {1}, {2}".format(self.dx, self.dy, self.dr))
              
            # if (d != 0):
@@ -189,14 +196,13 @@ class DiffTf:
            #     self.x = self.x + ( cos( self.th ) * x - sin( self.th ) * y )
            #     self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
           #  if( th != 0):
-           #     self.th = self.th + th
-                
+           #     self.th = self.th + th 
             # publish the odom information
             quaternion = Quaternion()
             quaternion.x = 0.0
             quaternion.y = 0.0
-            quaternion.z = math.sin( self.th / 2 )
-            quaternion.w = math.cos( self.th / 2 )
+            quaternion.z = math.sin( (self.th + math.pi / 2 - math.pi * 2 / 3) / 2)
+            quaternion.w = math.cos( (self.th + math.pi / 2 - math.pi * 2 / 3) / 2)
             self.odomBroadcaster.sendTransform(
                 (self.x, self.y, 0),
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),

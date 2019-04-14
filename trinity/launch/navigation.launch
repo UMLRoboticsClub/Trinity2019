@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find trinity)/config/custom_rosconsole.conf"/>-->
+	<!--<node pkg="trinity" type="gmapping_without_output.sh" name="gmapping" output="screen" />-->
 	<node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
-		<param name="pub_debug_info" value="false" />
-		<param name="use_tf_scan_transformation" value="false" />
+		<param name="pub_drawings" value="true" />
+		<param name="use_tf_scan_transformation" value="true" />
 		<param name="map_frame" value="map" />
-		<param name="map_resolution" value="0.01" />
+		<param name="map_resolution" value="0.02" />
 		<param name="map_size" value="1000" />
 		<param name="map_update_distance_thresh" value="0.2" />
-		<param name="map_update_angle_thresh" value="10" />
-		<param name="map_pub_period" value="2" />
+		<param name="map_update_angle_thresh" value="0.2" />
+		<param name="map_pub_period" value="0.3" />
 		<param name="laser_min_dist" value="0.01" />
 		<param name="laser_max_dist" value="20" />
-		<param name="pub_map_scanmatch_transform" value="false" />
+		<param name="pub_map_scanmatch_transform" value="true" />
 		<param name="output_timing" value="false" />
+		<param name="use_tf_pose_start_estimate" value="true" />
 	</node>
 	<!--<include file="$(find hector_slam_launch)/launch/tutorial.launch" />-->
 	<node pkg="rviz" type="rviz" name="trinity_rviz" args="-d $(find trinity)/config/trinity.rviz" />
 	<!--<node pkg="trinity" type="control" name="control" output="screen" /> -->
 	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-		<param name="base_local_planner" value="eband_local_planner/EBandPlannerROS" />
-		<param name="base_global_planner" value="navfn/NavfnROS" />
+		<param name="controller_frequency" value="1.0" />
+		<!--<param name="base_local_planner" value="ftc_local_planner/FTCPlanner" />
+		<param name="base_global_planner" value="navfn/NavfnROS" />-->
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
 		<rosparam file="$(find trinity)/config/local_costmap_params.yaml" command="load" />
 		<rosparam file="$(find trinity)/config/global_costmap_params.yaml" command="load" />
-		<rosparam file="$(find trinity)/config/eb_planner.yaml" command="load" ns="eb_planner" /> 
+		<rosparam file="$(find trinity)/config/base_local_planner_params.yaml" command="load" /> 
 	</node>
-</launch>
-	
+</launch>	
