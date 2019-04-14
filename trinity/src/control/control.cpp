@@ -50,6 +50,7 @@ void Control::initializeServices(){
 	robotPoseClient = nh.serviceClient<trinity_pi::GetRobotPose>("GetRobotPose");
 	irClient = nh.serviceClient<std_srvs::Trigger>("GetFlame");
 	solenoidClient = nh.serviceClient<std_srvs::Empty>("Extinguish");
+	inRoomClient = nh.serviceClient<std_srvs::Empty>("GetInRoom");
 	ROS_INFO("done initializing services");
 }
 
@@ -278,7 +279,18 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	ac->sendGoal(goal);
 	ac->waitForResult();
     std_srvs::Empty srv;
+	bool inRoom = inRoomClient.call(srv);
+	//if(! inRoom){
+	//if we are not in the room, approach the candle
+	//technically should be able to be done with just cmd_vel to move forwards a little bit
+	
+	//}
     solenoidClient.call(srv);
+	goal.target.pose.position.x = 0;
+	goal.target.pose.position.y = 0;
+	ac->sendGoal(goal);
+	ac->waitForResult();
+	gs.done = true;
     return;
 }
 
