@@ -206,11 +206,11 @@ protected:
 
       //std::cout << "\nsearchdir\n" << searchDir  << "\n";
 
-      if (searchDir[2] > 0.2f) {
-        searchDir[2] = 0.2f;
+      if (searchDir[2] > 1.6f) {
+        searchDir[2] = 1.6f;
         std::cout << "SearchDir angle change too large\n";
-      } else if (searchDir[2] < -0.2f) {
-        searchDir[2] = -0.2f;
+      } else if (searchDir[2] < -1.6f) {
+        searchDir[2] = -1.6f;
         std::cout << "SearchDir angle change too large\n";
       }
 

@@ -12,8 +12,9 @@
 #include <geometry_msgs/PointStamped.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/Empty.h>
+#include <nav_msgs/Path.h>
 #include <vector>
-using std::vector
+using std::vector;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -50,9 +51,9 @@ public:
     geometry_msgs::Pose getRobotPose();
     double irSense();
     vector<double> parseIrReadings(vector<double>);
-	vector<Point> Control::createTargetPath(Point target);
+	vector<Point> createTargetPath(Point target);
 	void goToGoal(geometry_msgs::Pose goal);
-	std::vector<geometry_msgs::Pose> pathToPlan(vector<Point> path);
+	std::vector<geometry_msgs::PoseStamped> pathToPlan(vector<Point> path);
 	bool start;
 	std::vector<Point> optimizePath(vector<Point> path);
 private:
@@ -61,6 +62,7 @@ private:
 	ros::Publisher point_pub;
 	ros::Subscriber map_sub;
 	ros::Subscriber wait_for_signal;
+	ros::Publisher plan_pub;
 	ros::NodeHandle nh;
     GameState gs;
     std::map<int, vector<geometry_msgs::Pose>> targetPoints;

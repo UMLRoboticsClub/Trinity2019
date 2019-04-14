@@ -20,12 +20,13 @@
 	<!--<node pkg="trinity" type="control" name="control" output="screen" /> -->
 	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 		<param name="base_local_planner" value="eband_local_planner/EBandPlannerROS" />
-		<param name="base_global_planner" value="navfn/NavfnROS" />
+		<!--<param name="base_global_planner" value="navfn/NavfnROS" /> -->
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
 		<rosparam file="$(find trinity)/config/local_costmap_params.yaml" command="load" />
 		<rosparam file="$(find trinity)/config/global_costmap_params.yaml" command="load" />
-		<rosparam file="$(find trinity)/config/eb_planner.yaml" command="load" ns="eb_planner" /> 
+		<rosparam file="$(find trinity)/config/eb_planner.yaml" command="load" ns="eb_planner" />
+		<param name="clearing_rotation_allowed" value="false" /> 
 	</node>
 </launch>
 	

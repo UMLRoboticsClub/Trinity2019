@@ -116,6 +116,8 @@ HectorMappingRos::HectorMappingRos()
   {
     ROS_INFO("HectorSM publishing debug info");
     debugInfoProvider = new HectorDebugInfoProvider();
+  } else {
+	ROS_INFO("not publishing debug info");
   }
 
   if(p_pub_odometry_)
@@ -239,7 +241,7 @@ void HectorMappingRos::scanCallback(const sensor_msgs::LaserScan& scan)
   {
     if (rosLaserScanToDataContainer(scan, laserScanContainer,slamProcessor->getScaleToMap()))
     {
-      slamProcessor->update(laserScanContainer,slamProcessor->getLastScanMatchPose());
+        slamProcessor->update(laserScanContainer, slamProcessor->getLastScanMatchPose());
     }
   }
   else
@@ -252,12 +254,11 @@ void HectorMappingRos::scanCallback(const sensor_msgs::LaserScan& scan)
       tf_.lookupTransform(p_base_frame_,scan.header.frame_id, scan.header.stamp, laserTransform);
 
       //projector_.transformLaserScanToPointCloud(p_base_frame_ ,scan, pointCloud,tf_);
-	  //ROS_INFO("size before: %d", scan.ranges.size());
       projector_.projectLaser(scan, laser_point_cloud_,30.0);
-	  //ROS_INFO("size after: %d", laser_point_cloud_.points.size());
-      if (scan_point_cloud_publisher_.getNumSubscribers() > 0){
-        scan_point_cloud_publisher_.publish(laser_point_cloud_);
-      }
+
+      //if (scan_point_cloud_publisher_.getNumSubscribers() > 0){
+      //  scan_point_cloud_publisher_.publish(laser_point_cloud_);
+     // }
 
       Eigen::Vector3f startEstimate(Eigen::Vector3f::Zero());
 
@@ -272,8 +273,8 @@ void HectorMappingRos::scanCallback(const sensor_msgs::LaserScan& scan)
           {
             tf::StampedTransform stamped_pose;
 
-            tf_.waitForTransform(p_map_frame_,p_base_frame_, scan.header.stamp, ros::Duration(0.5));
-            tf_.lookupTransform(p_map_frame_, p_base_frame_,  scan.header.stamp, stamped_pose);
+            tf_.waitForTransform("/odom",p_base_frame_, scan.header.stamp, ros::Duration(0.5));
+            tf_.lookupTransform("/odom", p_base_frame_,  scan.header.stamp, stamped_pose);
 
             tfScalar yaw, pitch, roll;
             stamped_pose.getBasis().getEulerYPR(yaw, pitch, roll);
@@ -423,7 +424,7 @@ void HectorMappingRos::publishMap(MapPublisherContainer& mapPublisher, const hec
 bool HectorMappingRos::rosLaserScanToDataContainer(const sensor_msgs::LaserScan& scan, hectorslam::DataContainer& dataContainer, float scaleToMap)
 {
   size_t size = scan.ranges.size();
-  //ROS_INFO("size (scan): %d", size);
+
   float angle = scan.angle_min;
 
   dataContainer.clear();
@@ -448,10 +449,38 @@ bool HectorMappingRos::rosLaserScanToDataContainer(const sensor_msgs::LaserScan&
   return true;
 }
 
+bool HectorMappingRos::rosLaserScanToDataContainer(const sensor_msgs::LaserScan& scan, const tf::StampedTransform& laserTransform, hectorslam::DataContainer& dataContainer, float scaleToMap){
+	
+  size_t size = scan.ranges.size();
+
+  float angle = scan.angle_min;
+
+  dataContainer.clear();
+
+  dataContainer.setOrigo(Eigen::Vector2f::Zero());
+
+  float maxRangeForContainer = scan.range_max - 0.1f;
+
+  for (size_t i = 0; i < size; ++i)
+  {
+    float dist = scan.ranges[i];
+
+    if ( (dist > scan.range_min) && (dist < maxRangeForContainer))
+    {
+      tf::Vector3 pointPosBaseFrame(laserTransform * tf::Vector3(cos(angle) * dist, sin(angle) * dist, 0));
+      dataContainer.add(Eigen::Vector2f(pointPosBaseFrame.x()*scaleToMap, pointPosBaseFrame.y()*scaleToMap));
+    }
+
+    angle += scan.angle_increment;
+  }
+
+  return true;
+} 
+
 bool HectorMappingRos::rosPointCloudToDataContainer(const sensor_msgs::PointCloud& pointCloud, const tf::StampedTransform& laserTransform, hectorslam::DataContainer& dataContainer, float scaleToMap)
 {
   size_t size = pointCloud.points.size();
-  ROS_INFO("size (pcloud): %d", size);
+  //ROS_INFO("size: %d", size);
 
   dataContainer.clear();
 

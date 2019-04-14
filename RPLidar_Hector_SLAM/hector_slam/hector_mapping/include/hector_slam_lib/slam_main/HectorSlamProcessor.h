@@ -70,11 +70,13 @@ public:
 
   void update(const DataContainer& dataContainer, const Eigen::Vector3f& poseHintWorld, bool map_without_matching = false)
   {
+	//ROS_INFO("inside of update");
     //std::cout << "\nph:\n" << poseHintWorld << "\n";
 
     Eigen::Vector3f newPoseEstimateWorld;
 
     if (!map_without_matching){
+		//ROS_INFO("map is matching. calculating new pose estimate");
         newPoseEstimateWorld = (mapRep->matchData(poseHintWorld, dataContainer, lastScanMatchCov));
     }else{
         newPoseEstimateWorld = poseHintWorld;

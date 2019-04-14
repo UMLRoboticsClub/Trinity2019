@@ -28,7 +28,7 @@
         <param name="encoder2" value="/enc2" />
         <param name="encoder3" value="/enc3" />
     </node>
-	<node pkg="trinity_pi" type="getRobotPose.py" name="poseService" output="screen" />
+	<node pkg="trinity" type="getRobotPose.py" name="poseService" output="screen" />
     <!--
 	<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
 		<param name="output_frame" value="odom" />

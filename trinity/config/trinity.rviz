@@ -12,8 +12,7 @@ Panels:
         - /Pose1
         - /Pose2
         - /Path1
-        - /Path1/Status1
-        - /Path2/Status1
+        - /Path2
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.5
@@ -95,7 +94,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 36
+      Max Intensity: 35
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: LaserScan
@@ -183,7 +182,7 @@ Visualization Manager:
       Radius: 0.0299999993
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
-      Topic: /move_base/EBandPlannerROS/local_plan
+      Topic: /silly_plan
       Unreliable: false
       Value: true
     - Class: rviz/TF
@@ -201,12 +200,6 @@ Visualization Manager:
           Value: false
         odom:
           Value: false
-        wheel1:
-          Value: false
-        wheel2:
-          Value: false
-        wheel3:
-          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -214,19 +207,12 @@ Visualization Manager:
       Show Names: false
       Tree:
         map:
-          {}
-        odom:
-          base_link:
-            imu:
-              {}
-            laser:
-              {}
-            wheel1:
-              {}
-            wheel2:
-              {}
-            wheel3:
-              {}
+          odom:
+            base_link:
+              imu:
+                {}
+              laser:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -250,7 +236,7 @@ Visualization Manager:
       Marker Topic: /move_base/EBandPlannerROS/eband_visualization_array
       Name: MarkerArray
       Namespaces:
-        bubbles: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -278,7 +264,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.25896883
+      Distance: 3.02586985
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1

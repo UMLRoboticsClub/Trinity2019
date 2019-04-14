@@ -116,11 +116,11 @@ public:
   virtual Eigen::Vector3f matchData(const Eigen::Vector3f& beginEstimateWorld, const DataContainer& dataContainer, Eigen::Matrix3f& covMatrix)
   {
     size_t size = mapContainer.size();
-
+	//std::cout << size << std::endl;
     Eigen::Vector3f tmp(beginEstimateWorld);
 
     for (int index = size - 1; index >= 0; --index){
-      //std::cout << " m " << i;
+      //std::cout << " m " << index;
       if (index == 0){
         tmp  = (mapContainer[index].matchData(tmp, dataContainer, covMatrix, 5));
       }else{

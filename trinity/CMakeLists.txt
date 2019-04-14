@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     sensor_msgs
 	trinity_pi
+	nav_msgs
 )
 
 
@@ -119,7 +120,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES trinity
-  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs actionlib move_base_msgs message_runtime tf trinity_pi
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs actionlib move_base_msgs message_runtime tf trinity_pi nav_msgs
 #  DEPENDS system_lib
 )
 
@@ -176,9 +177,6 @@ add_executable(control
     src/control/control_node.cpp
     src/control/control.cpp
     )
-add_executable(fake_node
-	src/control/fake_node.cpp
-	)
 
 
 ## Add cmake target dependencies of the executable
@@ -194,7 +192,6 @@ set(gpio_LIBS "-lpthread -lpigpiod_if2")
 #target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 #target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(fake_node		${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

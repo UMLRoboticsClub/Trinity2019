@@ -17,9 +17,9 @@ Control::Control(ros::NodeHandle* nodeHandle){
 	initializeServices();
 	ROS_INFO("ros initialized");
 	ac = new MoveBaseClient(nh, "move_base", true);
-	while(!ac->waitForServer(ros::Duration(5.0))){
-    	ROS_INFO("Waiting for the move_base action server to come up");
-  	}	
+	//while(!ac->waitForServer(ros::Duration(5.0))){
+   // 	ROS_INFO("Waiting for the move_base action server to come up");
+  	//}	
 	
 	//initialize the distance field
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
@@ -44,6 +44,7 @@ void Control::initializePublishers(){
 	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 	goal_pub = nh.advertise<geometry_msgs::PoseStamped>("goal", 1);
 	point_pub = nh.advertise<geometry_msgs::PointStamped>("robot_point", 1);
+	plan_pub = nh.advertise<nav_msgs::Path>("silly_plan", 1);
 	ROS_INFO("done initializing publishers");
 }
 
@@ -86,7 +87,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		cout << "Accept this goal? (y/n)" << endl;
 		cin >> yn;
 		if(yn == 'y'){	
-			goToGoal(goal);
+			goToGoal(goal.target_pose.pose);
 			//ac->sendGoal(goal);
 			//ac->waitForResult();
 			robotAction = OP_SCANROOM;
@@ -129,7 +130,12 @@ vector<Point> Control::createTargetPath(Point target) {//distance field already 
 
 
 void Control::goToGoal(geometry_msgs::Pose goal){
-	moves = optimizePath(createTargetPath(poseToPoint(goal)));
+	vector<Point> moves = optimizePath(createTargetPath(poseToPoint(goal)));
+	vector<geometry_msgs::PoseStamped> plan = pathToPlan(moves);
+	nav_msgs::Path plan_msg;
+	plan_msg.header = plan[0].header;
+	plan_msg.poses = plan;
+	plan_pub.publish(plan_msg);
 	for(move : moves){
 		goal = pointToPose(move);
 		double angle = atan2((goal.position.y-getRobotPose().position.y), (goal.position.x-getRobotPose().position.x));
@@ -144,7 +150,7 @@ void Control::goToGoal(geometry_msgs::Pose goal){
 			robotPose = getRobotPose();
 			angle = atan2((goal.position.y-robotPose.position.y), (goal.position.x-robotPose.position.x));
 			if (abs(robotPose.orientation.z - angle) > angleTolerance){
-		   		diff = angle - robotPose.orientation.z;
+		   		double diff = angle - robotPose.orientation.z;
 		   		if (diff < -3.1415926535){
 		   	 		diff += 6.2831;
 		   		}
@@ -168,10 +174,14 @@ void Control::goToGoal(geometry_msgs::Pose goal){
 	}
 }
 
-std::vector<geometry_msgs::Pose> Control::pathToPlan(vector<Point> path){
-	vector<geometry_msgs::Pose> plan;
+std::vector<geometry_msgs::PoseStamped> Control::pathToPlan(vector<Point> path){
+	vector<geometry_msgs::PoseStamped> plan;
 	for(Point wayPoint : path){
-		plan.push_back(pointToPose(wayPoint));
+		geometry_msgs::PoseStamped p;
+		p.pose = pointToPose(wayPoint);
+		p.header.stamp = ros::Time::now();
+		p.header.frame_id = "map";
+		plan.push_back(p);
 	}
 	return plan;
 }
@@ -433,8 +443,8 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	
 
     solenoidClient.call(srv);
-	goal.target.pose.position.x = 0;
-	goal.target.pose.position.y = 0;
+	goal.target_pose.pose.position.x = 0;
+	goal.target_pose.pose.position.y = 0;
 	ac->sendGoal(goal);
 	ac->waitForResult();
 	gs.done = true;
