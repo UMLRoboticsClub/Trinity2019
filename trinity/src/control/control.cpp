@@ -1,4 +1,4 @@
-#include <ros/ros.h>
+#include ngle = atan2((target.y-getRobotPos().y), (target.x-getRobotPos().x));<ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include "control.h"
@@ -129,7 +129,7 @@ vector<Point> Control::createTargetPath(Point target) {//distance field already 
 
 
 void Control::goToGoal(geometry_msgs::Pose goal){
-	moves = createTargetPath(poseToPoint(goal));
+	moves = optimizePath(createTargetPath(poseToPoint(goal)));
 	for(move : moves){
 		goal = pointToPose(move);
 		double angle = atan2((goal.position.y-getRobotPose().position.y), (goal.position.x-getRobotPose().position.x));
@@ -174,6 +174,51 @@ std::vector<geometry_msgs::Pose> Control::pathToPlan(vector<Point> path){
 		plan.push_back(pointToPose(wayPoint));
 	}
 	return plan;
+}
+
+vector<Point> Control::optimizePath(const vector<Point> &moves) {
+    //diagonalize to create shortest possible path
+    //grab the starting point, with line to second wayPoint.  Increment end point of that line
+    //along the path until hitting a wall, then back one and make that point the second waypoint
+    //then repeat from that point.  This is not a perfect optimization.  But it's good enough for now
+
+    vector<Point> optMoves;
+    Point startPoint(getRobotPos());
+    Point endPoint(moves[0]);
+
+    //for each possible improvement
+    for(unsigned i = 0; i < moves.size() - 1; ++i){
+        Point nextMove(moves[i + 1]);
+
+        //fix this to be more robust
+        Point direction(nextMove - endPoint);
+        //create unit vector in direction
+        direction /= abs(endPoint.x - nextMove.x + endPoint.y - nextMove.y);
+
+        while(endPoint != nextMove){ //if we reach the next point we have a straight digaonal path to it.
+            if(pathIsBlocked(startPoint, endPoint)){ //this path is not okay
+                endPoint -= direction; //go back a step, we overshot
+                break;
+            } else {
+              //continue iterating
+                endPoint += direction;
+            }
+        }
+
+        //do not add to optMoves if we reached the next point, because further optimization may be possible
+        if(endPoint != nextMove){
+            optMoves.push_back(endPoint);
+            startPoint = endPoint;
+        }
+        endPoint = nextMove;
+    }
+
+    //make sure we don't double count the last move which isn't part of the above loop
+    if(optMoves.empty() || moves.back() != optMoves.back()){
+        optMoves.push_back(moves.back());
+    }
+
+    return optMoves;
 }
 
 //modify this to return a pose instead of a point

@@ -54,6 +54,7 @@ public:
 	void goToGoal(geometry_msgs::Pose goal);
 	std::vector<geometry_msgs::Pose> pathToPlan(vector<Point> path);
 	bool start;
+	std::vector<Point> optimizePath(vector<Point> path);
 private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;
