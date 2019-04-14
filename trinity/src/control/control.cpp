@@ -231,6 +231,37 @@ vector<Point> Control::optimizePath(const vector<Point> &moves) {
     return optMoves;
 }
 
+bool Control::pathIsBlocked(const Point &start, const Point &end){
+    //creates fatter version of line (three cells wide) and iterates along that path until reaching target destination or colliding with a WALL
+    //if we hit a wall, the path is blocked
+    //if we make it to the end point, the path is clear
+    //currently does not use the fatter version for cases where we are moving along a wall,
+    //would incorrectly register as blocked.  Needs more thought KEY POINT
+
+    float magnitude = sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2));
+    DoublePoint direction((DoublePoint(end) - DoublePoint(start))/magnitude);
+    DoublePoint offset2(-direction.y, direction.x);
+    DoublePoint offset3(direction.y, -direction.x);
+
+    Point currentCell;
+    DoublePoint currentCell2, currentCell3;//currentCell is base line, 2 and 3 add thickness to line
+
+    for (int i = 0; i < magnitude + 1; ++i){
+        //iterate along the path
+        currentCell.x = static_cast<int>(start.x + static_cast<int>(direction.x * i));
+        currentCell.y = static_cast<int>(start.y + static_cast<int>(direction.y * i));
+        currentCell2 = currentCell + offset2;
+        currentCell3 = currentCell + offset3;
+        if(
+                accessOccGrid(currentCell.x,  currentCell.y) > 50){// ||
+            //occGrid.getValue(currentCell2.x, currentCell2.y) == WALL ||
+            //occGrid.getValue(currentCell3.x, currentCell3.y) == WALL){
+            return true;
+        }
+    }
+    return false;
+}
+
 //modify this to return a pose instead of a point
 //correct for origin inside this function.
 geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){

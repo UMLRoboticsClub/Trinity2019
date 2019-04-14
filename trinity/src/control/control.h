@@ -56,6 +56,7 @@ public:
 	std::vector<geometry_msgs::PoseStamped> pathToPlan(vector<Point> path);
 	bool start;
 	std::vector<Point> optimizePath(vector<Point> path);
+	bool pathIsBlocked(const Point& start, const Point& end);
 private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;
