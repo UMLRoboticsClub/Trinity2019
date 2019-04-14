@@ -298,9 +298,10 @@ void Control::takeAction(RobotOp robotAction){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
-                delta += (newRobotPose.orientation.z - robotPose.orientation.z);
-				if(delta < 0)
-					delta += 2*3.1415926535;
+                diff = (newRobotPose.orientation.z - robotPose.orientation.z);
+				if(diff < 0)
+					diff += 2*3.141592653;
+				delta += diff;
                 robotPose = newRobotPose;
             }
             //candles is vector of angle indices relative to robot orientation
@@ -351,7 +352,7 @@ RobotOp Control::determineRobotOp(int type){
 //robot already facing correct direction,
 void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//move to the correct pose
-
+	/*
 	move_base_msgs::MoveBaseGoal goal;
 	goal.target_pose.header.frame_id = "/map";
 	goal.target_pose.header.stamp = ros::Time::now();
@@ -364,7 +365,28 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//if we are not in the room, approach the candle
 	//technically should be able to be done with just cmd_vel to move forwards a little bit
 	
-	//}
+	//}*/
+
+	double targetAngle = candlePose.orientation.z;
+	double tolerance = 0.1;
+	geometry_msgs::Pose robotPose = getRobotPose();
+    geometry_msgs::Twist rotCommand;
+	rotCommand.z = 0;
+	while(abs(robotPose.orientation.z - targetAngle) > tolerance){
+		double diff = targetAngle - robotPose.orientation.z;
+		if(diff < -3.1415926535)
+			diff += 3.141592;
+		else if(diff > 3.14159265)
+			diff -= 3.141592;
+		if (diff > 0)
+			rotCommand.z = 0.3;
+		else
+			rotCommand.z = -0.3;
+		cmd_vel_pub.publish(rotCommand);
+		robotPose = getRobotPose();
+	}
+	
+
     solenoidClient.call(srv);
 	goal.target.pose.position.x = 0;
 	goal.target.pose.position.y = 0;
