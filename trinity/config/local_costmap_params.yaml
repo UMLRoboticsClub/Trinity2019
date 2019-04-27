@@ -4,6 +4,7 @@ local_costmap:
         update_frequency: 5.0
         publish_frequency: 2.0
         transform_tolerannce: 1.0 
+        track_unknown_space: true
         static_map: true
         rolling_window: true
         width: 2.0
@@ -11,12 +12,6 @@ local_costmap:
         resolution: 0.02
         map_topic: '/map'
         plugins:
-         -
-          name: static
-          type: "costmap_2d::StaticLayer"
-         -
-          name: obstacles
-          type: "costmap_2d::ObstacleLayer"
-         -
-          name: inflater
-          type: "costmap_2d::InflationLayer"
+         - {name: static, type: "costmap_2d::StaticLayer"}
+         - {name: obstacles, type: "costmap_2d::ObstacleLayer"}
+         - {name: inflater, type: "costmap_2d::InflationLayer"}

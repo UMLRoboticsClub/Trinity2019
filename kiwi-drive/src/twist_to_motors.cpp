@@ -33,10 +33,12 @@ int main(int argc, char **argv){
             //Coordinate systems in ROS are always in 3D,
             //and are right-handed, with X forward, Y left, and Z up. 
             //ROS_INFO("got a cmd_vel command");
-
             float vx = vel->linear.x * -1;
             float vy = vel->linear.y;
             float theta = vel->angular.z;
+			if(theta > 0.3){
+				theta = 0.3;	
+			}
             vc = -0.5f * vx - sqrt(3)/2 * vy+theta;
             vb = -0.5f * vx + sqrt(3)/2 * vy+theta;
             va = vx+theta;

@@ -57,13 +57,13 @@ class PidVelocity():
         self.prev_encoder = 0
         
         ### get parameters #### 
-        self.Kp = rospy.get_param('~Kp',0)
-        self.Ki = rospy.get_param('~Ki',3)
+        self.Kp = rospy.get_param('~Kp',0.01)
+        self.Ki = rospy.get_param('~Ki',0)
         self.Kd = rospy.get_param('~Kd',0)
         self.out_min = rospy.get_param('~out_min',-1)
         self.out_max = rospy.get_param('~out_max',1)
         self.rate = rospy.get_param('~rate',30)
-        self.rolling_pts = rospy.get_param('~rolling_pts',2)
+        self.rolling_pts = rospy.get_param('~rolling_pts',5)
         self.timeout_ticks = rospy.get_param('~timeout_ticks',4)
         self.ticks_per_meter = float(rospy.get_param('ticks_meter', 560 / (0.0825*math.pi)))  # The number of wheel encoder ticks per meter of travel
         self.vel_threshold = rospy.get_param('~vel_threshold', 0.001)
@@ -128,18 +128,19 @@ class PidVelocity():
         #rospy.loginfo("calculating velocity")
         self.dt_duration = rospy.Time.now() - self.then
         self.dt = self.dt_duration.to_sec()
-        rospy.logdebug("-D- %s caclVelocity dt=%0.3f wheel_latest=%0.3f wheel_prev=%0.3f" % (self.nodename, self.dt, self.wheel_latest, self.wheel_prev))
-        
-        if (self.wheel_latest == self.wheel_prev):
+        #rospy.loginfo("-D- %s caclVelocity dt=%0.3f wheel_latest=%0.3f wheel_prev=%0.3f" % (self.nodename, self.dt, self.wheel_latest, self.wheel_prev))
+        #rospy.loginfo("vel %.3f" % ((self.wheel_latest - self.wheel_prev)/self.dt))        
+        if (self.wheel_latest == self.wheel_prev or abs(self.wheel_latest - self.wheel_prev)/(self.dt) > 1):
             # we haven't received an updated wheel lately
-            cur_vel = (1 / self.ticks_per_meter) / self.dt    # if we got a tick right now, this would be the velocity
+            self.calcRollingVel()
+            cur_vel = self.vel  # if we got a tick right now, this would be the velocity
             if abs(cur_vel) < self.vel_threshold: 
                 # if the velocity is < threshold, consider our velocity 0
-                rospy.logdebug("-D- %s below threshold cur_vel=%0.3f vel=0" % (self.nodename, cur_vel))
+                #rospy.loginfo("-D- %s below threshold cur_vel=%0.3f vel=0" % (self.nodename, cur_vel))
                 self.appendVel(0)
                 self.calcRollingVel()
             else:
-                rospy.logdebug("-D- %s above threshold cur_vel=%0.3f" % (self.nodename, cur_vel))
+                #rospy.loginfo("-D- %s above threshold cur_vel=%0.3f" % (self.nodename, cur_vel))
                 if False: #abs(cur_vel) < self.vel:
                     rospy.logdebug("-D- %s cur_vel < self.vel" % self.nodename)
                     # we know we're slower than what we're currently publishing as a velocity
@@ -151,7 +152,7 @@ class PidVelocity():
             cur_vel = (self.wheel_latest - self.wheel_prev) / self.dt
             self.appendVel(cur_vel)
             self.calcRollingVel()
-            rospy.logdebug("-D- %s **** wheel updated vel=%0.3f **** " % (self.nodename, self.vel))
+            #rospy.loginfo("-D- %s **** wheel updated vel=%0.3f **** " % (self.nodename, self.vel))
             self.wheel_prev = self.wheel_latest
             self.then = rospy.Time.now()
             
@@ -183,21 +184,22 @@ class PidVelocity():
         #rospy.loginfo("i = i + (e * dt):  %0.3f = %0.3f + (%0.3f * %0.3f)" % (self.integral, self.integral, self.error, pid_dt))
         self.derivative = (self.error - self.previous_error) / pid_dt
         self.previous_error = self.error
-    
-        self.motor = (self.Kp * self.error) + (self.Ki * self.integral) + (self.Kd * self.derivative)
-    
+        #print(self.motor, (self.Kp * self.error), (self.Ki * self.integral) , (self.Kd * self.derivative))
+        self.motor += (self.Kp * self.error) + (self.Ki * self.integral) + (self.Kd * self.derivative)
+        #print(self.motor)
         if self.motor > self.out_max:
             self.motor = self.out_max
             self.integral = self.integral - (self.error * pid_dt)
         if self.motor < self.out_min:
             self.motor = self.out_min
             self.integral = self.integral - (self.error * pid_dt)
-      
+     	if abs(self.motor) < 0.25:
+            self.motor = 0.25*self.motor/abs(self.motor) 
         if (self.target == 0):
             self.motor = 0
     
         #rospy.loginfo("vel:%0.2f tar:%0.2f err:%0.2f int:%0.2f der:%0.2f ## motor:%d " % 
-                      #(self.vel, self.target, self.error, self.integral, self.derivative, self.motor))
+         #             (self.vel, self.target, self.error, self.integral, self.derivative, self.motor))
     
     
 
@@ -213,7 +215,8 @@ class PidVelocity():
             self.wheel_mult = self.wheel_mult - 1
            
          
-        self.wheel_latest = 1.0 * (enc + self.wheel_mult * (self.encoder_max - self.encoder_min)) / self.ticks_per_meter 
+        self.wheel_latest = 1.0 * (enc + self.wheel_mult * (self.encoder_max - self.encoder_min)) / self.ticks_per_meter
+        #rospy.loginfo("%d / %d" % (enc, self.prev_encoder))
         self.prev_encoder = enc
         
         

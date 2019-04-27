@@ -1,4 +1,4 @@
-#include ngle = atan2((target.y-getRobotPos().y), (target.x-getRobotPos().x));<ros/ros.h>
+#include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include "control.h"
@@ -62,13 +62,16 @@ void Control::startFunc(const std_msgs::Bool::ConstPtr&){
 
 void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 	occGrid = *grid;
+	if (occGrid.info.resolution == -1)
+		return;
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;
 	ROS_INFO("In control loop");
 	if(start && !gs.done){
 		//determine target and type based on occGrid and gameState
         geometry_msgs::Pose target = findNextTarget(robotAction);
-		ROS_INFO("finished find next target");
+		Point ptar = poseToPoint(target);
+		ROS_INFO("finished find next target, target is: %d, %d", ptar.x, ptar.y);
 		//translate occGrid coords into moveBase coords
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
@@ -81,12 +84,9 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		psGoal.header = goal.target_pose.header;
 		goal_pub.publish(psGoal);
 		ros::spinOnce();
+		ROS_INFO("about to do important stuff");
 		//ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
 		//ROS_INFO("Found goal, publishing...");
-		char yn;
-		cout << "Accept this goal? (y/n)" << endl;
-		cin >> yn;
-		if(yn == 'y'){	
 			goToGoal(goal.target_pose.pose);
 			//ac->sendGoal(goal);
 			//ac->waitForResult();
@@ -95,16 +95,17 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 			//if we entered a room, update robotAction accordingly
 			//`update robot action in case we entered a room
 			takeAction(robotAction);
-		}
+		
 	}
 }
 
 vector<Point> Control::createTargetPath(Point target) {//distance field already created
     //start at target which has a specific val in distancie field, locate neighbor with distVal 1 less, repeat.
     //when the direction changes, push the current point into the moves list.
-    vector<Point> moves;
+	vector<Point> moves;
     //distance of target from robot position
     int distVal = distanceField[target.x][target.y];
+	ROS_INFO("starting distVal: %d", distVal);
     vector<Point> neighbors;//used for calculating path
     Point direction(0, 0);  //used for detecting changes in direction, which are recorded as waypoints
     //until we get back to the robot
@@ -118,6 +119,7 @@ vector<Point> Control::createTargetPath(Point target) {//distance field already 
                     direction = neighbor-target;
                 }
                 target = neighbor;
+				ROS_INFO("successfully found a neigbor with value: %d", distVal - 1);
                 distVal--;
                 break;
             }
@@ -130,12 +132,21 @@ vector<Point> Control::createTargetPath(Point target) {//distance field already 
 
 
 void Control::goToGoal(geometry_msgs::Pose goal){
-	vector<Point> moves = optimizePath(createTargetPath(poseToPoint(goal)));
+	ROS_INFO("going to goal at %f, %f", goal.position.x, goal.position.y);
+	vector<Point> moves = createTargetPath(poseToPoint(goal));
+	ROS_INFO("path made, optimizing");
+	moves = optimizePath(moves);
+	ROS_INFO("aw fuck I kahnt belieeve yoove dun this");
 	vector<geometry_msgs::PoseStamped> plan = pathToPlan(moves);
 	nav_msgs::Path plan_msg;
 	plan_msg.header = plan[0].header;
 	plan_msg.poses = plan;
 	plan_pub.publish(plan_msg);
+	char yn;
+	cout << "accept path?" << endl;
+	cin >> yn;
+	if(yn != 'y')
+		return;
 	for(move : moves){
 		goal = pointToPose(move);
 		double angle = atan2((goal.position.y-getRobotPose().position.y), (goal.position.x-getRobotPose().position.x));
@@ -148,6 +159,7 @@ void Control::goToGoal(geometry_msgs::Pose goal){
 		double angleTolerance = .1;
         while(ros::ok() && sqrt(robotPose.position.x - goal.position.x)*(robotPose.position.x - goal.position.x) + (robotPose.position.y - goal.position.y)*(robotPose.position.y - goal.position.y) > .05){
 			robotPose = getRobotPose();
+			printf("angle is %d and dist is %d", angle, sqrt(robotPose.position.x - goal.position.x)*(robotPose.position.x - goal.position.x) + (robotPose.position.y - goal.position.y)*(robotPose.position.y - goal.position.y));
 			angle = atan2((goal.position.y-robotPose.position.y), (goal.position.x-robotPose.position.x));
 			if (abs(robotPose.orientation.z - angle) > angleTolerance){
 		   		double diff = angle - robotPose.orientation.z;
@@ -193,7 +205,7 @@ vector<Point> Control::optimizePath(const vector<Point> &moves) {
     //then repeat from that point.  This is not a perfect optimization.  But it's good enough for now
 
     vector<Point> optMoves;
-    Point startPoint(getRobotPos());
+    Point startPoint(poseToPoint(getRobotPose()));
     Point endPoint(moves[0]);
 
     //for each possible improvement
@@ -384,7 +396,7 @@ void Control::takeAction(RobotOp robotAction){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
-                diff = (newRobotPose.orientation.z - robotPose.orientation.z);
+                double diff = (newRobotPose.orientation.z - robotPose.orientation.z);
 				if(diff < 0)
 					diff += 2*3.141592653;
 				delta += diff;
@@ -457,7 +469,7 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	double tolerance = 0.1;
 	geometry_msgs::Pose robotPose = getRobotPose();
     geometry_msgs::Twist rotCommand;
-	rotCommand.z = 0;
+	rotCommand.angular.z = 0;
 	while(abs(robotPose.orientation.z - targetAngle) > tolerance){
 		double diff = targetAngle - robotPose.orientation.z;
 		if(diff < -3.1415926535)
@@ -465,21 +477,22 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 		else if(diff > 3.14159265)
 			diff -= 3.141592;
 		if (diff > 0)
-			rotCommand.z = 0.3;
+			rotCommand.angular.z = 0.3;
 		else
-			rotCommand.z = -0.3;
+			rotCommand.angular.z = -0.3;
 		cmd_vel_pub.publish(rotCommand);
 		robotPose = getRobotPose();
 	}
 	
+    std_srvs::Empty srv;
 
     solenoidClient.call(srv);
-	goal.target_pose.pose.position.x = 0;
-	goal.target_pose.pose.position.y = 0;
-	ac->sendGoal(goal);
-	ac->waitForResult();
+	geometry_msgs::Pose home;
+	home.position.x = 0;
+	home.position.y = 0;
+    goToGoal(home);
 	gs.done = true;
-    return;
+	return;
 }
 
 bool Control::unknownLargeEnough(Point center){

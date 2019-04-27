@@ -49,7 +49,7 @@ HectorMappingRos::HectorMappingRos()
   , lastGetMapUpdateIndex(-100)
   , tfB_(0)
   , map__publish_thread_(0)
-  , initial_pose_set_(false)
+  , initial_pose_set_(false), tf_(ros::Duration(30))
 {
   ros::NodeHandle private_nh_("~");
 
@@ -270,7 +270,8 @@ void HectorMappingRos::scanCallback(const sensor_msgs::LaserScan& scan)
         }else if (p_use_tf_pose_start_estimate_){
 
           try
-          {
+          { 
+			//ROS_INFO("trying to get odom transform");
             tf::StampedTransform stamped_pose;
 
             tf_.waitForTransform("/odom",p_base_frame_, scan.header.stamp, ros::Duration(0.5));
@@ -334,7 +335,6 @@ void HectorMappingRos::scanCallback(const sensor_msgs::LaserScan& scan)
   if (p_pub_map_odom_transform_)
   {
     tf::StampedTransform odom_to_base;
-
     try
     {
       tf_.waitForTransform(p_odom_frame_, p_base_frame_, scan.header.stamp, ros::Duration(0.5));
@@ -416,6 +416,7 @@ void HectorMappingRos::publishMap(MapPublisherContainer& mapPublisher, const hec
     }
   }
 
+  //tfB_->sendTransform( tf::StampedTransform (map_to_odom_, ros::Time::now(), p_map_frame_, p_odom_frame_));
   map_.map.header.stamp = timestamp;
 
   mapPublisher.mapPublisher_.publish(map_.map);

@@ -218,8 +218,8 @@ class DiffTf:
             odom.twist.twist.linear.y = self.dy
             odom.twist.twist.angular.z = self.dr
             self.odomPub.publish(odom)
-            #print("robot pose is: ", self.x, self.y)            
-            
+            rospy.loginfo("robot pose is: %.2f, %.2f" % (self.x, self.y))            
+            rospy.loginfo("encoders: %d, %d, %d" % (self.enc_first, self.enc_second, self.enc_third))
 
 
     #############################################################################
