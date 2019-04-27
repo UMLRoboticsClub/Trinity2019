@@ -32,17 +32,21 @@
 //#define I2C_SLAVE_1_SCL 19
 //#define I2C_SLAVE_1_SDA 18
 
+int count1 = 0;
+int count2 = 0;
+int count3 = 0;
+
 union Data {
     int32_t counter[3];
     uint8_t buf[4*3];
 } d;
 
-void IRAM_ATTR enc1_a(void *arg){ gpio_get_level(ENC1_A) == gpio_get_level(ENC1_B) ? --d.counter[0] : ++d.counter[0]; }
-void IRAM_ATTR enc1_b(void *arg){ gpio_get_level(ENC1_A) == gpio_get_level(ENC1_B) ? ++d.counter[0] : --d.counter[0]; }
-void IRAM_ATTR enc2_a(void *arg){ gpio_get_level(ENC2_A) == gpio_get_level(ENC2_B) ? --d.counter[1] : ++d.counter[1]; }
-void IRAM_ATTR enc2_b(void *arg){ gpio_get_level(ENC2_A) == gpio_get_level(ENC2_B) ? ++d.counter[1] : --d.counter[1]; }
-void IRAM_ATTR enc3_a(void *arg){ gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? --d.counter[2] : ++d.counter[2]; }
-void IRAM_ATTR enc3_b(void *arg){ gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? ++d.counter[2] : --d.counter[2]; }
+void IRAM_ATTR enc1_a(void *arg){ count1++; gpio_get_level(ENC1_A) == gpio_get_level(ENC1_B) ? --d.counter[0] : ++d.counter[0];}
+void IRAM_ATTR enc1_b(void *arg){ count1++; gpio_get_level(ENC1_A) == gpio_get_level(ENC1_B) ? ++d.counter[0] : --d.counter[0];}
+void IRAM_ATTR enc2_a(void *arg){ count2++; gpio_get_level(ENC2_A) == gpio_get_level(ENC2_B) ? --d.counter[1] : ++d.counter[1]; }
+void IRAM_ATTR enc2_b(void *arg){ count2++; gpio_get_level(ENC2_A) == gpio_get_level(ENC2_B) ? ++d.counter[1] : --d.counter[1]; }
+void IRAM_ATTR enc3_a(void *arg){ count3++; gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? --d.counter[2] : ++d.counter[2];}
+void IRAM_ATTR enc3_b(void *arg){ count3++; gpio_get_level(ENC3_A) == gpio_get_level(ENC3_B) ? ++d.counter[2] : --d.counter[2];}
 
 void i2c_slave_init(uint8_t address){
     int i2c_slave_port = I2C_NUM_0;
@@ -87,8 +91,12 @@ void i2c_slave_task(void *params){
             switch(addr){
                 case REG_GETVAL:
                     i2c_slave_write_buffer(I2C_NUM_0, &startByte, 1, waitTicks);
+					//ets_printf("%d\n", startByte);
                     i2c_slave_write_buffer(I2C_NUM_0, d.buf, 12, waitTicks);
+					//for(int i = 0; i < 12; i++)
+					//	ets_printf("%d, ", d.buf[i]);
                     i2c_slave_write_buffer(I2C_NUM_0, &endByte, 1, waitTicks);
+					//ets_printf("\n%d\n", endByte);
                     break;
                 case REG_ECHO:
                     i2c_slave_write_buffer(I2C_NUM_0, &addr, 1, waitTicks);
@@ -111,15 +119,24 @@ void i2c_slave_task(void *params){
     vTaskDelete(NULL);
 }
 
-//void printy(void *arg){
-//     while(1){
-//        printf("%d, %d, %d\n", d.counter[0], d.counter[1], d.counter[2]);
-//        //printf("1A:%d, 1B:%d\n", gpio_get_level(ENC1_A), gpio_get_level(ENC1_B));
-//        //printf("2A:%d, 2B:%d\n", gpio_get_level(ENC2_A), gpio_get_level(ENC2_B));
-//        //printf("3A:%d, 3B:%d\n", gpio_get_level(ENC3_A), gpio_get_level(ENC3_B));
-//        vTaskDelay(200 / portTICK_RATE_MS);
-//     }
-//}
+void printy(void *arg){
+    uint8_t startByte = 63;
+    uint8_t endByte   = 64;
+    while(1){
+		//char c = getchar();
+		//printf(" %d ", c);
+		if(getchar() != -1){
+			printf("%c", startByte);
+			printf("%c%c%c%c%c%c%c%c%c%c%c%c", d.buf[0], d.buf[1], d.buf[2], d.buf[3], d.buf[4], d.buf[5], d.buf[6], d.buf[7], d.buf[8], d.buf[9], d.buf[10], d.buf[11]);
+			printf("%c", endByte);
+		}
+        //printf("%d, %d, %d, %d, %d, %d\n", d.counter[0], d.counter[1], d.counter[2], count1, count2, count3);
+        //printf("1A:%d, 1B:%d\n", gpio_get_level(ENC1_A), gpio_get_level(ENC1_B));
+        //printf("2A:%d, 2B:%d\n", gpio_get_level(ENC2_A), gpio_get_level(ENC2_B));
+        //printf("3A:%d, 3B:%d\n", gpio_get_level(ENC3_A), gpio_get_level(ENC3_B));
+        //vTaskDelay(200 / portTICK_RATE_MS);
+   }
+}
 
 void init_gpio(void *params){
     ESP_ERROR_CHECK(gpio_set_direction(ENC1_A, GPIO_MODE_INPUT));
@@ -156,13 +173,13 @@ void init_gpio(void *params){
 }
 
 void app_main(){
-    d.counter[0] = d.counter[1] = d.counter[2] = 0;
-
+    d.counter[0] = d.counter[1] = d.counter[2] = 0xcccccccc;
+	//init_gpio(NULL);
     xTaskCreatePinnedToCore(init_gpio, "init_gpio", 1024, NULL, 1, NULL, 1);
     vTaskDelay(100 / portTICK_RATE_MS);
 
-    i2c_slave_init(0x03);
-    xTaskCreatePinnedToCore(i2c_slave_task, "i2c_slave", 1024, NULL, 2, NULL, 0);
+    //i2c_slave_init(0x03);
+    //xTaskCreatePinnedToCore(i2c_slave_task, "i2c_slave", 1024, NULL, 2, NULL, 0);
 
-    //xTaskCreatePinnedToCore(printy, "printy", 2048, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(printy, "printy", 2048, NULL, 2, NULL, 1);
 }
