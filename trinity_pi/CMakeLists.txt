@@ -140,6 +140,7 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/trinity_pi_node.cpp)
 
 add_executable(encoders
+    src/encoders/serial.cpp
     src/encoders/encoders_i2c.cpp
     #src/encoders/encoder.cpp
 )
