@@ -105,10 +105,10 @@ void PCA9685::setPWMFreq(float freq){
     //write8(PCA9685_MODE1, oldmode | 0xa0);   //  This sets the MODE1 register to turn on auto increment.
 
     // Get settings and calc bytes for the different states.
-    int settings = read8(PCA9685_MODE1) & 0x7F;   // Set restart bit to 0
-    int sleep_m   = settings | 0x10;                                  // Set sleep bit to 1
-    int wake    = settings & 0xEF;                                  // Set sleep bit to 0
-    int restart = wake | 0x80;
+    uint8_t settings = read8(PCA9685_MODE1) & 0x7F;   // Set restart bit to 0
+    uint8_t sleep_m   = settings | 0x10;                                  // Set sleep bit to 1
+    uint8_t wake    = settings & 0xEF;                                  // Set sleep bit to 0
+    uint8_t restart = wake | 0x80;
 
     // Go to sleep, set prescale and wake up again.
     write8(PCA9685_MODE1, sleep_m);
@@ -179,11 +179,11 @@ void PCA9685::setAllPins(uint16_t val){
 }
 
 uint8_t PCA9685::read8(uint8_t addr){
-    if(write(fd, &addr, 1) != 1){
+    while(write(fd, &addr, 1) != 1){
         cerr << "read: pca write failed" << endl;
         return 0;
     }
-    if(read(fd, &addr, 1)  != 1){
+    while(read(fd, &addr, 1)  != 1){
         cerr << "read: pca read failed" << endl;
         return 0;
     }
@@ -193,7 +193,7 @@ uint8_t PCA9685::read8(uint8_t addr){
 
 void PCA9685::write8(uint8_t addr, uint8_t val) {
     uint8_t packet[2] = { addr, val };
-    if(write(fd, packet, 2) != 2){
-        cerr << "pca9685 write failed(1)" << endl;
+    while(write(fd, packet, 2) != 2){
+        cerr << "write: pca write failed" << endl;
     }
 }

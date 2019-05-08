@@ -5,10 +5,8 @@ import numpy as np
 import signal
 import sys
 
-# Configuration:
-target_freq = 3800
-#+/-Hz
-tolerance = 20
+min_freq = 3300
+max_freq = 4300
 #how many times do we have to get the
 #frequency for it to be accepted
 freq_duration = 5
@@ -53,7 +51,7 @@ def wait_for_freq():
             freq = which*sample_rate/chunk_size
 
         #print(freq)
-        if freq > (target_freq - tolerance) and freq < (target_freq + tolerance):
+        if freq > min_freq and freq < max_freq:
             count += 1 
         else:
            count = 0

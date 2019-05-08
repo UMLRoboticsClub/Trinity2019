@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-include('frequency_detect.py')
+
 import rospy
 from std_msgs.msg import String
+
+import frequency_detect.py
 
 node_name = 'sound_start_node'
 topic_name = 'sound_start'
