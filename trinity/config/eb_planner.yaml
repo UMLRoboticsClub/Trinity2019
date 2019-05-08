@@ -1,0 +1,4 @@
+EBandPlannerROS:
+    yaw_goal_tolerance: 0.2
+    xy_goal_tolerance: 0.05
+    max_vel_th: 0.05

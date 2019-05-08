@@ -1,3 +1,18 @@
 [submodule "rplidar_ros"]
 	path = rplidar_ros
 	url = https://github.com/Slamtec/rplidar_ros.git
+[submodule "RPLidar_Hector_SLAM"]
+	path = RPLidar_Hector_SLAM
+	url = https://github.com/NickL77/RPLidar_Hector_SLAM.git
+[submodule "asr_move_base"]
+	path = asr_move_base
+	url = https://github.com/asr-ros/asr_move_base.git
+[submodule "asr_nav_core"]
+	path = asr_nav_core
+	url = https://github.com/asr-ros/asr_nav_core.git
+[submodule "navigation"]
+	path = navigation
+	url = https://github.com/ros-planning/navigation.git
+[submodule "asr_ftc_local_planner"]
+	path = asr_ftc_local_planner
+	url = https://github.com/asr-ros/asr_ftc_local_planner.git

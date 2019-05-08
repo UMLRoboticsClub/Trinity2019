@@ -25,7 +25,7 @@ int main(int argc, char **argv){
     float &va = a.data;
     float &vb = b.data;
     float &vc = c.data;
-
+	
     typedef geometry_msgs::Twist::ConstPtr inType;
 
     boost::function<void (const inType&)> callback = 
@@ -33,13 +33,12 @@ int main(int argc, char **argv){
             //Coordinate systems in ROS are always in 3D,
             //and are right-handed, with X forward, Y left, and Z up. 
             //ROS_INFO("got a cmd_vel command");
-
-            float vx = vel->linear.x * -1;
-            float vy = vel->linear.y;
-            float theta = vel->angular.z;
-            vc = -0.5f * vx - sqrt(3)/2 * vy+theta;
-            vb = -0.5f * vx + sqrt(3)/2 * vy+theta;
-            va = vx+theta;
+            float vy = vel->linear.x;
+            float vx = vel->linear.y;
+            float theta = vel->angular.z * -1;
+            vb = -0.5f * vx - sqrt(3)/2 * vy+theta;
+            va = -0.5f * vx + sqrt(3)/2 * vy+theta;
+            vc = vx+theta;
 
             mtrA_pub.publish(a);
             mtrB_pub.publish(b);

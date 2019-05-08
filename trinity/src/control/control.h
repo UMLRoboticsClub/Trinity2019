@@ -31,14 +31,14 @@ typedef enum ROBOT_OPS {
 
 class Control{
 public:
-    Control(ros::Publisher, ros::Publisher, ros::Publisher, ros::ServiceClient&, ros::ServiceClient&, ros::ServiceClient&);
+    Control(ros::NodeHandle* nodehandle);
 	void controlLoop(const nav_msgs::OccupancyGrid::ConstPtr&);
 	void startFunc(const std_msgs::Bool::ConstPtr&);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
 	void takeAction(RobotOp robotAction);
     Point computeDistanceField();
 	RobotOp determineRobotOp(int);
-	void extinguishCandle();
+	void extinguishCandle(geometry_msgs::Pose candlePose);
 	bool unknownLargeEnough(Point center);
     vector<Point> findOpenNeighbors(const Point &currentPos);
     int accessOccGrid(int x, int y);
@@ -53,12 +53,19 @@ private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;
 	ros::Publisher point_pub;
+	ros::Subscriber map_sub;
+	ros::Subscriber wait_for_signal;
+	ros::NodeHandle nh;
     GameState gs;
     std::map<int, vector<geometry_msgs::Pose>> targetPoints;
 	vector<vector<int>> distanceField;
 	nav_msgs::OccupancyGrid occGrid;
-	MoveBaseClient ac;
+	MoveBaseClient* ac;
     ros::ServiceClient robotPoseClient;
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
+
+	void initializeSubscribers();
+	void initializePublishers();
+	void initializeServices();
 };
