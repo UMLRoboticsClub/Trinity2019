@@ -97,7 +97,10 @@ class PidVelocity():
         self.then = rospy.Time.now()
         while not rospy.is_shutdown():
             self.spinOnce()
-            self.r.sleep()
+            try:
+                self.r.sleep()
+            except:
+                pass
             
     #####################################################
     def spinOnce(self):

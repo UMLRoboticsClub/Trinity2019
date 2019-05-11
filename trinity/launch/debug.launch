@@ -3,4 +3,5 @@
 	<include file="$(find trinity)/launch/static_transforms.launch" />
 	<node pkg="joy" type="joy_node" name="joystick" />
 	<node pkg="kiwi-drive" type="joystick_drive" name="joy_to_twist" />
+	<include file="$(find kiwi-drive)/launch/robot_control.launch" />
 </launch>

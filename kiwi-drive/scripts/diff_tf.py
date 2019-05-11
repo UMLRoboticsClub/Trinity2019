@@ -131,7 +131,31 @@ class DiffTf:
         r = rospy.Rate(self.rate)
         while not rospy.is_shutdown():
             self.update()
-            r.sleep()
+            #print("looping")
+            try:
+                r.sleep()
+            except rospy.exceptions.ROSTimeMovedBackwardsException:
+                rospy.logwarn("time jump")
+                self.t_next = rospy.Time.now() + self.t_delta
+                self.enc_first = None        # wheel encoder readings
+                self.enc_second = None
+                self.enc_third = None
+                self.first = 0               # actual values coming back from robot
+                self.second = 0
+                self.third = 0
+                self.fmult = 0
+                self.smult = 0
+                self.tmult = 0
+                self.prev_fencoder = 0
+                self.prev_sencoder = 0
+                self.prev_tencoder = 0
+                self.x = 0                  # position in xy plane 
+                self.y = 0
+                self.th = 0
+                self.dx = 0                 # speeds in x/rotation
+                self.dr = 0
+                self.then = rospy.Time.now()
+                r.sleep()
        
      
     #############################################################################
@@ -144,7 +168,7 @@ class DiffTf:
             elapsed = elapsed.to_sec()
             
             # calculate odometry
-            if self.enc_first is None:
+            if self.enc_first is None or (self.enc_first is 0 and self.enc_second is 0 and self.enc_third is 0):
                 d_first = 0
                 d_second = 0
                 d_third = 0
@@ -163,7 +187,7 @@ class DiffTf:
                 return
             #print("ticks per meter: {0}".format(self.ticks_meter))
             #print("distances: {0}, {1}, {2}".format(d_first, d_second, d_third))
-    
+            
             # distance traveled in x an y, rotation in z 
             x = (-2 * d_second + d_first + d_third) / 3
             y = (d_first - d_third) * math.sqrt(3) / -3
@@ -181,9 +205,14 @@ class DiffTf:
             #print("time elapsed: {0}".format(elapsed))
             
             # calculate velocities
-            self.dx = x / elapsed
-            self.dy = y / elapsed
-            self.dr = th / elapsed
+            if(elapsed > 0):
+                self.dx = x / elapsed
+                self.dy = y / elapsed
+                self.dr = th / elapsed
+            else:
+                self.dx = 0
+                self.dy = 0
+                self.dr = 0
           
             #print("x, y, th: %.2f %.2f %.2f" % (self.x, self.y, self.th))
             #print("velocities: {0}, {1}, {2}".format(self.dx, self.dy, self.dr))
@@ -224,8 +253,9 @@ class DiffTf:
             odom.twist.twist.linear.y = self.dy
             odom.twist.twist.angular.z = self.dr
             self.odomPub.publish(odom)
-            #print("robot pose is: ", self.x, self.y)            
             
+            rospy.loginfo("robot pose is: %.2f, %.2f" % (self.x, self.y))            
+            #rospy.loginfo("encoders: %d, %d, %d" % (self.enc_first, self.enc_second, self.enc_third))
 
 
     #############################################################################
@@ -258,6 +288,8 @@ class DiffTf:
     def twheelCallback(self, msg):
     #############################################################################
         enc = msg.data
+        if(enc == 0):
+            print("got 0")
         if(enc < self.encoder_low_wrap and self.prev_tencoder > self.encoder_high_wrap):
             self.tmult = self.tmult + 1
 
@@ -276,4 +308,3 @@ if __name__ == '__main__':
         diffTf.spin()
     except rospy.ROSInterruptException:
         pass
-

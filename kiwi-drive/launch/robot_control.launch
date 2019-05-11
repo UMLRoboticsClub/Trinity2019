@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <launch>
 	<node pkg="kiwi-drive" type="twist_to_motors" name="twist_to_motors" output="screen">
-        <param name="motor1" value="/wheel1_vtarget" />
-        <param name="motor2" value="/wheel2_vtarget" />
-        <param name="motor3" value="/wheel3_vtarget" />
+        <param name="motor1" value="/motor1_cmd" />
+        <param name="motor2" value="/motor2_cmd" />
+        <param name="motor3" value="/motor3_cmd" />
 	</node>
 	<node pkg="kiwi-drive" type="pid_velocity.py" name="pid_velocity1" output="screen">
         <param name="wheel" value="/enc1" />
@@ -29,8 +29,9 @@
         <param name="encoder3" value="/enc3" />
     </node>
 	<node pkg="trinity" type="getRobotPose.py" name="poseService" output="screen" />
-    <!--
-	<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+	
+    
+	<!--<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
 		<param name="output_frame" value="odom" />
 		<param name="freq" value="2.0" />
 		<param name="sensor_timeout" value="1.0" />

@@ -12,7 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs    
     sensor_msgs    
-    geometry_msgs    
+    geometry_msgs
+	std_srvs
+	trinity_pi    
 )
 
 catkin_package()
