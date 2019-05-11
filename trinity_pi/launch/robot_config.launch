@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <launch>
     <rosparam param="robot_description" file="$(find trinity_pi)/models/trinitybot.urdf" />
-    <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+    <!--<include file="$(find rplidar_ros)/launch/rplidar.launch" />-->
     <!--<include file="$(find kiwi-drive)/launch/robot_control.launch" />-->
-    <node pkg="joint_state_publisher" type="joint_state_publisher" name="joints" output="screen" />
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state" output="screen" />
+    <!--<node pkg="joint_state_publisher" type="joint_state_publisher" name="joints" output="screen" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state" output="screen" /> -->
     <node pkg="trinity_pi" type="encoders" name="encoders" output="screen">
         <param name="encoder1" value="/enc1" />
         <param name="encoder2" value="/enc2" />
         <param name="encoder3" value="/enc3" />
         <param name="i2c_device" value="/dev/i2c-1" />
         <param name="slave_address" value="3" />
-        <param name="pub_hz" value="20" />
+        <param name="pub_hz" value="30" />
     </node>
     <!--<node pkg="trinity_pi" type="color_sensor" name="color_sensor" output="screen">
         <param name="i2c_device" value="/dev/i2c-1" />
