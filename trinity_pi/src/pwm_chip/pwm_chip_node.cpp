@@ -28,9 +28,9 @@ void motorA_callback(std_msgs::Float32::ConstPtr cmd){
 
 void init_motors(ros::NodeHandle &n){
     string topic_motorA, topic_motorB, topic_motorC;
-    n.getParam("motor1", topic_motorA);
-    n.getParam("motor2", topic_motorB);
-    n.getParam("motor3", topic_motorC);
+    n.param<std::string>("motor1", topic_motorA, "/motor1_cmd");
+    n.param<std::string>("motor2", topic_motorB, "/motor2_cmd");
+    n.param<std::string>("motor3", topic_motorC, "/motor3_cmd");
     ROS_INFO("%s, %s, %s", topic_motorA.c_str(), topic_motorB.c_str(), topic_motorC.c_str());
     typedef std_msgs::Float32::ConstPtr mtr_input_type;
     typedef boost::function<void (const mtr_input_type&)> callback_func;

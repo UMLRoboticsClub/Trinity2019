@@ -9,8 +9,7 @@
         <param name="encoder1" value="/enc1" />
         <param name="encoder2" value="/enc2" />
         <param name="encoder3" value="/enc3" />
-        <param name="i2c_device" value="/dev/i2c-1" />
-        <param name="slave_address" value="3" />
+        <param name="serial_port" value="/dev/ttyUSB1" />
         <param name="pub_hz" value="20" />
     </node>
     <!--<node pkg="trinity_pi" type="color_sensor" name="color_sensor" output="screen">

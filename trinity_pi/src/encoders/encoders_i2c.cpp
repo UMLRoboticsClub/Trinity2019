@@ -33,8 +33,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-const uint8_t startByte = 170;
-const uint8_t endByte = 169;
+const uint8_t startByte = 63;
+const uint8_t endByte = 64;
 int num_failures = 0;
 
 union Encoders{
@@ -103,21 +103,24 @@ bool i2c_read(uint8_t addr, int nbytes) {
         //if(num_failures > 25){
         //    return false;
         //}
-        /*
+        
         while(ros::ok() && byte != startByte) {
 
             printf("start byte: %d\n", byte);
 
             read(fd, &byte, 1);
             num_failures++;
-            ROS_INFO("num failures: %d", num_failures);
-            if(++count > 13){
-                return false;
+            //ROS_INFO("num failures: %d", num_failures);
+            if(++num_failures > 13){
+                break;;
             }
-        }*/
+        }
+        if(byte != startByte)
+            continue;
 
         //ROS_INFO("start byte found");
         int numBytes = 0;
+        //read(fd, &byte, 1);
         //printf("start byte: %d\n", byte);
         while(numBytes < 12){
             count ++;
@@ -125,7 +128,7 @@ bool i2c_read(uint8_t addr, int nbytes) {
             //ROS_INFO("numGot is: %d", numBytes);
             if(count > 25){
                 ROS_INFO("still couldn't get the whole packet");
-                continue;
+                break;
             }
             //usleep(1000);
         }
@@ -134,17 +137,14 @@ bool i2c_read(uint8_t addr, int nbytes) {
             ROS_ERROR("read failed");
             continue;
         } 
-        read(fd, &byte, 1);
-        //printf("end byte: %d\n", byte);
-        return true;
-        //if(read(fd, &byte, 1), byte != endByte){
-            //ROS_INFO("end byte not found!");
+        if(read(fd, &byte, 1), byte != endByte){
+            ROS_INFO("end byte not found! (got: %d)", byte);
             //num_failures++;
-            //continue;
-        //} else {
+            continue;
+        } else {
             //ROS_INFO("got all data (end byte: %d)", byte);
-        //    done = true;
-        //}
+            done = true;
+        }
     }
 
     /*int ret = read(file, buf, nbytes);
@@ -169,7 +169,7 @@ int main(int argc, char** argv){
     topic_nameB = n.param<std::string>("encoder2", "enc2");
     topic_nameC = n.param<std::string>("encoder3", "enc3");
     //i2c_device = n.param<std::string>("i2c_device", "/dev/i2c-1");
-    const char* serialPort = n.param<std::string>("serialPort", "/dev/ttyUSB0").c_str();
+    const char* serialPort = n.param<std::string>("serial_port", "/dev/ttyUSB0").c_str();
     //slave_address = n.param("slave_address", 0x03);
     pub_hz = n.param("pub_hz", 20);
     ROS_INFO("encoders node / encoder1: %s, encoder2: %s, encoder3: %s, i2c_device: %s, slave_address: 0x%x, pub_hz: %d", topic_nameA.c_str(), topic_nameB.c_str(), topic_nameC.c_str(), i2c_device.c_str(), slave_address, pub_hz);
@@ -187,6 +187,8 @@ int main(int argc, char** argv){
     //i2c_set_pointer(REG_CLEARVAL);
 
     ROS_INFO("Publishing encoder values");
+    char reset = '0';
+    write(fd, &reset, 1);
     while(ros::ok()){
         i2c_read(REG_GETVAL, 12);
         /*if(num_failures > 25){
