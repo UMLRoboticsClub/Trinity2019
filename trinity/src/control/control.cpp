@@ -5,6 +5,7 @@
 #include <nav_msgs/GetMap.h>
 #include <iostream>
 
+
 using std::cin;
 using std::cout;
 
@@ -212,15 +213,19 @@ void Control::takeAction(RobotOp robotAction){
             geometry_msgs::Pose robotPose = getRobotPose();
             geometry_msgs::Pose newRobotPose;
             double delta = 0;
+	    double diff; 
             //while we haven't rotated 2*PI rads
 			//this should ahve a ROS rate
             while(ros::ok() && delta < 2*3.1415926535){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
-                delta += (newRobotPose.orientation.z - robotPose.orientation.z);
-				if(delta < 0)
-					delta += 2*3.1415926535;
+                
+
+		diff = (newRobotPose.orientation.z - robotPose.orientation.z);
+		if(diff < 0)
+			diff += 2*3.1415926535;
+		delta += diff;
                 robotPose = newRobotPose;
             }
             //candles is vector of angle indices relative to robot orientation
@@ -271,7 +276,7 @@ RobotOp Control::determineRobotOp(int type){
 //robot already facing correct direction,
 void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//move to the correct pose
-
+	/*
 	move_base_msgs::MoveBaseGoal goal;
 	goal.target_pose.header.frame_id = "/map";
 	goal.target_pose.header.stamp = ros::Time::now();
@@ -284,14 +289,34 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//if we are not in the room, approach the candle
 	//technically should be able to be done with just cmd_vel to move forwards a little bit
 	
-	//}
-    solenoidClient.call(srv);
-	goal.target.pose.position.x = 0;
-	goal.target.pose.position.y = 0;
+	//}*/
+	double targetAngle = candlePose.orientation.z;
+	double tolerance = 0.1;
+	geometry_msgs::Pose robotPose = getRobotPose();
+    geometry_msgs::Twist rotCommand;
+	rotCommand.angular.z = 0;
+	while(abs(robotPose.orientation.z - targetAngle) > tolerance){
+		double diff = targetAngle - robotPose.orientation.z;
+		if(diff < -3.1415926535)
+			diff += 3.141592;
+		else if(diff > 3.14159265)
+			diff -= 3.141592;
+		if (diff > 0)
+			rotCommand.angular.z = 0.3;
+		else
+			rotCommand.angular.z = -0.3;
+		cmd_vel_pub.publish(rotCommand);
+		robotPose = getRobotPose();
+	}	
+	std_srvs::Empty srv;
+    	solenoidClient.call(srv);
+	move_base_msgs::MoveBaseGoal goal;
+	goal.target_pose.pose.position.x = 0;
+	goal.target_pose.pose.position.y = 0;
 	ac->sendGoal(goal);
 	ac->waitForResult();
 	gs.done = true;
-    return;
+    	return;
 }
 
 bool Control::unknownLargeEnough(Point center){

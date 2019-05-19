@@ -64,7 +64,7 @@ private:
     ros::ServiceClient robotPoseClient;
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
-
+	ros::ServiceClient inRoomClient;
 	void initializeSubscribers();
 	void initializePublishers();
 	void initializeServices();
