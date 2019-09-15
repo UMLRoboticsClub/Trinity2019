@@ -339,10 +339,16 @@ It's a huge pain so I hope we don't have to do it anymore, leaving this out for 
 Theres lots more I can't think of right now bc I'm tired
 
 ## References
+
 [tf and reference frames](http://library.isr.ist.utl.pt/docs/roswiki/hector_slam(2f)Tutorials(2f)SettingUpForYourRobot.html)
+
 [standard frames](https://www.ros.org/reps/rep-0105.html)
+
 [custom messages and services](http://wiki.ros.org/ROS/Tutorials/CreatingMsgAndSrv)
+
 [timing issues](https://defendtheplanet.net/2014/10/05/synchronize-time-ros-offline-environments-without-chrony/) I THINK this is how we fixed it. I don't totally remember
+
 [debugging tf](http://wiki.ros.org/tf/Debugging%20tools)
+
 [network setup](http://wiki.ros.org/ROS/NetworkSetup)
 
