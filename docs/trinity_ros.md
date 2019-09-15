@@ -210,10 +210,10 @@ On the pi:
 ### Node Graph (generated using rqt_graph)
 A graph of all our nodes and topics (excluding external):
 
-<center> <img src=/home/lili/trinity2.png width=900></img></center>
+<center> <img src=trinity2.png width=900></img></center>
 A graph of all our nodes and topics (including external): 
 
-<center> <img src=/home/lili/trinity_all.png width=1000></img>
+<center> <img src=trinity_all.png width=1000></img>
 _/play\_... is the pi, running off of a bag file._</center>
 
 ### List of topics and their Publishers/Subscribers
