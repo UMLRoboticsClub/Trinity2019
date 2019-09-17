@@ -49,6 +49,7 @@ The two main languages used for ROS are C++ and Python. (Java and Javascript are
 ROS uses a pub/sub system with callbacks. This is a simple graph of how ROS works (not ours, I found it on google). 
 <center><img src="20190907-193142.png" width=600></img></center>
 Each ros node is registered with ROS master (run with `roscore` or run automatically through a launch file). Each node publishes data on topics that other nodes can subscribe to. For example, we have a motor encoders node that publishes on three topics, `/enc_1`, `/enc_2`, and `/enc_3`. The type of each of these topics is `int32`. CHECK IF CORRECT
+
 #### Packages vs Nodes vs Workspaces
 A **package** contains one or more **nodes**. Packages will usually contain a set of related nodes, usually all grouped into one or more launchfiles. When creating a package for general use, it is good practice to create a repo from the package and **not** the catkin workspace itself. This allows others to use their package in an existing workspace. While technically you can have more than one catkin workspace at a time, it isn't generally a good idea (mostly cause it causes lots of problems and breaks things).
 
