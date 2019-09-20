@@ -30,7 +30,6 @@ RUN rosdep install --from-paths src --ignore-src --rosdistro kinetic -y
 # Init Catkin
 WORKDIR /Trinity2019/trinity_2019_ws/src
 RUN git clone https://github.com/ros/catkin.git
-RUN catkin clean
 
 # Catkin Build
 WORKDIR /Trinity2019/trinity_2019_ws/src
