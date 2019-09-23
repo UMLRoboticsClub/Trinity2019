@@ -187,7 +187,7 @@ Rosbag is a commandline tool used to record and playback various topics. It's su
 #### Running on multiple machines
 Running on multiple machines is important especially when you want to offload computing power from your robot. In a ROS system, one computer runs ROS master and all of the other computers with ROS installed can connect to it. It's best to give the computer running master a static IP so you don't have to constantly be changing it. All the computers obviously have to be running on the same network.
 
-Each computer using ros accross multpile machines needs the following lines in `~/.bashrc` (assuming you are using bash).
+Each computer using ros accross multiple machines needs the following lines in `~/.bashrc` (assuming you are using bash).
 
 * `export ROS_MASTER_URI=http://[MASTER_IP]:11311`
 * `export ROS_HOSTNAME=[YOUR_IP]`
