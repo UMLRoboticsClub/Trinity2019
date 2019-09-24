@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  roscore:
+    container_name: roscore
+    command: /opt/ros/kinetic/bin/roscore 
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: roscore
+    volumes:
+      - ./logs:/root/.ros/log
+    build:
+      context: .
+      dockerfile: dockerfile
+  trinity-debug:
+    container_name: trinity-debug
+    command: /opt/ros/kinetic/bin/roslaunch trinity debug.launch --wait
+    tty: true
+    image: trinity2019:dev
+    depends_on:
+      - roscore
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: trinity-debug
+    volumes:
+      - ./logs:/root/.ros/log
+  trinity-static-transforms:
+    container_name: trinity-static-transforms
+    command: /opt/ros/kinetic/bin/roslaunch trinity static_transforms.launch --wait
+    tty: true
+    image: trinity2019:dev
+    depends_on:
+      - roscore
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: trinity-static-transforms
+    volumes:
+      - ./logs:/root/.ros/log
+  kiwi-drive:
+    container_name: kiwi-drive
+    command: /opt/ros/kinetic/bin/roslaunch kiwi-drive robot_control.launch --wait
+    tty: true
+    image: trinity2019:dev
+    depends_on:
+      - roscore
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: kiwi-drive
+    volumes:
+      - ./logs:/root/.ros/log
+  trinity-navigation:
+    container_name: trinity-navigation
+    command: /opt/ros/kinetic/bin/roslaunch trinity navigation.launch --wait
+    tty: true
+    image: trinity2019:dev
+    depends_on:
+      - roscore
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: trinity-navigation
+    volumes:
+      - ./logs:/root/.ros/log
