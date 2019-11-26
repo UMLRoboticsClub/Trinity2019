@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-# setup ros environment
-source "/opt/ros/$ROS_DISTRO/setup.bash"
-source "/home/ros/catkin_ws/devel/setup.bash"
+# setup ros environment -- add to bashrc so we can use interactive shell
+echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+echo "source /home/ros/catkin_ws/devel/setup.bash" >> ~/.bashrc
+source /opt/ros/$ROS_DISTRO/setup.bash
+source /home/ros/catkin_ws/devel/setup.bash
 exec "$@"

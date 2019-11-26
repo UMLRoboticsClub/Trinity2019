@@ -3,8 +3,8 @@ version: '3.0'
 services:
   roscore:
     build:
-      context: .
-      dockerfile: dockerfile
+      context: ../
+      dockerfile: ./docker/dockerfile
     container_name: roscore
     command: /opt/ros/kinetic/bin/roscore 
     tty: true

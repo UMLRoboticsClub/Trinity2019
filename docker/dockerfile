@@ -1,7 +1,7 @@
 FROM ros:kinetic-robot
 SHELL ["/bin/bash", "-c"]
 
-COPY ./docker-entrypoint.sh /
+COPY ./docker/docker-entrypoint.sh /
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
 # INSTALL pigpio
