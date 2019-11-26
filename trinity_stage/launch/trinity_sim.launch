@@ -1,0 +1,9 @@
+<!-- -*- xml -*- -->
+<launch>
+<!--<env name="ROSCONSOLE_CONFIG_FILE"
+       value="/home/lili/Documents/trinity_catkin_ws/src/Trinity2019/src/trinity/config/custom_rosconsole.conf"/> -->
+    <node name="stage" pkg="stage_ros" type="stageros" required="true"
+          args="$(find trinity_stage)/share/trinity_sim.world">
+		<remap from="/base_scan" to="/scan" />
+	</node>
+</launch>

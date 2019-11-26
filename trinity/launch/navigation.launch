@@ -21,16 +21,17 @@
 	<!--<include file="$(find hector_slam_launch)/launch/tutorial.launch" />-->
 	<node pkg="rviz" type="rviz" name="trinity_rviz" args="-d $(find trinity)/config/trinity.rviz" />
 	<!--<node pkg="trinity" type="control" name="control" output="screen" /> -->
-	<!--<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 		<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
 		<param name="base_global_planner" value="global_planner/GlobalPlanner" /> 
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
 		<rosparam file="$(find trinity)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
 		<rosparam file="$(find trinity)/config/local_costmap_params.yaml" command="load" />
 		<rosparam file="$(find trinity)/config/global_costmap_params.yaml" command="load" />
+		<rosparam file="$(find trinity)/config/teb_local_planner.yaml" command="load" />
 		<param name="clearing_rotation_allowed" value="false" /> 
 		<param name="planner_frequency" value="1.0" />
 		<param name="planner_patience" value="5.0" />
-	</node>-->
+	</node>
 </launch>
 	
