@@ -1,4 +1,5 @@
 EBandPlannerROS:
     yaw_goal_tolerance: 0.2
-    xy_goal_tolerance: 0.05
-    max_vel_th: 0.05
+    xy_goal_tolerance: 0.02
+    max_vel_th: 1.5
+    differential_drive: False

@@ -27,8 +27,8 @@ define robot position
   name "robot" 
   bitmap "t20.png"
   sicklms(pose [ 0 0 -0.15 0.000 ])
-  velocity_bounds [-5.0 5.0 0 0 0 0 -90.0 90.0 ]					
-  acceleration_bounds [-5.0 5.0 0 0 0 0 -90 90.0 ]
+  velocity_bounds [-5.0 5.0 -5.0 5.0 0 0 -90.0 90.0 ]					
+  acceleration_bounds [-5.0 5.0 -5.0 5.0 0 0 -90 90.0 ]
 )
 
 define floorplan model

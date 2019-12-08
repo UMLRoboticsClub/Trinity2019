@@ -5,13 +5,13 @@ floorplan
 ( 
   name "trinity"
   bitmap "config_500.png"
-  size [2.4 2.4 0.34]
+  size [2.400 2.400 0.340]
 )
 
 window
 ( 
-  size [ 1010 1100 ] 
-  scale 208.3
+  size [ 1010 1027 ] 
+  scale 208.300
 )
 
-robot( pose [ 0.2 0.2 0 0 ] )
+robot( pose [ 0.598 -0.598 0.000 -0.000 ] )
