@@ -20,7 +20,9 @@ RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc
     && apt-get install -y \
         python-catkin-tools \
         cmake \
-        ros-kinetic-joy
+        ros-kinetic-joy \
+        ros-kinetic-move-base-msgs \
+        ros-kinetic-rviz
 
 # Initialize Trinity Catkin Workspace
 RUN mkdir -p /home/ros/catkin_ws/src \
@@ -28,7 +30,8 @@ RUN mkdir -p /home/ros/catkin_ws/src \
     && catkin init
 
 # Copy & Configure Trinity Source
-COPY src /home/ros/catkin_ws/src
+# COPY src /home/ros/catkin_ws/src
+COPY ./docker/wait_for_core.sh /home/ros/
 RUN rosdep update && rosdep install \
     --from-paths /home/ros/catkin_ws/src \
     --ignore-src \

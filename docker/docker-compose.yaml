@@ -6,20 +6,24 @@ services:
       context: ../
       dockerfile: ./docker/dockerfile
     container_name: roscore
-    command: /opt/ros/kinetic/bin/roscore 
+    command: bash -c "cd /home/ros/catkin_ws/src && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
     tty: true
     image: trinity2019:dev
     environment:
       ROS_MASTER_URI: http://roscore:11311
       ROS_HOSTNAME: roscore
+      DISPLAY: unix$DISPLAY
     volumes:
       - ./logs:/root/.ros/log
-      
+      - ../:/home/ros/catkin_ws/src
+      - ws:/home/ros/catkin_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
   trinity-debug:
     depends_on:
       - roscore
     container_name: trinity-debug
-    command: /opt/ros/kinetic/bin/roslaunch trinity debug.launch --wait
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity debug.launch"
     tty: true
     image: trinity2019:dev
     environment:
@@ -27,12 +31,14 @@ services:
       ROS_HOSTNAME: trinity-debug
     volumes:
       - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
       
   trinity-static-transforms:
     depends_on:
       - roscore
     container_name: trinity-static-transforms
-    command: /opt/ros/kinetic/bin/roslaunch trinity static_transforms.launch --wait
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity static_transforms.launch"
     tty: true
     image: trinity2019:dev
     environment:
@@ -40,12 +46,15 @@ services:
       ROS_HOSTNAME: trinity-static-transforms
     volumes:
       - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
       
   kiwi-drive:
     depends_on:
       - roscore
     container_name: kiwi-drive
-    command: /opt/ros/kinetic/bin/roslaunch kiwi-drive robot_control.launch --wait
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch kiwi-drive robot_control.launch"
+    #command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && sleep 5m"
     tty: true
     image: trinity2019:dev
     environment:
@@ -53,12 +62,14 @@ services:
       ROS_HOSTNAME: kiwi-drive
     volumes:
       - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
 
   trinity-navigation:
     depends_on:
       - roscore
     container_name: trinity-navigation
-    command: /opt/ros/kinetic/bin/roslaunch trinity navigation.launch --wait
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity navigation.launch"
     tty: true
     image: trinity2019:dev
     environment:
@@ -66,3 +77,23 @@ services:
       ROS_HOSTNAME: trinity-navigation
     volumes:
       - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+   
+  trinity-pi:
+    depends_on:
+      - roscore
+    container_name: trinity-pi
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity_pi robot_config.launch"
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://roscore:11311
+      ROS_HOSTNAME: trinity-pi
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+
+volumes:
+    ws:
