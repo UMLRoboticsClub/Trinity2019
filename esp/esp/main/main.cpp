@@ -8,23 +8,21 @@
 ros::NodeHandle nh;
 
 std_msgs::String str_msg;
-ros::Publisher ack("ack", &str_msg);
+ros::Publisher chatter("chatter", &str_msg);
 
-void messageCb( const std_msgs::String& msg){
-    ack.publish(&msg);
-}
-
-ros::Subscriber<std_msgs::String> echo("echo", &messageCb);
+char hello[13] = "hello world!";
 
 void rosserial_setup(){
-    // Initialize ROS
-    nh.initNode();
-    nh.subscribe(echo);
-    nh.advertise(ack);
+      // Initialize ROS
+      nh.initNode();
+        nh.advertise(chatter);
 }
 
-void rosserial_spinonce(){
-    nh.spinOnce();
+void rosserial_publish(){
+      str_msg.data = hello;
+        // Send the message
+        chatter.publish(&str_msg);
+          nh.spinOnce();
 }
 
 extern "C" {
@@ -32,7 +30,7 @@ extern "C" {
         rosserial_setup();
 
         while(1){
-            rosserial_spinonce();
+            nh.spinOnce();
             vTaskDelay(100);
         }
     }
