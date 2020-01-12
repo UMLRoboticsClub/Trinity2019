@@ -40,5 +40,3 @@ RUN rosdep update && rosdep install \
 
 # Catkin Build
 WORKDIR /home/ros/catkin_ws/
-RUN source /opt/ros/kinetic/setup.bash \
-    && catkin build

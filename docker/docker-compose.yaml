@@ -6,18 +6,20 @@ services:
       context: ../
       dockerfile: ./docker/dockerfile
     container_name: roscore
-    command: bash -c "cd /home/ros/catkin_ws/src && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
+    command: bash -c "echo 'running roscore' && cd /home/ros/catkin_ws && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
+    #command: bash -c "echo 'sleeping' && sleep 5m"
     tty: true
     image: trinity2019:dev
+    devices:
+      - "/dev/ttyUSB1:/dev/ttyUSB0"
     environment:
-      ROS_MASTER_URI: http://roscore:11311
-      ROS_HOSTNAME: roscore
-      DISPLAY: unix$DISPLAY
+      ROS_MASTER_URI: http://localhost:11311
+      ROS_HOSTNAME: 192.168.1.5
     volumes:
       - ./logs:/root/.ros/log
       - ../:/home/ros/catkin_ws/src
       - ws:/home/ros/catkin_ws
-      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host
 
   trinity-debug:
     depends_on:
@@ -85,15 +87,19 @@ services:
       - roscore
     container_name: trinity-pi
     command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity_pi robot_config.launch"
+    #command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && sleep 5m"
     tty: true
     image: trinity2019:dev
+    devices: 
+      - "/dev/ttyUSB1:/dev/ttyUSB0"
     environment:
-      ROS_MASTER_URI: http://roscore:11311
-      ROS_HOSTNAME: trinity-pi
+      ROS_MASTER_URI: http://localhost:11311
+      ROS_HOSTNAME: 192.168.1.5
     volumes:
       - ./logs:/root/.ros/log
       - ws:/home/ros/catkin_ws
       - ../:/home/ros/catkin_ws/src
+    network_mode: host
 
 volumes:
     ws:
