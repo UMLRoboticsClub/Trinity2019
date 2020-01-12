@@ -1,0 +1,63 @@
+version: '3.0'
+
+services:
+  build:
+    container_name: build
+    command: bash -c "rm /home/ros/catkin_ws/done; cd /home/ros/catkin_ws && catkin build && touch /home/ros/catkin_ws/devel/test && touch /home/ros/catkin_ws/done"
+    image: trinity2019:dev
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+    network_mode: host
+
+  trinity-debug:
+    depends_on:
+      - build
+    container_name: trinity-debug
+    command: bash -c "/home/ros/catkin_ws/src/wait_for_build.sh && rm /home/ros/catkin_ws/done; source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity debug.launch"
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://${ROS_MASTER_URI}:11311
+      ROS_HOSTNAME: ${ROS_HOSTNAME}
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+    network_mode: host
+      
+  trinity-static-transforms:
+    depends_on:
+      - build
+    container_name: trinity-static-transforms
+    command: bash -c "/home/ros/catkin_ws/src/wait_for_build.sh && rm /home/ros/catkin_ws/done; source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity static_transforms.launch"
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://${ROS_MASTER_URI}:11311
+      ROS_HOSTNAME: ${ROS_HOSTNAME}
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+    network_mode: host
+
+  trinity-navigation:
+    depends_on:
+      - build
+    container_name: trinity-navigation
+    command: bash -c "/home/ros/catkin_ws/src/wait_for_build.sh && rm /home/ros/catkin_ws/done; source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity navigation.launch"
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://${ROS_MASTER_URI}:11311
+      ROS_HOSTNAME: ${ROS_HOSTNAME}
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+    network_mode: host
+
+volumes:
+    ws:

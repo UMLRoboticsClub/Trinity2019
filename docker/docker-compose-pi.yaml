@@ -1,0 +1,38 @@
+version: '3.0'
+
+services:
+  roscore:
+    build:
+      context: ../
+      dockerfile: ./docker/dockerfile
+    container_name: roscore
+    command: bash -c "echo 'running roscore' && cd /home/ros/catkin_ws && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
+    tty: true
+    image: trinity2019:dev
+    environment:
+      ROS_MASTER_URI: http://localhost:11311
+      ROS_HOSTNAME: ${ROS_MASTER_URI}
+    volumes:
+      - ./logs:/root/.ros/log
+      - ../:/home/ros/catkin_ws/src
+      - ws:/home/ros/catkin_ws
+    network_mode: host
+   
+  trinity-pi:
+    container_name: trinity-pi
+    command: bash -c "/home/ros/wait_for_core.sh && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roslaunch trinity_pi robot_config.launch"
+    tty: true
+    image: trinity2019:dev
+    devices: 
+      - "/dev/ttyUSB1:/dev/ttyUSB0"
+    environment:
+      ROS_MASTER_URI: http://${ROS_MASTER_URI}:11311
+      ROS_HOSTNAME: ${ROS_HOSTNAME}
+    volumes:
+      - ./logs:/root/.ros/log
+      - ws:/home/ros/catkin_ws
+      - ../:/home/ros/catkin_ws/src
+    network_mode: host
+
+volumes:
+    ws:
