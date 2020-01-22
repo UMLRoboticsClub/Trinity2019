@@ -15,6 +15,7 @@ char hello[13] = "hello world!";
 void rosserial_setup(){
     // Initialize ROS
     nh.initNode();
+    uart_set_baudrate(UART_PORT, 115200);
     nh.advertise(chatter);
 }
 
@@ -38,6 +39,7 @@ extern "C" {
         rosserial_setup();
 
         while(1){
+            rosserial_publish();
             rosserial_spinonce();
             delay_ms(1000);
         }
