@@ -15,7 +15,8 @@ RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc
         cmake \
         ros-kinetic-joy \
         ros-kinetic-move-base-msgs \
-        ros-kinetic-rviz
+        ros-kinetic-rviz \
+        ros-kinetic-rosserial
 
 # Initialize Trinity Catkin Workspace
 RUN mkdir -p /home/ros/catkin_ws/src \
