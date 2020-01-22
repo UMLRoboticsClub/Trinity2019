@@ -172,10 +172,10 @@ include_directories(
 #    src/color_sensor/color_sensor_node.cpp
 #    src/color_sensor/TCS34725.cpp
 #)
-add_executable(control
-    src/control/control_node.cpp
-    src/control/control.cpp
-    )
+#add_executable(control
+#    src/control/control_node.cpp
+#    src/control/control.cpp
+#    )
 add_executable(fake_node
 	src/control/fake_node.cpp
 	)
@@ -186,14 +186,14 @@ add_executable(fake_node
 # add_dependencies(trinity_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-set(gpio_LIBS "-lpthread -lpigpiod_if2")
+#set(gpio_LIBS "-lpthread -lpigpiod_if2")
 #target_link_libraries(encoders_node ${catkin_LIBRARIES} ${gpio_LIBS})
 #target_link_libraries(pca9685_node  ${catkin_LIBRARIES})
 #target_link_libraries(color_sensor  ${catkin_LIBRARIES})
 #target_link_libraries(statuslight   ${catkin_LIBRARIES} ${gpio_LIBS})
 #target_link_libraries(solenoid      ${catkin_LIBRARIES} ${gpio_LIBS})
 #target_link_libraries(servo         ${catkin_LIBRARIES} ${gpio_LIBS})
-target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
+#target_link_libraries(control       ${catkin_LIBRARIES} ${gpio_LIBS})
 target_link_libraries(fake_node		${catkin_LIBRARIES})
 #############
 ## Install ##

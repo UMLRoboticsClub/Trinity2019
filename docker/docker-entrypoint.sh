@@ -5,5 +5,5 @@ set -e
 echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
 echo "source /home/ros/catkin_ws/devel/setup.bash" >> ~/.bashrc
 source /opt/ros/$ROS_DISTRO/setup.bash
-source /home/ros/catkin_ws/devel/setup.bash
+[ -e /home/ros/catkin_ws/devel/setup.bash ] && source /home/ros/catkin_ws/devel/setup.bash
 exec "$@"

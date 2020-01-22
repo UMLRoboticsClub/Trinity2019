@@ -6,7 +6,7 @@ services:
       context: ../
       dockerfile: ./docker/dockerfile
     container_name: roscore
-    command: bash -c "echo 'running roscore' && cd /home/ros/catkin_ws && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
+    command: bash -c "cd /home/ros/catkin_ws && catkin build && source /home/ros/catkin_ws/devel/setup.bash && /opt/ros/kinetic/bin/roscore"
     tty: true
     image: trinity2019:dev
     environment:
