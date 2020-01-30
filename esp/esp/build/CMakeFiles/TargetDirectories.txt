@@ -1,2 +1,0 @@
-/home/jackson/robotics/Trinity/Trinity2019/esp/esp/build/CMakeFiles/rebuild_cache.dir
-/home/jackson/robotics/Trinity/Trinity2019/esp/esp/build/CMakeFiles/edit_cache.dir

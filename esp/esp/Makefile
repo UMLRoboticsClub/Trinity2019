@@ -1,3 +1,4 @@
-PROJECT_NAME := esp
+SKETCH = main.cpp
+CHIP = esp32
 
-include $(IDF_PATH)/make/project.mk
+include common.mk
