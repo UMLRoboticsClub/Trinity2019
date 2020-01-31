@@ -15,9 +15,9 @@ void motorControlInitialize(){
 
 void twistToMotorVels(const geometry_msgs::Twist& robotTwist, double* motorVels){
     motorVels[2] = robotTwist.linear.y;
-	motorVels[0] = -robotTwist.linear.y;
-    motorVels[3] = robotTwist.linear.x;
-	motorVels[1] = -robotTwist.linear.x;
+    motorVels[0] = -robotTwist.linear.y;
+    motorVels[3] = -robotTwist.linear.x;
+    motorVels[1] = robotTwist.linear.x;
     double rotLinVel = -turnRadius*robotTwist.angular.z;
 
     for(int i = 0; i < 4; i ++){
