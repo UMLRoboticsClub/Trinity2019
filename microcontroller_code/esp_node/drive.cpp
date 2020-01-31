@@ -6,10 +6,21 @@ void motorControlInitialize(){
     pinMode(MOTOR_PIN_2, OUTPUT);
     pinMode(MOTOR_PIN_3, OUTPUT);
 
+    pinMode(MOTOR_DIR_0, OUTPUT);
+    pinMode(MOTOR_DIR_1, OUTPUT);
+    pinMode(MOTOR_DIR_2, OUTPUT);
+    pinMode(MOTOR_DIR_3, OUTPUT);
+
     ledcSetup(MOTOR_PIN_0, PWM_FREQ, PWM_RESOLUTION);
     ledcSetup(MOTOR_PIN_1, PWM_FREQ, PWM_RESOLUTION);
     ledcSetup(MOTOR_PIN_2, PWM_FREQ, PWM_RESOLUTION);
     ledcSetup(MOTOR_PIN_3, PWM_FREQ, PWM_RESOLUTION);
+
+
+    ledcWrite(MOTOR_PIN_0, 0);
+    ledcWrite(MOTOR_PIN_1, 0);
+    ledcWrite(MOTOR_PIN_2, 0);
+    ledcWrite(MOTOR_PIN_3, 0);
 }
 
 
@@ -37,8 +48,11 @@ void IRAM_ATTR encoderInterrupt(void* encoder){
 
 void driveMotor(int motorPin, int directionPin, int pwm){
 	if (pwm < 0){
-		ledcWrite(directionPin, 1024);
+		digitalWrite(directionPin, LOW);
 		pwm = -pwm;
+	}
+	else{
+		digitalWrite(directionPin, HIGH);
 	}
 	ledcWrite(motorPin, pwm);
 }
