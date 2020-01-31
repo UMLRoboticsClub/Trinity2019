@@ -24,7 +24,8 @@ services:
     tty: true
     image: trinity2019:dev
     devices: 
-      - "/dev/ttyUSB1:/dev/ttyUSB0"
+      - "/dev/ttyAMA1:/dev/ttyUSB0"
+      - "/dev/gpiomem:/dev/gpiomem"
     environment:
       ROS_MASTER_URI: http://${ROS_MASTER_URI}:11311
       ROS_HOSTNAME: ${ROS_HOSTNAME}
