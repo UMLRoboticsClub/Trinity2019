@@ -5,15 +5,20 @@
 
 #define turnRadius 124
 #define wheelRadius 42.94
-#define ENCODER_PIN_0 0
-#define ENCODER_PIN_1 1
-#define ENCODER_PIN_2 2
-#define ENCODER_PIN_3 3
+#define ENCODER_PIN_0 34
+#define ENCODER_PIN_1 35
+#define ENCODER_PIN_2 36
+#define ENCODER_PIN_3 39
 
-#define MOTOR_PIN_0 4
-#define MOTOR_PIN_1 5
-#define MOTOR_PIN_2 6
-#define MOTOR_PIN_3 7
+#define MOTOR_PIN_0 16
+#define MOTOR_PIN_1 17
+#define MOTOR_PIN_2 18
+#define MOTOR_PIN_3 19
+
+#define MOTOR_DIR_0 26
+#define MOTOR_DIR_1 27
+#define MOTOR_DIR_2 32
+#define MOTOR_DIR_3 33
 
 #define PWM_FREQ 240
 #define PWM_RESOLUTION 10

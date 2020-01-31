@@ -35,6 +35,14 @@ void IRAM_ATTR encoderInterrupt(void* encoder){
     enc->ticks.data += 1;
 }
 
+void driveMotor(int motorPin, int directionPin, int pwm){
+	if (pwm < 0){
+		ledcWrite(directionPin, 1024);
+		pwm = -pwm;
+	}
+	ledcWrite(motorPin, pwm);
+}
+
 void twistToMotors(const geometry_msgs::Twist& twist){
     double motorVels[4];
     int outputPWM[4];
@@ -43,9 +51,9 @@ void twistToMotors(const geometry_msgs::Twist& twist){
     for(int i = 0; i < 4; i++){
         outputPWM[i] = initialMotorPWM(motorVels[i]);
     }
-
-    ledcWrite(MOTOR_PIN_0, outputPWM[0]);
-    ledcWrite(MOTOR_PIN_1, outputPWM[1]);
-    ledcWrite(MOTOR_PIN_2, outputPWM[2]);
-    ledcWrite(MOTOR_PIN_3, outputPWM[3]);
+    
+    driveMotor(MOTOR_PIN_0, MOTOR_DIR_0, outputPWM[0]);
+    driveMotor(MOTOR_PIN_1, MOTOR_DIR_1, outputPWM[1]);
+    driveMotor(MOTOR_PIN_2, MOTOR_DIR_2, outputPWM[2]);
+    driveMotor(MOTOR_PIN_3, MOTOR_DIR_3, outputPWM[3]);
 }
