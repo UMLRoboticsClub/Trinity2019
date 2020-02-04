@@ -20,7 +20,7 @@
 
 #=== Default values not available in the Arduino configuration files
 
-CHIP ?= esp8266
+CHIP ?= esp32
 
 # Set chip specific default board unless specified
 BOARD ?= $(if $(filter $(CHIP), esp32),esp32,generic)
@@ -196,7 +196,7 @@ ifeq ($(LIBS),)
 endif
 
 IGNORE_PATTERN := $(foreach dir,$(EXCLUDE_DIRS),$(dir)/%)
-USER_INC := $(filter-out $(IGNORE_PATTERN),$(call find_files,h|hpp,$(SKETCH_DIR) $(dir $(LIBS))))
+USER_INC := $(filter-out $(IGNORE_PATTERN),$(call find_files,hpp|h,$(SKETCH_DIR) $(dir $(LIBS))))
 USER_SRC := $(SKETCH) $(filter-out $(IGNORE_PATTERN),$(call find_files,S|c|cpp$(USER_SRC_PATTERN),$(SKETCH_DIR) $(LIBS)))
 # Object file suffix seems to be significant for the linker...
 USER_OBJ := $(subst .ino,_.cpp,$(patsubst %,$(BUILD_DIR)/%$(OBJ_EXT),$(notdir $(USER_SRC))))
