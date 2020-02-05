@@ -9,7 +9,7 @@ int main(){
 
     ledc_timer_config_t timer_conf;
     timer_conf.speed_mode       = LEDC_LOW_SPEED_MODE;
-    timer_conf.duty_resolution  = LEDC_TIMER_8_BIT;
+    timer_conf.duty_resolution  = LEDC_TIMER_16_BIT;
     timer_conf.timer_num        = LEDC_TIMER_0;
     timer_conf.freq_hz          = 1000;
 
