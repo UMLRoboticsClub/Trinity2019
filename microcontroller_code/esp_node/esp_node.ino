@@ -16,7 +16,12 @@ ros::Subscriber<geometry_msgs::Twist> twistSub("motorTwist", &twistToMotors);
 void setup() {
   // put your setup code here, to run once:
   nh.initNode();
-
+  nh.advertise(encPub0);
+  nh.advertise(encPub1);
+  nh.advertise(encPub2);
+  nh.advertise(encPub3);
+  nh.subscribe(twistSub);
+  
   for(int i = 0; i < 4; i ++){
     attachInterruptArg(encoders[i].PIN, encoderInterrupt, encoders + i, FALLING);
     pinMode(encoders[i].PIN, INPUT_PULLUP);
