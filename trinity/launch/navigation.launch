@@ -2,6 +2,7 @@
 <launch>
 	<!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find trinity)/config/custom_rosconsole.conf"/>-->
 	<node pkg="trinity" type="gmapping_without_output.sh" name="gmapping" output="screen" />
+	<node pkg="trinity" type="getRobotPose.py" name="poseService" output="screen" />
 	<!--<node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
 		<param name="pub_drawings" value="true" />
 		<param name="use_tf_scan_transformation" value="true" />
@@ -32,6 +33,7 @@
 		<param name="clearing_rotation_allowed" value="false" /> 
 		<param name="planner_frequency" value="1.0" />
 		<param name="planner_patience" value="5.0" />
+		<rosparam file="$(find trinity)/config/global_planner_params.yaml" command="load" />
 	</node>
 </launch>
 	

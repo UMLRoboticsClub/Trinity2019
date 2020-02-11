@@ -322,24 +322,25 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 //TODO rewrite this to grab points on boundary if attached region big enough
 bool Control::unknownLargeEnough(Point center){
 	int distFromWall = 2;
-	int minSize = 10
+	int minSize = 30;
 
 
 	vector<Point> boundary;
-	boundary.push_back(robotPos);
+	boundary.push_back(center);
 	vector<Point> neighbors;
-	distanceField[robotPos.x][robotPos.y] = 0;
+	distanceField[center.x][center.y] = 0;
 	Point currentCell;
 	int currentDistance;
 	int areaCount = 1;
 
-	ROS_INFO("Computing distance field");
 	while (ros::ok() && !boundary.empty()) {
 			currentCell = boundary.front();
-			neighbors = findUnknownNeighbors(currentCell);
+			neighbors = findNeighbors(currentCell);
 			currentDistance = distanceField[currentCell.x][currentCell.y];
 			for (Point neighbor : neighbors) {
-				  if(distanceField[neighbor.x][neighbor.y] >= 99 && currentDistance <= distFromWall){
+				  ROS_INFO("occGrid: %d, distance: %d", accessOccGrid(neighbor.x, neighbor.y), currentDistance);
+				  if(accessOccGrid(neighbor.x, neighbor.y) >= 30 && currentDistance <= distFromWall){
+						ROS_INFO("hit a wall, occGrid value of %d", accessOccGrid(neighbor.x, neighbor.y));
 						//point is too close to a wall, abort mission
 						return false;
 					}
@@ -379,6 +380,18 @@ vector<Point> Control::findUnknownNeighbors(const Point &currentPos) {
 		for (int y_offset = -1; y_offset < 2; ++y_offset) {
 			if (!isDiag(x_offset, y_offset) &&
 					accessOccGrid(currentPos.x + x_offset, currentPos.y + y_offset) == -1) {
+				openNeighbors.push_back(Point(currentPos.x + x_offset, currentPos.y + y_offset));
+			}
+		}
+	}
+	return openNeighbors;
+}
+
+vector<Point> Control::findNeighbors(const Point &currentPos) {
+	vector<Point> openNeighbors;
+	for (int x_offset = -1; x_offset < 2; ++x_offset) {
+		for (int y_offset = -1; y_offset < 2; ++y_offset) {
+			if (!isDiag(x_offset, y_offset)){
 				openNeighbors.push_back(Point(currentPos.x + x_offset, currentPos.y + y_offset));
 			}
 		}

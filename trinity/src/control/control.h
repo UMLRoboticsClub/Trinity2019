@@ -40,8 +40,10 @@ public:
 	RobotOp determineRobotOp(int);
 	void extinguishCandle(geometry_msgs::Pose candlePose);
 	bool unknownLargeEnough(Point center);
-    vector<Point> findOpenNeighbors(const Point &currentPos);
     int accessOccGrid(int x, int y);
+    vector<Point> findOpenNeighbors(const Point &currentPos);
+    vector<Point> findUnknownNeighbors(const Point &currentPos);
+    vector<Point> findNeighbors(const Point &currentPos);
     bool isDiag(int x, int y);
     Point poseToPoint(geometry_msgs::Pose pose);
     geometry_msgs::Pose pointToPose(Point point);
