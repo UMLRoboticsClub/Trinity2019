@@ -19,8 +19,8 @@ Control::Control(ros::NodeHandle* nodeHandle){
 	ac = new MoveBaseClient(nh, "move_base", true);
 	while(!ac->waitForServer(ros::Duration(5.0))){
     	ROS_INFO("Waiting for the move_base action server to come up");
-  	}	
-	
+  	}
+
 	//initialize the distance field
 	distanceField = vector<vector<int>>(GRID_SIZE_CELLS);
     for(unsigned i = 0; i < distanceField.size(); ++i){
@@ -85,7 +85,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		char yn;
 		cout << "Accept this goal? (y/n)" << endl;
 		cin >> yn;
-		if(yn == 'y'){	
+		if(yn == 'y'){
 			ac->sendGoal(goal);
 			ac->waitForResult();
 			robotAction = OP_SCANROOM;
@@ -153,14 +153,14 @@ Point Control::computeDistanceField() {
 	//ros::spinOnce();
 	//Point robotPos = poseToPoint(origin);
 	//ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
-	
+
     vector<Point> boundary;
     boundary.push_back(robotPos);
     vector<Point> neighbors;
     distanceField[robotPos.x][robotPos.y] = 0;
     Point currentCell;
     int currentDistance;
-	
+
 	ROS_INFO("Computing distance field");
     while (ros::ok() && !boundary.empty()) {
 		//ROS_INFO("Inside while loop");
@@ -213,18 +213,18 @@ void Control::takeAction(RobotOp robotAction){
             geometry_msgs::Pose robotPose = getRobotPose();
             geometry_msgs::Pose newRobotPose;
             double delta = 0;
-	    double diff; 
+	    double diff;
             //while we haven't rotated 2*PI rads
 			//this should ahve a ROS rate
-            while(ros::ok() && delta < 2*3.1415926535){
+            while(ros::ok() && delta < 2*M_PI){
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();
-                
+
 
 		diff = (newRobotPose.orientation.z - robotPose.orientation.z);
 		if(diff < 0)
-			diff += 2*3.1415926535;
+			diff += 2*M_PI;
 		delta += diff;
                 robotPose = newRobotPose;
             }
@@ -288,7 +288,7 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//if(! inRoom){
 	//if we are not in the room, approach the candle
 	//technically should be able to be done with just cmd_vel to move forwards a little bit
-	
+
 	//}*/
 	double targetAngle = candlePose.orientation.z;
 	double tolerance = 0.1;
@@ -297,17 +297,17 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	rotCommand.angular.z = 0;
 	while(abs(robotPose.orientation.z - targetAngle) > tolerance){
 		double diff = targetAngle - robotPose.orientation.z;
-		if(diff < -3.1415926535)
-			diff += 3.141592;
-		else if(diff > 3.14159265)
-			diff -= 3.141592;
+		while(diff < -M_PI)
+			diff += M_PI;
+		while(diff > M_PI)
+			diff -= M_PI;
 		if (diff > 0)
 			rotCommand.angular.z = 0.3;
 		else
 			rotCommand.angular.z = -0.3;
 		cmd_vel_pub.publish(rotCommand);
 		robotPose = getRobotPose();
-	}	
+	}
 	std_srvs::Empty srv;
     	solenoidClient.call(srv);
 	move_base_msgs::MoveBaseGoal goal;
@@ -319,14 +319,45 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
     	return;
 }
 
+//TODO rewrite this to grab points on boundary if attached region big enough
 bool Control::unknownLargeEnough(Point center){
-	int areaSize  = 5; // (2 results in an inclusive 3*3 grid)5
-	for(int i = center.x - (areaSize - 1); i < center.x + areaSize; i++){
-		for(int j = center.y - (areaSize - 1); j < center.y + areaSize; j++){
-			if(accessOccGrid(i, j) != -1) return false; // something other than unknown has been found, so return false
-		}
+	int distFromWall = 2;
+	int minSize = 10
+
+
+	vector<Point> boundary;
+	boundary.push_back(robotPos);
+	vector<Point> neighbors;
+	distanceField[robotPos.x][robotPos.y] = 0;
+	Point currentCell;
+	int currentDistance;
+	int areaCount = 1;
+
+	ROS_INFO("Computing distance field");
+	while (ros::ok() && !boundary.empty()) {
+			currentCell = boundary.front();
+			neighbors = findUnknownNeighbors(currentCell);
+			currentDistance = distanceField[currentCell.x][currentCell.y];
+			for (Point neighbor : neighbors) {
+				  if(distanceField[neighbor.x][neighbor.y] >= 99 && currentDistance <= distFromWall){
+						//point is too close to a wall, abort mission
+						return false;
+					}
+					if(distanceField[neighbor.x][neighbor.y] == -1){//neighbor not already indexed by function
+							// if point is unknown, add to areaCount
+							if (accessOccGrid(neighbor.x, neighbor.y) == -1){
+								distanceField[neighbor.x][neighbor.y] = currentDistance + 1;
+								boundary.push_back(neighbor);
+								areaCount++;
+								if(areaCount > minSize){
+									return true;
+								}
+							}
+					}
+			}
+			boundary.erase(boundary.begin());
 	}
-	return true;
+	return false;
 }
 
 vector<Point> Control::findOpenNeighbors(const Point &currentPos) {
@@ -342,6 +373,18 @@ vector<Point> Control::findOpenNeighbors(const Point &currentPos) {
 	return openNeighbors;
 }
 
+vector<Point> Control::findUnknownNeighbors(const Point &currentPos) {
+	vector<Point> openNeighbors;
+	for (int x_offset = -1; x_offset < 2; ++x_offset) {
+		for (int y_offset = -1; y_offset < 2; ++y_offset) {
+			if (!isDiag(x_offset, y_offset) &&
+					accessOccGrid(currentPos.x + x_offset, currentPos.y + y_offset) == -1) {
+				openNeighbors.push_back(Point(currentPos.x + x_offset, currentPos.y + y_offset));
+			}
+		}
+	}
+	return openNeighbors;
+}
 
 int Control::accessOccGrid(int x, int y){
 	if(x < 0 || x >= occGrid.info.width || y < 0 || y >= occGrid.info.height){
@@ -360,10 +403,10 @@ Point Control::poseToPoint(geometry_msgs::Pose pose){
 	ROS_INFO("divided by res: %d", int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution));
     int realX = int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution);
     int realY = int((pose.position.y - occGrid.info.origin.position.y)/occGrid.info.resolution);
-	
+
 	ROS_INFO("(realX, realY): (%d, %d)", realX, realY);
 	Point p = Point(realX, realY);
-	ROS_INFO("(p.x, p.y): (%d, %d)", p.x, p.y);	
+	ROS_INFO("(p.x, p.y): (%d, %d)", p.x, p.y);
     return p;
 }
 
@@ -415,9 +458,9 @@ vector<double> Control::parseIrReadings(vector<double> readings){
             sigStart = i;
         else if(readings[i] < readingThreshold && readings[i-1] > readingThreshold){
             //end of candle reading range.
-            if((i - sigStart)*2*3.1415926535/readings.size() > angleThreshold){
+            if((i - sigStart)*2*M_PI/readings.size() > angleThreshold){
                 double midIndex = (i-1 - sigStart)/2;
-                double angle = midIndex/readings.size() * 2 * 3.1415926535;
+                double angle = midIndex/readings.size() * 2 * M_PI;
                 candles.push_back(angle);
             }
         }
