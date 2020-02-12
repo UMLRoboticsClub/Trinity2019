@@ -4,3 +4,7 @@
 [submodule "navigation"]
 	path = navigation
 	url = https://github.com/ros-planning/navigation.git
+[submodule "stage_ros"]
+	path = stage_ros
+	url = https://github.com/UMLRoboticsClub/stage_ros.git
+    branch = trinity
