@@ -22,4 +22,4 @@ local_costmap:
           type: "costmap_2d::InflationLayer"
         inflater:
             cost_scaling_factor: 25.0
-            inflation_radius: 0.18
+            inflation_radius: 0.16
