@@ -66,7 +66,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 	ROS_INFO("In control loop");
 	if(start && !gs.done){
 		//determine target and type based on occGrid and gameState
-        geometry_msgs::Pose target = findNextTarget(robotAction);
+    geometry_msgs::Pose target = findNextTarget(robotAction);
 		ROS_INFO("finished find next target");
 		//translate occGrid coords into moveBase coords
 		//move moveBase
@@ -88,6 +88,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 		if(yn == 'y'){
 			ac->sendGoal(goal);
 			ac->waitForResult();
+			//TODO this is a temporary "solution".  Door code makes this obsolete
 			robotAction = OP_SCANROOM;
 			//perform necessary action at targetLoc.
 			//if we entered a room, update robotAction accordingly
@@ -102,28 +103,25 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
 	//last year's code modified for accessing occGrid.  Nice and simple
 	robotAction = OP_NOTHING;
-    for(unsigned i = 0; i < distanceField.size(); ++i){
-        for(unsigned j = 0; j < distanceField[i].size(); j ++){
-            distanceField[i][j] = -1;
-        }
-    }
-	//geometry_msgs::Pose targetPose;
+
+
+	//TODO uncomment this block of code to actually extinguish candles, find doors, etc
+	geometry_msgs::Pose targetPose;
     //check if we have already found an important point where we need to go
-    /*vector<int> primaryTargets = gs.getTargetType();
-    for (const int type : primaryTargets) {
+    vector<int> primaryTargetTypes = gs.getTargetType();
+    for (const int type : primaryTargetTypes) {
         // if we have a destination in mind
         if (targetPoints[type].size() > 0) {
             //update robotOps
             robotAction = determineRobotOp(type);
-            geometry_msgs::Pose closestTarget = targetPoints[type][0];
-            int targetIndex = 0;
-			targetPoints[type].erase(targetPoints[type].begin()+targetIndex);
+						int targetIndex = 0;
+            geometry_msgs::Pose closestTarget = targetPoints[type][targetIndex];
+						targetPoints[type].erase(targetPoints[type].begin()+targetIndex);
             return closestTarget;
         }
     }
 	ROS_INFO("At end of find next target");
     //no important points already found, go to distance field and find an unknown
- `i */
 	return pointToPose(computeDistanceField());
 }
 
@@ -132,27 +130,17 @@ Point Control::computeDistanceField() {
 	//until locating an unknown region of sufficient size
 	//populates the distance field as it goes
 	//KEY POINT make sure distance field is always reset properly between loops
-	//also switch from vector to something circular
+	//also switch from vector to a real queue
+
+	//reset the distanceField
+    for(unsigned i = 0; i < distanceField.size(); ++i){
+        for(unsigned j = 0; j < distanceField[i].size(); j ++){
+            distanceField[i][j] = -1;
+        }
+    }
 
 	//get the robot position
     Point robotPos = poseToPoint(getRobotPose());
-	//geometry_msgs::Pose origin;
-	//geometry_msgs::PoseStamped robot_point;
-	//origin.position.x = 0.05;
-	//origin.position.y = -0.05;
-	//origin.position.z = 0;
-	//robot_point.point.x = origin.position.x;
-	//robot_point.point.y = origin.position.y;
-	//robot_point.point.z = 0;
-	//robot_point.pose = origin;
-	//robot_point.header.stamp = ros::Time::now();
-	//robot_point.header.frame_id = "/map";
-	//point_pub.publish(robot_point);
-	//goal_pub.publish(robot_point);
-	//ROS_INFO("publishing robot point...");
-	//ros::spinOnce();
-	//Point robotPos = poseToPoint(origin);
-	//ROS_INFO("Robot position: (%d, %d)", robotPos.x, robotPos.y);
 
     vector<Point> boundary;
     boundary.push_back(robotPos);
@@ -205,41 +193,40 @@ void Control::takeAction(RobotOp robotAction){
 			//extinguishCandle();
 			break;
 		case OP_SCANROOM:
-            {
+      {
             //rotate in circle, ir and camera should actually be constantly gathering data.
-			vector<double> irReadings = vector<double>();
-            geometry_msgs::Twist rotCommand;
-            rotCommand.angular.z = 1;
-            geometry_msgs::Pose robotPose = getRobotPose();
-            geometry_msgs::Pose newRobotPose;
-            double delta = 0;
-	    double diff;
-            //while we haven't rotated 2*PI rads
-			//this should ahve a ROS rate
-            while(ros::ok() && delta < 2*M_PI){
-                irReadings.push_back(irSense());
-                cmd_vel_pub.publish(rotCommand);
-                newRobotPose = getRobotPose();
-
-
-		diff = (newRobotPose.orientation.z - robotPose.orientation.z);
-		if(diff < 0)
-			diff += 2*M_PI;
-		delta += diff;
-                robotPose = newRobotPose;
-            }
-            //candles is vector of angle indices relative to robot orientation
-            vector<double> candles = parseIrReadings(irReadings);
-			for(double candle : candles){
-                geometry_msgs::Pose candlePose;
-                candlePose.position = robotPose.position;
-                candlePose.orientation.z = robotPose.orientation.z + candle;
-                targetPoints[FLAME].push_back(candlePose);
-				extinguishCandle(candlePose);
-            }
-			//now we extinguish
-            break;
-            }
+				vector<double> irReadings = vector<double>();
+	      geometry_msgs::Twist rotCommand;
+	      rotCommand.angular.z = 1;
+	      geometry_msgs::Pose robotPose = getRobotPose();
+	      geometry_msgs::Pose newRobotPose;
+	      double delta = 0;
+		    double diff;
+	            //while we haven't rotated 2*PI rads
+				//this should ahve a ROS rate
+				ros::Rate rate(10);
+				while(ros::ok() && delta < 2*M_PI){
+	        irReadings.push_back(irSense());
+	        cmd_vel_pub.publish(rotCommand);
+	        newRobotPose = getRobotPose();
+					diff = (newRobotPose.orientation.z - robotPose.orientation.z);
+					if(diff < 0)
+						diff += 2*M_PI;
+					delta += diff;
+	        robotPose = newRobotPose;
+					rate.sleep()
+	      }
+	      //candles is vector of angle indices relative to robot orientation
+	      vector<double> candles = parseIrReadings(irReadings);
+				for(double candle : candles){
+	          geometry_msgs::Pose candlePose;
+	          candlePose.position = robotPose.position;
+	          candlePose.orientation.z = robotPose.orientation.z + candle;
+	          targetPoints[FLAME].push_back(candlePose);
+						extinguishCandle(candlePose);
+	      }
+	      break;
+      }
 		case OP_EXIT_ROOM:
 			break; //why does this exist?
 		default:
@@ -290,6 +277,10 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	//technically should be able to be done with just cmd_vel to move forwards a little bit
 
 	//}*/
+
+
+  //TODO this should just be a goal that is the current position but rotated towards the candle
+
 	double targetAngle = candlePose.orientation.z;
 	double tolerance = 0.1;
 	geometry_msgs::Pose robotPose = getRobotPose();
@@ -310,16 +301,19 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose){
 	}
 	std_srvs::Empty srv;
     	solenoidClient.call(srv);
+
+	//TODO this is only the case at level 1, shouldn't be part of this function
 	move_base_msgs::MoveBaseGoal goal;
 	goal.target_pose.pose.position.x = 0;
 	goal.target_pose.pose.position.y = 0;
+	goal.target_pose.header.frame_id = "/map";
+	goal.target_pose.header.stamp = ros::Time::now();
 	ac->sendGoal(goal);
 	ac->waitForResult();
 	gs.done = true;
     	return;
 }
 
-//TODO rewrite this to grab points on boundary if attached region big enough
 bool Control::unknownLargeEnough(Point center){
 	int distFromWall = 2;
 	int minSize = 30;
