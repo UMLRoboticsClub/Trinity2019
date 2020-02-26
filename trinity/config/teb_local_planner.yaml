@@ -2,14 +2,18 @@ TebLocalPlannerROS:
 
  odom_topic: odom
  map_frame: /odom
-    
+
+ oscillation_filter_duration: 3 
+ oscillation_v_eps: 0.13
+ oscillation_omega_eps: 0.5
  # Trajectory
   
  teb_autosize: True
  dt_ref: 0.3
  dt_hysteresis: 0.1
- global_plan_overwrite_orientation: True
- max_global_plan_lookahead_dist: 3.0
+ global_plan_overwrite_orientation: False
+ allow_init_with_backwards_motion: True
+ max_global_plan_lookahead_dist: 0.12
  feasibility_check_no_poses: 5
  publish_feedback: true
 

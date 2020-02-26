@@ -1,0 +1,5 @@
+straf_recovery:
+    minimum_translate_distance: 0.005
+    maximum_translate_distance: 0.03
+    straf_vel: 0.2
+    timeout: 7.0

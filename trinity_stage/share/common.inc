@@ -4,7 +4,7 @@ define sicklms ranger
 (
   sensor(
     fov 360.0
-    samples 180
+    samples 360
   )
   model
   (
