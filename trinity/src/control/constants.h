@@ -10,6 +10,8 @@ constexpr static const int HALLWAY_WIDTH_CM = 46;
 constexpr static const int CELLSIZE_CM = 1;
 constexpr static const int ROBOT_DIAMETER_CM = 31;
 
+constexpr static const int NEW_DOOR_THRESH = 10;//cm
+
 constexpr static const int CRADLE_SIZE_CM = 15;
 
 //big enough to hold entire maze no matter where we start
@@ -17,7 +19,7 @@ static const int GRID_SIZE_CM  = 10 * ARENA_LENGTH_CM;
 static const int GRID_SIZE_CELLS = GRID_SIZE_CM / RESOLUTION;
 
 // Constant cell types, used as parameters to updateValue().
-enum cellType { 
+enum cellType {
     UNKNOWN = -1,
     CLEAR,
     WALL,
@@ -34,4 +36,3 @@ enum cellType {
     START_ZONE,
     FAKE
 };
-

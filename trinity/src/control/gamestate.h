@@ -19,7 +19,7 @@ struct GameState {
             bool _babyObtained = false,
             bool _safeZoneFound = false,
             bool _inRoom = true,
-            bool _secondArena = false, 
+            bool _secondArena = false,
             bool _done = false):
         levelOfCompetition(_levelOfCompetition),
         numCandlesExtinguished(_numCandlesExtinguished),
@@ -27,7 +27,7 @@ struct GameState {
         babyObtained(_babyObtained),
         safeZoneFound(_safeZoneFound),
         inRoom(_inRoom),
-        secondArena(_secondArena), 
+        secondArena(_secondArena),
         done(_done)
     {}
 
@@ -53,7 +53,7 @@ struct GameState {
     bool done;
 
     friend ostream& operator<<(ostream& out, GameState state){
-        return out 
+        return out
         << "level: " << state.levelOfCompetition << std::endl
         << "numCandlesExtinguished: " << state.numCandlesExtinguished << std::endl
         << "babySaved: " << state.babySaved << std::endl
@@ -87,11 +87,11 @@ struct GameState {
         if (levelOfCompetition != 3 || babySaved) {
             targets.push_back(FLAME);
             targets.push_back(CANDLE);
-            if(!inRoom){
+            //if(!inRoom){
                 targets.push_back(DOOR);
-            } else {
-                targets.push_back(EXPLORED_DOOR);
-            }
+            //} else {
+            //    targets.push_back(EXPLORED_DOOR);
+            //}
             return targets;
         }
 

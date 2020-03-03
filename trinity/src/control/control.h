@@ -51,6 +51,8 @@ public:
     double irSense();
     vector<double> parseIrReadings(vector<double>);
 	bool start;
+	void Control::getDoors(const doorArray::ConstPtr& doors);
+	double Control::pointDist(Point a, Point b);
 private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;

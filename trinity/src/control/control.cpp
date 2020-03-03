@@ -4,6 +4,7 @@
 #include "control.h"
 #include <nav_msgs/GetMap.h>
 #include <iostream>
+#include <trinity/DoorArray.h>
 
 
 using std::cin;
@@ -37,6 +38,7 @@ Control::Control(ros::NodeHandle* nodeHandle){
 void Control::initializeSubscribers(){
 	map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::controlLoop, this);
 	wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
+	get_doors = nh.subscribe("door_array", 100, &Control::getDoors, this);
 	ROS_INFO("done initializing subscribers");
 }
 
@@ -57,6 +59,36 @@ void Control::initializeServices(){
 
 void Control::startFunc(const std_msgs::Bool::ConstPtr&){
 	start = true;
+}
+
+void Control::getDoors(const DoorArray::ConstPtr& doors){
+	bool newDoor;
+  for(geometry_msgs::Point doorP : doors.doors){
+	  Point door = {doorP.x, doorP.y};
+	  //check if the new door is unique
+	  newDoor = true;
+	  for(Point explored : targetPoints[EXPLORED_DOOR]){
+		  if(pointDist(explored, door) < NEW_DOOR_THRESH){
+		 	  newDoor = false;
+				break;
+		  }
+	  }
+	  if(!newDoor)
+	 		continue;
+	  for(Point oldDoor : targetPoints[DOOR]){
+		  if(pointDist(oldDoor, door) < NEW_DOOR_THRESH){
+		 	  newDoor = false;
+			  break;
+		  }
+	  }
+	  if(newDoor){
+		  targetPoints[DOOR].push_back(door);
+	  }
+  }
+}
+
+double Control::pointDist(Point a, Point b){
+	return sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));
 }
 
 void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
@@ -89,7 +121,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 			ac->sendGoal(goal);
 			ac->waitForResult();
 			//TODO this is a temporary "solution".  Door code makes this obsolete
-			robotAction = OP_SCANROOM;
+			//robotAction = OP_SCANROOM;
 			//perform necessary action at targetLoc.
 			//if we entered a room, update robotAction accordingly
 			//`update robot action in case we entered a room
@@ -103,8 +135,6 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
 	//last year's code modified for accessing occGrid.  Nice and simple
 	robotAction = OP_NOTHING;
-
-
 	//TODO uncomment this block of code to actually extinguish candles, find doors, etc
 	geometry_msgs::Pose targetPose;
     //check if we have already found an important point where we need to go
@@ -189,6 +219,7 @@ void Control::takeAction(RobotOp robotAction){
 			//bunch of stuff is gonna go here, but for now...
 			gs.secondArena = true;
 			break;
+			//TODO this doesn't exist unless we can actually detect candles
 		case OP_EXTINGUISH:
 			//extinguishCandle();
 			break;
@@ -442,6 +473,7 @@ double Control::irSense(){
     return srv.response.success;
 }
 
+//TODO improve this - actually record robot angle per reading for one thing
 vector<double> Control::parseIrReadings(vector<double> readings){
     //find regions of HIGH readings, center of regions indicates a flame
     //return vector of angles in radians for candle direction.
@@ -456,8 +488,8 @@ vector<double> Control::parseIrReadings(vector<double> readings){
         //iterate in reverse to find start of region
         int index = 0;
         while(readings[--index+readings.size()] > readingThreshold);
-        sigStart = index+1;
-        endIndex = index;
+        sigStart = index + 1;
+        endIndex = index + readings.size();
     }
 
     for(int i = 1; i < endIndex; i ++){
@@ -465,8 +497,8 @@ vector<double> Control::parseIrReadings(vector<double> readings){
             sigStart = i;
         else if(readings[i] < readingThreshold && readings[i-1] > readingThreshold){
             //end of candle reading range.
-            if((i - sigStart)*2*M_PI/readings.size() > angleThreshold){
-                double midIndex = (i-1 - sigStart)/2;
+            if(((i - sigStart + readings.size())%readings.size())*2*M_PI/readings.size() > angleThreshold){
+                double midIndex = ((i-1 - sigStart + readings.size())%readings.size()/2;
                 double angle = midIndex/readings.size() * 2 * M_PI;
                 candles.push_back(angle);
             }
