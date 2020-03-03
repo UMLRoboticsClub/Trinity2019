@@ -12,6 +12,8 @@
 #include <geometry_msgs/PointStamped.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/Empty.h>
+#include <trinity/DoorArray.h>
+#include <tf/transform_listener.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -51,13 +53,15 @@ public:
     double irSense();
     vector<double> parseIrReadings(vector<double>);
 	bool start;
-	void Control::getDoors(const doorArray::ConstPtr& doors);
-	double Control::pointDist(Point a, Point b);
+	void getDoors(const trinity::DoorArray::ConstPtr& doors);
+	double pointDist(Point a, Point b);
+	int findClosestDoorIndex();
 private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;
 	ros::Publisher point_pub;
 	ros::Subscriber map_sub;
+    ros::Subscriber get_doors;
 	ros::Subscriber wait_for_signal;
 	ros::NodeHandle nh;
     GameState gs;

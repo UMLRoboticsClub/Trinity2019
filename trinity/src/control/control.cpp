@@ -4,11 +4,10 @@
 #include "control.h"
 #include <nav_msgs/GetMap.h>
 #include <iostream>
-#include <trinity/DoorArray.h>
-
 
 using std::cin;
 using std::cout;
+using trinity::DoorArray;
 
 Control::Control(ros::NodeHandle* nodeHandle){
 	nh = *nodeHandle;
@@ -38,7 +37,7 @@ Control::Control(ros::NodeHandle* nodeHandle){
 void Control::initializeSubscribers(){
 	map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::controlLoop, this);
 	wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
-	get_doors = nh.subscribe("door_array", 100, &Control::getDoors, this);
+	get_doors = nh.subscribe("doors_array", 100, &Control::getDoors, this);
 	ROS_INFO("done initializing subscribers");
 }
 
@@ -63,8 +62,22 @@ void Control::startFunc(const std_msgs::Bool::ConstPtr&){
 
 void Control::getDoors(const DoorArray::ConstPtr& doors){
 	bool newDoor;
-  for(geometry_msgs::Point doorP : doors.doors){
-	  Point door = {doorP.x, doorP.y};
+	ROS_INFO("got doors with size: %d", doors->doors.size());
+	listener.waitForTransform(occGrid.header.frame_id, doors->header.frame_id, ros::Time::now(), ros::Duration(0.01));
+	for (geometry_msgs::Point doorP : doors->doors)
+	{
+		geometry_msgs::PointStamped ps;
+		geometry_msgs::PointStamped pout;
+		ps.header = doors->header;
+		ps.point = doorP;
+		
+		listener.transformPoint(occGrid.header.frame_id, ros::Time(0), ps, ps.header.frame_id, pout);
+		geometry_msgs::Pose pose;
+		pose.position = pout.point;
+		std_msgs::Header h;
+		h.frame_id = occGrid.header.frame_id;
+		h.stamp = ros::Time::now();
+		Point door = poseToPoint(pose);
 	  //check if the new door is unique
 	  newDoor = true;
 	  for(Point explored : targetPoints[EXPLORED_DOOR]){
@@ -91,7 +104,18 @@ double Control::pointDist(Point a, Point b){
 	return sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));
 }
 
-void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
+int Control::findClosestDoorIndex(){
+	Point robotPos = poseToPoint(getRobotPose());
+	int closest = 0;
+	for(int i = 1; i < targetPoints[DOOR].size(); i++){
+		if(pointDist(robotPos, targetPoints[DOOR][i]) < pointDist(robotPos, targetPoints[DOOR][closest]) && doorCount[targetPoints[DOOR][i]] > 10){
+			closest = i;
+		}
+	}
+	return closest;
+}
+
+void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){ 
 	occGrid = *grid;
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;
@@ -99,7 +123,7 @@ void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 	if(start && !gs.done){
 		//determine target and type based on occGrid and gameState
     geometry_msgs::Pose target = findNextTarget(robotAction);
-		ROS_INFO("finished find next target");
+		ROS_INFO("finished find next target: (%.2f, %.2f)", target.position.x, target.position.y);
 		//translate occGrid coords into moveBase coords
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
@@ -144,12 +168,18 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
         if (targetPoints[type].size() > 0) {
             //update robotOps
             robotAction = determineRobotOp(type);
-						int targetIndex = 0;
-            geometry_msgs::Pose closestTarget = targetPoints[type][targetIndex];
-						targetPoints[type].erase(targetPoints[type].begin()+targetIndex);
-            return closestTarget;
+			int targetIndex = type == DOOR ? findClosestDoorIndex() : 0;
+			ROS_INFO("Is door: %d, index: %d", type == DOOR, targetIndex);
+			Point closestTarget = targetPoints[type][targetIndex];
+			targetPoints[type].erase(targetPoints[type].begin() + targetIndex);
+			if (type == DOOR)
+			{
+				targetPoints[EXPLORED_DOOR].push_back(closestTarget);
         }
+			ROS_INFO("Closest target: (%d, %d)", closestTarget.x, closestTarget.y);
+			return pointToPose(closestTarget);
     }
+	}
 	ROS_INFO("At end of find next target");
     //no important points already found, go to distance field and find an unknown
 	return pointToPose(computeDistanceField());
@@ -245,7 +275,7 @@ void Control::takeAction(RobotOp robotAction){
 						diff += 2*M_PI;
 					delta += diff;
 	        robotPose = newRobotPose;
-					rate.sleep()
+			rate.sleep();
 	      }
 	      //candles is vector of angle indices relative to robot orientation
 	      vector<double> candles = parseIrReadings(irReadings);
@@ -253,7 +283,7 @@ void Control::takeAction(RobotOp robotAction){
 	          geometry_msgs::Pose candlePose;
 	          candlePose.position = robotPose.position;
 	          candlePose.orientation.z = robotPose.orientation.z + candle;
-	          targetPoints[FLAME].push_back(candlePose);
+			targetPoints[FLAME].push_back(poseToPoint(candlePose));
 						extinguishCandle(candlePose);
 	      }
 	      break;
@@ -363,9 +393,9 @@ bool Control::unknownLargeEnough(Point center){
 			neighbors = findNeighbors(currentCell);
 			currentDistance = distanceField[currentCell.x][currentCell.y];
 			for (Point neighbor : neighbors) {
-				  ROS_INFO("occGrid: %d, distance: %d", accessOccGrid(neighbor.x, neighbor.y), currentDistance);
+				  //ROS_INFO("occGrid: %d, distance: %d", accessOccGrid(neighbor.x, neighbor.y), currentDistance);
 				  if(accessOccGrid(neighbor.x, neighbor.y) >= 30 && currentDistance <= distFromWall){
-						ROS_INFO("hit a wall, occGrid value of %d", accessOccGrid(neighbor.x, neighbor.y));
+						//ROS_INFO("hit a wall, occGrid value of %d", accessOccGrid(neighbor.x, neighbor.y));
 						//point is too close to a wall, abort mission
 						return false;
 					}
@@ -436,16 +466,17 @@ bool Control::isDiag(int x, int y){
 }
 
 Point Control::poseToPoint(geometry_msgs::Pose pose){
-    //convert from real world pose to occGrid point.
-	ROS_INFO("pose - origin: %.3f", pose.position.x - occGrid.info.origin.position.x);
-	ROS_INFO("divided by res: %d", int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution));
-    int realX = int((pose.position.x - occGrid.info.origin.position.x)/occGrid.info.resolution);
-    int realY = int((pose.position.y - occGrid.info.origin.position.y)/occGrid.info.resolution);
+	//convert from real world pose to occGrid point.
+	//ROS_INFO("pose - origin: %.3f", pose.position.x - occGrid.info.origin.position.x);
+	//ROS_INFO("divided by res: %d", int((pose.position.x - occGrid.info.origin.position.x) / occGrid.info.resolution));
+	//ROS_INFO("origin: (%.2f, %.2f), resolution: %.2f", occGrid.info.origin.position.x, occGrid.info.origin.position.y, occGrid.info.resolution);
+	int realX = int((pose.position.x - occGrid.info.origin.position.x) / occGrid.info.resolution);
+	int realY = int((pose.position.y - occGrid.info.origin.position.y) / occGrid.info.resolution);
 
-	ROS_INFO("(realX, realY): (%d, %d)", realX, realY);
+	//ROS_INFO("(realX, realY): (%d, %d)", realX, realY);
 	Point p = Point(realX, realY);
-	ROS_INFO("(p.x, p.y): (%d, %d)", p.x, p.y);
-    return p;
+	//ROS_INFO("(p.x, p.y): (%d, %d)", p.x, p.y);
+	return p;
 }
 
 geometry_msgs::Pose Control::pointToPose(Point point){
@@ -498,7 +529,7 @@ vector<double> Control::parseIrReadings(vector<double> readings){
         else if(readings[i] < readingThreshold && readings[i-1] > readingThreshold){
             //end of candle reading range.
             if(((i - sigStart + readings.size())%readings.size())*2*M_PI/readings.size() > angleThreshold){
-                double midIndex = ((i-1 - sigStart + readings.size())%readings.size()/2;
+                double midIndex = ((i-1 - sigStart + readings.size())%readings.size()/2);
                 double angle = midIndex/readings.size() * 2 * M_PI;
                 candles.push_back(angle);
             }
