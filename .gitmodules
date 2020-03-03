@@ -1,10 +1,10 @@
 [submodule "rplidar_ros"]
 	path = rplidar_ros
 	url = https://github.com/Slamtec/rplidar_ros.git
-[submodule "navigation"]
-	path = navigation
-	url = https://github.com/ros-planning/navigation.git
 [submodule "stage_ros"]
 	path = stage_ros
 	url = https://github.com/UMLRoboticsClub/stage_ros.git
     branch = trinity
+[submodule "straf_recovery"]
+	path = straf_recovery
+	url = https://github.com/PeterMitrano/straf_recovery.git

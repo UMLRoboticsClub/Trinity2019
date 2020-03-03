@@ -7,10 +7,13 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/ColorRGBA.h>
+#include <trinity/DoorArray.h>
+
 using std::vector;
 using std::string;
 using sensor_msgs::LaserScan;
 using geometry_msgs::Point;
+using trinity::DoorArray;
 
 #define doorDistMin 0.35
 #define doorDistMax 0.45
@@ -19,12 +22,13 @@ using geometry_msgs::Point;
 ros::Publisher doors_pub;
 ros::Publisher points_pub;
 ros::Publisher walls_pub;
+ros::Publisher door_array_pub;
 
 vector<int> extractKeyIndices(const LaserScan& scan){
   vector<int> keyPoints;
   for(int i = 0; i < scan.ranges.size(); i++){
     if(fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]) > spikeDist){
-      ROS_INFO("Found key point with spike of %g",fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]));
+      //ROS_INFO("Found key point with spike of %g",fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]));
       if(scan.ranges[i] < scan.ranges[(i+1) % scan.ranges.size()])
         keyPoints.push_back(i);
       else
@@ -121,11 +125,12 @@ visualization_msgs::Marker CreateMarker(std_msgs::Header h, Point p, string text
 
 // Find doors
 void findDoors(const LaserScan& scan){
-  ROS_INFO("----------------------------------------------------------------------------------");
+  //ROS_INFO("----------------------------------------------------------------------------------");
   visualization_msgs::MarkerArray m;
   visualization_msgs::MarkerArray k;
   visualization_msgs::MarkerArray w;
   vector<Point> walls;
+  DoorArray door_array;
   
   vector<Point> doors;
   vector<int> keyPoints = extractKeyIndices(scan);
@@ -139,9 +144,9 @@ void findDoors(const LaserScan& scan){
   }
 
   Point p1, p2;
-  ROS_INFO("Found %d key points", keyPoints.size());
+  //ROS_INFO("Found %d key points", keyPoints.size());
   for(int i = 0; i < keyPoints.size(); i++){
-    ROS_INFO("Key point: #%d: %d", i, keyPoints[i]);
+    //ROS_INFO("Key point: #%d: %d", i, keyPoints[i]);
     foundPair = false;
     if(keyPoints[i] == -1){
       continue; // already been recorded, skip
@@ -159,8 +164,8 @@ void findDoors(const LaserScan& scan){
 
         // Create marker for door labelled with the key points that it is between
         m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, i));
-        ROS_INFO("Key point %d matched with %d (%g apart), marked as -1", i, j, scanDist);
-        ROS_INFO("Added door. Total doors: %d", doors.size());
+        //ROS_INFO("Key point %d matched with %d (%g apart), marked as -1", i, j, scanDist);
+        //ROS_INFO("Added door. Total doors: %d", doors.size());
         keyPoints[i] = keyPoints[j] = -1;
         break;
       }
@@ -175,9 +180,9 @@ void findDoors(const LaserScan& scan){
 
         // Create marker for door labelled with its key point
         m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, i));
-        ROS_INFO("Added door. Total doors: %d", doors.size());
+        //ROS_INFO("Added door. Total doors: %d", doors.size());
       } else {
-        ROS_INFO("Discarded door because the closest wall wasn't door distance away");
+        //ROS_INFO("Discarded door because the closest wall wasn't door distance away");
       }
     }
   }
@@ -189,11 +194,15 @@ void findDoors(const LaserScan& scan){
     }
   }
 
+  door_array.doors = doors;
+  door_array.header = scan.header;
+
   ROS_INFO("Publishing %d key point markers", k.markers.size());
   ROS_INFO("Publishing %d door markers", m.markers.size());
   doors_pub.publish(m);
   points_pub.publish(k);
   walls_pub.publish(w);
+  door_array_pub.publish(door_array);
 }
 
 
@@ -205,6 +214,7 @@ int main(int argc, char **argv)
   doors_pub = n.advertise<visualization_msgs::MarkerArray>("doors", 1000);
   points_pub = n.advertise<visualization_msgs::MarkerArray>("key_points", 1000);
   walls_pub = n.advertise<visualization_msgs::MarkerArray>("walls", 1000);
+  door_array_pub = n.advertise<DoorArray>("doors_array", 1000);
   ros::Subscriber sub = n.subscribe("/scan", 1000, findDoors);
   ros::spin();
   return 0;
