@@ -70,7 +70,7 @@ void Control::getDoors(const DoorArray::ConstPtr& doors){
 		geometry_msgs::PointStamped pout;
 		ps.header = doors->header;
 		ps.point = doorP;
-		
+
 		listener.transformPoint(occGrid.header.frame_id, ros::Time(0), ps, ps.header.frame_id, pout);
 		geometry_msgs::Pose pose;
 		pose.position = pout.point;
@@ -82,7 +82,6 @@ void Control::getDoors(const DoorArray::ConstPtr& doors){
 	  newDoor = true;
 	  for(Point explored : targetPoints[EXPLORED_DOOR]){
 		  if(pointDist(explored, door) < NEW_DOOR_THRESH){
-				doorCount[explored]++;
 		 	  newDoor = false;
 				break;
 		  }
@@ -110,15 +109,18 @@ double Control::pointDist(Point a, Point b){
 int Control::findClosestDoorIndex(){
 	Point robotPos = poseToPoint(getRobotPose());
 	int closest = 0;
+  double closestDist = pointDist(robotPos, targetPoints[DOOR][0]);
 	for(int i = 1; i < targetPoints[DOOR].size(); i++){
-		if(pointDist(robotPos, targetPoints[DOOR][i]) < pointDist(robotPos, targetPoints[DOOR][closest]) && doorCount[targetPoints[DOOR][i]] > 10){
+		double currDist = pointDist(robotPos, targetPoints[DOOR][i]);
+		if(currDist < closestDist) && doorCount[targetPoints[DOOR][i]] > 10){
 			closest = i;
+			closestDist = currDist;
 		}
 	}
 	return closest;
 }
 
-void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){ 
+void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
 	occGrid = *grid;
 	move_base_msgs::MoveBaseGoal goal;
 	RobotOp robotAction;

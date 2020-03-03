@@ -40,7 +40,7 @@ vector<int> extractKeyIndices(const LaserScan& scan){
 
 Point scanToPoint(const LaserScan& scan, int i){
   Point p;
-  double theta = i*2*M_PI/scan.ranges.size(); 
+  double theta = i*2*M_PI/scan.ranges.size();
 
   // Idk why we are multiplying by -1 but it works
   p.x = cos(theta)*scan.ranges[i]*-1;
@@ -61,39 +61,22 @@ Point findClosestWall(const LaserScan& scan, int ind){
   Point p1 = scanToPoint(scan, ind);
   Point closest = GetPoint(-1, -1);
   double scanDist;
-  bool seenSpike = false;
   int closestIndex = 0;
-  for(int j = 0; j < scan.ranges.size()/2; j++){
-    int ind2 = (ind+j)%scan.ranges.size();
-    if(fabs(scan.ranges[ind2] - scan.ranges[(ind2+1+scan.ranges.size())%scan.ranges.size()]) > spikeDist){
-      seenSpike = true;
-      continue; // The point before a spike will never be the other side of the door
-    }
-    if(seenSpike){
-      Point p2 = scanToPoint(scan, ind2);
-      scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-      if(scanDist > 0 && (scanDist < closestDist || closestDist == -1) && scanDist > doorDistMin && scanDist < doorDistMax){
-        closestDist = scanDist;
-        closest = p2;
-        closestIndex = ind2; // Saving index for debug purposes
-      }  
-    }
+
+  //determine direction to look for other endpoint
+  int dir = -1;
+  if(abs(scan.ranges[ind] - scan.ranges[(ind+1)%scan.ranges.size()]) > spikeDist){
+    dir = 1;
   }
-  seenSpike = false;
-  for(int j = 0; j < scan.ranges.size()/2; j++){
-    int ind2 = (ind-j + scan.ranges.size())%scan.ranges.size();
-    if(fabs(scan.ranges[ind2] - scan.ranges[(ind2-1+scan.ranges.size())%scan.ranges.size()]) > spikeDist){
-      seenSpike = true;
-      continue;
-    }
-    if(seenSpike){
-      Point p2 = scanToPoint(scan, ind2);
-      scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-      if(scanDist > 0 && (scanDist < closestDist || closestDist == -1) && scanDist > doorDistMin && scanDist < doorDistMax){
-        closestDist = scanDist;
-        closest = p2;
-        closestIndex = ind2;
-      }  
+
+  for(int j = 5; j < scan.ranges.size()/2; j++){
+    int ind2 = (ind+j*dir + scan.ranges.size())%scan.ranges.size();
+    Point p2 = scanToPoint(scan, ind2);
+    scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+    if(scanDist > 0 && (scanDist < closestDist || closestDist == -1) && scanDist > doorDistMin && scanDist < doorDistMax){
+      closestDist = scanDist;
+      closest = p2;
+      closestIndex = ind2; // Saving index for debug purposes
     }
   }
   return closest;
@@ -131,7 +114,7 @@ void findDoors(const LaserScan& scan){
   visualization_msgs::MarkerArray w;
   vector<Point> walls;
   DoorArray door_array;
-  
+
   vector<Point> doors;
   vector<int> keyPoints = extractKeyIndices(scan);
   bool foundPair = false;
@@ -152,9 +135,9 @@ void findDoors(const LaserScan& scan){
       continue; // already been recorded, skip
     }
     p1 = scanToPoint(scan, keyPoints[i]);
-    
+
     for(int j = i + 1; j < keyPoints.size(); j++){
-      if(keyPoints[j] == -1)
+      if(keyPoints[j] == -1 || abs(keyPoints[j] - keyPoints[i]) < 5)
         continue; // already been recordedm skip
       p2 = scanToPoint(scan, keyPoints[j]);
       double scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
@@ -186,7 +169,7 @@ void findDoors(const LaserScan& scan){
       }
     }
   }
-  
+
   for (int i = 0; i < walls.size(); i++){
     if(walls[i].x != -1 && walls[i].y != -1){
       // Create marker for a "closest wall" point
