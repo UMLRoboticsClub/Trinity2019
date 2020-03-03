@@ -64,8 +64,10 @@ private:
     ros::Subscriber get_doors;
 	ros::Subscriber wait_for_signal;
 	ros::NodeHandle nh;
+	tf::TransformListener listener;
     GameState gs;
-    std::map<int, vector<geometry_msgs::Pose>> targetPoints;
+    std::map<int, vector<Point>> targetPoints;
+	std::map<Point, int> doorCount;
 	vector<vector<int>> distanceField;
 	nav_msgs::OccupancyGrid occGrid;
 	MoveBaseClient* ac;

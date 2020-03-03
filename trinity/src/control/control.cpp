@@ -82,6 +82,7 @@ void Control::getDoors(const DoorArray::ConstPtr& doors){
 	  newDoor = true;
 	  for(Point explored : targetPoints[EXPLORED_DOOR]){
 		  if(pointDist(explored, door) < NEW_DOOR_THRESH){
+				doorCount[explored]++;
 		 	  newDoor = false;
 				break;
 		  }
@@ -90,12 +91,14 @@ void Control::getDoors(const DoorArray::ConstPtr& doors){
 	 		continue;
 	  for(Point oldDoor : targetPoints[DOOR]){
 		  if(pointDist(oldDoor, door) < NEW_DOOR_THRESH){
+				doorCount[oldDoor]++;
 		 	  newDoor = false;
 			  break;
 		  }
 	  }
 	  if(newDoor){
 		  targetPoints[DOOR].push_back(door);
+			doorCount[door] = 1;
 	  }
   }
 }
@@ -164,6 +167,12 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction){
     //check if we have already found an important point where we need to go
     vector<int> primaryTargetTypes = gs.getTargetType();
     for (const int type : primaryTargetTypes) {
+		ROS_INFO("target type: %d, size: %d", type, targetPoints[type].size());
+		if(type == DOOR){
+			for(std::pair<Point, int> p : doorCount){
+				ROS_INFO("Point (%d, %d): %d", p.first.x, p.first.y, p.second);
+			}
+		}
         // if we have a destination in mind
         if (targetPoints[type].size() > 0) {
             //update robotOps
