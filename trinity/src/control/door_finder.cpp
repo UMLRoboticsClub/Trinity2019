@@ -24,15 +24,15 @@ ros::Publisher points_pub;
 ros::Publisher walls_pub;
 ros::Publisher door_array_pub;
 
-vector<int> extractKeyIndices(const LaserScan& scan){
+vector<std::Pair<int, int>> extractKeyIndices(const LaserScan& scan){
   vector<int> keyPoints;
   for(int i = 0; i < scan.ranges.size(); i++){
     if(fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]) > spikeDist){
       //ROS_INFO("Found key point with spike of %g",fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]));
       if(scan.ranges[i] < scan.ranges[(i+1) % scan.ranges.size()])
-        keyPoints.push_back(i);
+        keyPoints.push_back(std::Pair<int, int>(i, 1));
       else
-        keyPoints.push_back((i+1) % scan.ranges.size());
+        keyPoints.push_back(std::Pair<int, int>((i+1) % scan.ranges.size(), -1));
     }
   }
   return keyPoints;
@@ -116,12 +116,12 @@ void findDoors(const LaserScan& scan){
   DoorArray door_array;
 
   vector<Point> doors;
-  vector<int> keyPoints = extractKeyIndices(scan);
+  vector<std::Pair<int, int>> keyPoints = extractKeyIndices(scan);
   bool foundPair = false;
 
   // Create key point markers labelled with their number
   for(int i = 0; i < keyPoints.size(); i++){
-    Point p = scanToPoint(scan, keyPoints[i]);
+    Point p = scanToPoint(scan, keyPoints[i].first);
     k.markers.push_back(CreateMarker(scan.header, p, std::to_string(i), 0, 0, 1, i));
     walls.push_back(GetPoint(-1, -1));
   }
@@ -131,15 +131,28 @@ void findDoors(const LaserScan& scan){
   for(int i = 0; i < keyPoints.size(); i++){
     //ROS_INFO("Key point: #%d: %d", i, keyPoints[i]);
     foundPair = false;
-    if(keyPoints[i] == -1){
+    if(keyPoints[i].first == -1){
       continue; // already been recorded, skip
     }
-    p1 = scanToPoint(scan, keyPoints[i]);
+    p1 = scanToPoint(scan, keyPoints[i].first);
 
     for(int j = i + 1; j < keyPoints.size(); j++){
-      if(keyPoints[j] == -1 || abs(keyPoints[j] - keyPoints[i]) < 5)
+      if(keyPoints[j].first == -1 || abs(keyPoints[j].first - keyPoints[i].first) < 5)
         continue; // already been recordedm skip
-      p2 = scanToPoint(scan, keyPoints[j]);
+      int degDiff = keyPoints[j].first - keyPoints[i].first;
+      if (degDiff > 180)
+        degDiff -= 360;
+      else if (degDiff < -180)
+        degDiff += 360;
+      if(degDiff < 0 && keyPoints[j].second == 1 && keyPoints[i].second == -1
+        ||degDiff > 0 && keyPoitns[j].second == -1 && keyPoints[i].second == 1){
+          //good to go
+        }
+      else{
+        continue;
+      }
+
+      p2 = scanToPoint(scan, keyPoints[j].first);
       double scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
       if(scanDist < doorDistMax && scanDist > doorDistMin){
         // two edges of a door, mark their midpoint as a door.
@@ -149,14 +162,14 @@ void findDoors(const LaserScan& scan){
         m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, i));
         //ROS_INFO("Key point %d matched with %d (%g apart), marked as -1", i, j, scanDist);
         //ROS_INFO("Added door. Total doors: %d", doors.size());
-        keyPoints[i] = keyPoints[j] = -1;
+        keyPoints[i].first = keyPoints[j].first = -1;
         break;
       }
     }
-    if(keyPoints[i] != -1){
+    if(keyPoints[i].first != -1){
       //find closest wall to the point
-      p1 = scanToPoint(scan, keyPoints[i]);
-      p2 = findClosestWall(scan, keyPoints[i]);
+      p1 = scanToPoint(scan, keyPoints[i].first);
+      p2 = findClosestWall(scan, keyPoints[i].first);
       if(p2.x != -1 && p2.y != -1){
         walls[i] = p2;
         doors.push_back(GetPoint((p1.x+p2.x)/2,(p1.y+p2.y)/2));
