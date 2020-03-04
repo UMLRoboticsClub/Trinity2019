@@ -3,7 +3,8 @@
 	<env name="ROSCONSOLE_CONFIG_FILE" value="$(find trinity)/config/custom_rosconsole.conf"/>
 	<node pkg="trinity" type="gmapping_without_output.sh" name="gmapping" output="screen" />
 	<node pkg="trinity" type="getRobotPose.py" name="poseService" output="screen" />
-	<!--<node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
+	<node pkg="trinity" type="door_finder" name="door_finder" output="screen" />
+    <!--<node pkg="hector_mapping" type="hector_mapping" name="hector_mapping" output="screen">
 		<param name="pub_drawings" value="true" />
 		<param name="use_tf_scan_transformation" value="true" />
 		<param name="use_tf_pose_start_estimate" value="false" />

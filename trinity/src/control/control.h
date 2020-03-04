@@ -14,6 +14,7 @@
 #include <std_srvs/Empty.h>
 #include <trinity/DoorArray.h>
 #include <tf/transform_listener.h>
+#include <visualization_msgs/MarkerArray.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -56,10 +57,13 @@ public:
 	void getDoors(const trinity::DoorArray::ConstPtr& doors);
 	double pointDist(Point a, Point b);
 	int findClosestDoorIndex();
+	visualization_msgs::Marker CreateMarker(std_msgs::Header h, geometry_msgs::Pose p, std::string text, float r, float g, float b, int id);
 private:
     ros::Publisher cmd_vel_pub;
     ros::Publisher goal_pub;
 	ros::Publisher point_pub;
+	ros::Publisher seen_doors_pub;
+	ros::Publisher target_points_pub;
 	ros::Subscriber map_sub;
     ros::Subscriber get_doors;
 	ros::Subscriber wait_for_signal;
@@ -68,6 +72,8 @@ private:
     GameState gs;
     std::map<int, vector<Point>> targetPoints;
 	std::map<Point, int> doorCount;
+	visualization_msgs::MarkerArray m_array;
+	visualization_msgs::MarkerArray m_target_array;
 	vector<vector<int>> distanceField;
 	nav_msgs::OccupancyGrid occGrid;
 	MoveBaseClient* ac;

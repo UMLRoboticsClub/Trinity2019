@@ -45,6 +45,8 @@ void Control::initializePublishers() {
     cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("goal", 1);
     point_pub = nh.advertise<geometry_msgs::PointStamped>("robot_point", 1);
+    seen_doors_pub = nh.advertise<visualization_msgs::MarkerArray>("seen_doors_control", 1);
+    target_points_pub = nh.advertise<visualization_msgs::MarkerArray>("target_doors_control", 1);
     ROS_INFO("done initializing publishers");
 }
 
@@ -103,7 +105,26 @@ void Control::getDoors(const DoorArray::ConstPtr& doors){
 }
 
 // Create a marker for our marker array
-visualization_msgs::Marker Control::CreateMarker(std_msgs::Header h, geometry_msgs::Pose p, float r, float g, float b, int id) {
+visualization_msgs::Marker Control::CreateMarker(std_msgs::Header h, geometry_msgs::Pose p, std::string text, float r, float g, float b, int id) {
+    visualization_msgs::Marker m;
+    m.id = id;
+    m.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    m.text = text;
+    m.header = h;
+    m.action = 0;
+    m.pose = p;
+    m.scale.x = 0.1;
+    m.scale.y = 0.1;
+    m.scale.z = 0.1;
+    m.pose.orientation.w = 1.0;
+    m.color.r = r;
+    m.color.b = g;
+    m.color.g = b;
+    m.color.a = 1.0;
+    //m.lifetime = ros::Duration(60);
+    return m;
+}
+
 double Control::pointDist(Point a, Point b) {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
@@ -500,7 +521,7 @@ geometry_msgs::Pose Control::pointToPose(Point point) {
 geometry_msgs::Pose Control::getRobotPose() {
     trinity_pi::GetRobotPose srv;
     robotPoseClient.call(srv);
-    ROS_INFO("pose frame: %s, map frame: %s", srv.response.pose.header.frame_id.c_str(), occGrid.header.frame_id.c_str());
+    //ROS_INFO("pose frame: %s, map frame: %s", srv.response.pose.header.frame_id.c_str(), occGrid.header.frame_id.c_str());
     if (srv.response.pose.header.frame_id != occGrid.header.frame_id) {
         ROS_INFO("Oh shit frames are different need to fix");
     }

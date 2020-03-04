@@ -53,6 +53,14 @@ struct Point2 {
         return x != p.x || y != p.y;
     }
 
+    bool operator<(const Point2 &p) const {
+        return sqrt(pow(x, 2) + pow(y, 2)) < sqrt(pow(p.x, 2) + pow(p.y, 2));
+    }
+
+    bool operator>(const Point2 &p) const {
+        return sqrt(pow(x, 2) + pow(y, 2)) > sqrt(pow(p.x, 2) + pow(p.y, 2));
+    }
+
     template <typename T>
         Point2& operator+=(const Point2<T> &p) {
             x += p.x;
@@ -150,6 +158,7 @@ struct Point2 {
             Point2 temp(x / p.x, y / p.y);
             return temp;
         }
+        
 
     template <typename U>
         Point2 operator/(const U &p) const {
