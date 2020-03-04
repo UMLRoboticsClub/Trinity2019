@@ -23,6 +23,7 @@ ros::Publisher doors_pub;
 ros::Publisher points_pub;
 ros::Publisher walls_pub;
 ros::Publisher door_array_pub;
+int marker_index = 0;
 
 vector<std::Pair<int, int>> extractKeyIndices(const LaserScan& scan){
   vector<int> keyPoints;
@@ -65,11 +66,12 @@ Point findClosestWall(const LaserScan& scan, int ind){
 
   //determine direction to look for other endpoint
   int dir = -1;
-  if(abs(scan.ranges[ind] - scan.ranges[(ind+1)%scan.ranges.size()]) > spikeDist){
+  if(fabs(scan.ranges[ind] - scan.ranges[(ind+1)%scan.ranges.size()]) > spikeDist){
+    //ROS_INFO("Between %d and %d is %")
     dir = 1;
   }
 
-  for(int j = 5; j < scan.ranges.size()/2; j++){
+  for(int j = 10; j < scan.ranges.size()/2; j++){
     int ind2 = (ind+j*dir + scan.ranges.size())%scan.ranges.size();
     Point p2 = scanToPoint(scan, ind2);
     scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
@@ -79,6 +81,7 @@ Point findClosestWall(const LaserScan& scan, int ind){
       closestIndex = ind2; // Saving index for debug purposes
     }
   }
+  ROS_INFO("Closest index for %d is %d", ind, closestIndex);
   return closest;
 }
 
@@ -102,7 +105,7 @@ visualization_msgs::Marker CreateMarker(std_msgs::Header h, Point p, string text
   m.color.b = b;
   m.color.g = g;
   m.color.a = 1.0;
-  m.lifetime = ros::Duration(0.5);
+  m.lifetime = ros::Duration(0.1);
   return m;
 }
 
@@ -129,7 +132,7 @@ void findDoors(const LaserScan& scan){
   Point p1, p2;
   //ROS_INFO("Found %d key points", keyPoints.size());
   for(int i = 0; i < keyPoints.size(); i++){
-    //ROS_INFO("Key point: #%d: %d", i, keyPoints[i]);
+    //ROS_INFO("Key point: #%d: %d", i, keyPoints[i].first);
     foundPair = false;
     if(keyPoints[i].first == -1){
       continue; // already been recorded, skip
@@ -137,7 +140,7 @@ void findDoors(const LaserScan& scan){
     p1 = scanToPoint(scan, keyPoints[i].first);
 
     for(int j = i + 1; j < keyPoints.size(); j++){
-      if(keyPoints[j].first == -1 || abs(keyPoints[j].first - keyPoints[i].first) < 5)
+      if(keyPoints[j].first == -1 || abs(keyPoints[j].first - keyPoints[i].first) < 10)
         continue; // already been recordedm skip
       int degDiff = keyPoints[j].first - keyPoints[i].first;
       if (degDiff > 180)
@@ -155,11 +158,12 @@ void findDoors(const LaserScan& scan){
       p2 = scanToPoint(scan, keyPoints[j].first);
       double scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
       if(scanDist < doorDistMax && scanDist > doorDistMin){
+        ROS_INFO("paired two key points with index %d and %d", keyPoints[i].first, keyPoints[j].first);
         // two edges of a door, mark their midpoint as a door.
         doors.push_back(GetPoint((p1.x+p2.x)/2, (p1.y+p2.y)/2));
 
         // Create marker for door labelled with the key points that it is between
-        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, i));
+        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, marker_index++));
         //ROS_INFO("Key point %d matched with %d (%g apart), marked as -1", i, j, scanDist);
         //ROS_INFO("Added door. Total doors: %d", doors.size());
         keyPoints[i].first = keyPoints[j].first = -1;
@@ -172,10 +176,11 @@ void findDoors(const LaserScan& scan){
       p2 = findClosestWall(scan, keyPoints[i].first);
       if(p2.x != -1 && p2.y != -1){
         walls[i] = p2;
+        //ROS_INFO("Found door for key point with index %d", keyPoints[i].first);
         doors.push_back(GetPoint((p1.x+p2.x)/2,(p1.y+p2.y)/2));
 
         // Create marker for door labelled with its key point
-        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, i));
+        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, marker_index++));
         //ROS_INFO("Added door. Total doors: %d", doors.size());
       } else {
         //ROS_INFO("Discarded door because the closest wall wasn't door distance away");

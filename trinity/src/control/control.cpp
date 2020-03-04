@@ -135,7 +135,7 @@ int Control::findClosestDoorIndex(){
   double closestDist = pointDist(robotPos, targetPoints[DOOR][0]);
 	for(int i = 1; i < targetPoints[DOOR].size(); i++){
 		double currDist = pointDist(robotPos, targetPoints[DOOR][i]);
-		if(currDist < closestDist) && doorCount[targetPoints[DOOR][i]] > 10){
+		if(currDist < closestDist && doorCount[targetPoints[DOOR][i]] > 10){
 			closest = i;
 			closestDist = currDist;
 		}
