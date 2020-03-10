@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
     encoders[3] = {ENCODER_PIN_3, 0};
 
     for(int i = 0; i < 4; i ++){
-        attachInterruptArg(encoders[i].PIN, encoderInterrupt, encoders + i, FALLING);
+        attachInterruptArg(encoders[i].PIN, encoderInterrupt, encoders + i, CHANGE);
         pinMode(encoders[i].PIN, INPUT_PULLUP);
     }
 
