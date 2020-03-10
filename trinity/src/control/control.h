@@ -82,7 +82,8 @@ private:
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
 	ros::ServiceClient inRoomClient;
-	void initializeSubscribers();
+	vector<Point> foundDoors;
+		void initializeSubscribers();
 	void initializePublishers();
 	void initializeServices();
 };

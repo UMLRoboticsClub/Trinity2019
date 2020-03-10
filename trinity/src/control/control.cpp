@@ -29,6 +29,9 @@ Control::Control(ros::NodeHandle* nodeHandle) {
             distanceField[i][j] = -1;
         }
     }
+
+    foundDoors = vector<Point>();
+
     //ros::Duration(7).sleep();
     start = true;
     ROS_INFO("Done initializing");
@@ -71,7 +74,10 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
         return;
     }
     //ROS_INFO("Transform wait succeeded");
-    for (geometry_msgs::Point doorP : doors->doors) {
+    for (int i = 0; i < doors->doors.size(); i++) {
+        geometry_msgs::Point doorP = doors->doors[i];
+        geometry_msgs::Point target = doors->targets[i];
+
         geometry_msgs::PointStamped ps;
         geometry_msgs::PointStamped pout;
         ps.header = doors->header;
@@ -84,17 +90,21 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
         h.frame_id = occGrid.header.frame_id;
         h.stamp = doors->header.stamp;
         Point door = poseToPoint(pose);
+
+        ps.point = target;
+        listener.transformPoint(occGrid.header.frame_id, doors->header.stamp, ps, ps.header.frame_id, pout);
+        pose.position = pout.point;
+        Point realTarget = poseToPoint(pose);
+
         //check if the new door is unique
-        newDoor = true;
-        for (Point explored : targetPoints[EXPLORED_DOOR]) {
-            if (pointDist(explored, door) < NEW_DOOR_THRESH) {
-                newDoor = false;
-                break;
+        for (Point foundDoor : foundDoors) {
+            if (pointDist(foundDoor, door) < NEW_DOOR_THRESH) {
+                //not a new door, continue.
+                continue;
             }
         }
-        if (!newDoor)
-            continue;
-        for (int oldDoor = 0; oldDoor < targetPoints[DOOR].size(); oldDoor++) {
+            //code is obsolete.
+        /*for (int oldDoor = 0; oldDoor < targetPoints[DOOR].size(); oldDoor++) {
             if (pointDist(targetPoints[DOOR][oldDoor], door) < NEW_DOOR_THRESH) {
                 //ROS_INFO("door is the same as a current door");
                 doorCount[targetPoints[DOOR][oldDoor]]++;
@@ -102,14 +112,13 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
                 newDoor = false;
                 break;
             }
-        }
-        if (newDoor) {
+        }*/
             ROS_INFO("new door found");
-            targetPoints[DOOR].push_back(door);
+            targetPoints[DOOR].push_back(realTarget);
+            foundDoors.push_back(door);
             doorCount[door] = 1;
             m_array.markers.push_back(CreateMarker(h, pose, std::to_string(doorCount[door]), 1, 0, 0, targetPoints[DOOR].size() - 1));
             //m_target_array.markers.push_back(CreateMarker(h, pose, 0, 1, 0, targetPoints[DOOR].size()));
-        }
     }
 }
 
@@ -189,7 +198,7 @@ void Control::controlLoop() {
             ros::spinOnce();
             // Wait for map to update after we stop moving
             //ros::Duration(1).sleep();
-            robotAction = OP_NOTHING; 
+            robotAction = OP_NOTHING;
             //TODO this is a temporary "solution".  Door code makes this obsolete
             //robotAction = OP_SCANROOM;
             //perform necessary action at targetLoc.
@@ -229,7 +238,7 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction) {
                 ROS_INFO("This door has been seen %d time(s)", doorCount[closestTarget]);
             }
             ROS_INFO("Closest target: (%d, %d), occGrid value: %d", closestTarget.x, closestTarget.y, accessOccGrid(closestTarget.x, closestTarget.y));
-            
+
             // Shift to nearest clear space in case we are too near a wall
             Point closestOpen = (accessOccGrid(closestTarget.x, closestTarget.y) > 60 ? computeDistanceField(closestTarget, 60) : closestTarget);
             ROS_INFO("Closest open: (%d, %d), occGrid value: %d", closestOpen.x, closestOpen.y, accessOccGrid(closestOpen.x, closestOpen.y));
