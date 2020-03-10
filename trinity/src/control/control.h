@@ -35,14 +35,15 @@ typedef enum ROBOT_OPS {
 class Control{
 public:
     Control(ros::NodeHandle* nodehandle);
-	void controlLoop(const nav_msgs::OccupancyGrid::ConstPtr&);
+	void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& grid);
+	void controlLoop();
 	void startFunc(const std_msgs::Bool::ConstPtr&);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
 	void takeAction(RobotOp robotAction);
-    Point computeDistanceField();
+    Point computeDistanceField(Point, int);
 	RobotOp determineRobotOp(int);
 	void extinguishCandle(geometry_msgs::Pose candlePose);
-	bool unknownLargeEnough(Point center);
+	bool groupLargeEnough(Point center, int cellValue, int minSize);
     int accessOccGrid(int x, int y);
     vector<Point> findOpenNeighbors(const Point &currentPos);
     vector<Point> findUnknownNeighbors(const Point &currentPos);

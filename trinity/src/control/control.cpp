@@ -32,10 +32,11 @@ Control::Control(ros::NodeHandle* nodeHandle) {
     //ros::Duration(7).sleep();
     start = true;
     ROS_INFO("Done initializing");
+    controlLoop();
 }
 
 void Control::initializeSubscribers() {
-    map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::controlLoop, this);
+    map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::mapCallback, this);
     wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
     get_doors = nh.subscribe("doors_array", 100, &Control::getDoors, this);
     ROS_INFO("done initializing subscribers");
@@ -62,46 +63,54 @@ void Control::startFunc(const std_msgs::Bool::ConstPtr&) {
     start = true;
 }
 
-void Control::getDoors(const DoorArray::ConstPtr& doors){
-	bool newDoor;
-	ROS_INFO("got doors with size: %d", doors->doors.size());
-	listener.waitForTransform(occGrid.header.frame_id, doors->header.frame_id, ros::Time::now(), ros::Duration(0.01));
-	for (geometry_msgs::Point doorP : doors->doors)
-	{
-		geometry_msgs::PointStamped ps;
-		geometry_msgs::PointStamped pout;
-		ps.header = doors->header;
-		ps.point = doorP;
+void Control::getDoors(const DoorArray::ConstPtr& doors) {
+    bool newDoor;
+    ROS_INFO("got doors with size: %d", doors->doors.size());
+    if (!listener.waitForTransform(occGrid.header.frame_id, doors->header.frame_id, doors->header.stamp, ros::Duration(1))) {
+        ROS_INFO("Wait for transform failed, will retry...");
+        return;
+    }
+    //ROS_INFO("Transform wait succeeded");
+    for (geometry_msgs::Point doorP : doors->doors) {
+        geometry_msgs::PointStamped ps;
+        geometry_msgs::PointStamped pout;
+        ps.header = doors->header;
+        ps.point = doorP;
 
-		listener.transformPoint(occGrid.header.frame_id, ros::Time(0), ps, ps.header.frame_id, pout);
-		geometry_msgs::Pose pose;
-		pose.position = pout.point;
-		std_msgs::Header h;
-		h.frame_id = occGrid.header.frame_id;
-		h.stamp = ros::Time::now();
-		Point door = poseToPoint(pose);
-	  //check if the new door is unique
-	  newDoor = true;
-	  for(Point explored : targetPoints[EXPLORED_DOOR]){
-		  if(pointDist(explored, door) < NEW_DOOR_THRESH){
-		 	  newDoor = false;
-				break;
-		  }
-	  }
-	  if(!newDoor)
-	 		continue;
-	  for(Point oldDoor : targetPoints[DOOR]){
-		  if(pointDist(oldDoor, door) < NEW_DOOR_THRESH){
-				doorCount[oldDoor]++;
-		 	  newDoor = false;
-			  break;
-		  }
-	  }
-	  if(newDoor){
-		  targetPoints[DOOR].push_back(door);
-			doorCount[door] = 1;
-	  }
-  }
+        listener.transformPoint(occGrid.header.frame_id, doors->header.stamp, ps, ps.header.frame_id, pout);
+        geometry_msgs::Pose pose;
+        pose.position = pout.point;
+        std_msgs::Header h;
+        h.frame_id = occGrid.header.frame_id;
+        h.stamp = doors->header.stamp;
+        Point door = poseToPoint(pose);
+        //check if the new door is unique
+        newDoor = true;
+        for (Point explored : targetPoints[EXPLORED_DOOR]) {
+            if (pointDist(explored, door) < NEW_DOOR_THRESH) {
+                newDoor = false;
+                break;
+            }
+        }
+        if (!newDoor)
+            continue;
+        for (int oldDoor = 0; oldDoor < targetPoints[DOOR].size(); oldDoor++) {
+            if (pointDist(targetPoints[DOOR][oldDoor], door) < NEW_DOOR_THRESH) {
+                //ROS_INFO("door is the same as a current door");
+                doorCount[targetPoints[DOOR][oldDoor]]++;
+                m_array.markers.push_back(CreateMarker(h, pose, std::to_string(doorCount[targetPoints[DOOR][oldDoor]]), 1, 0, 0, oldDoor));
+                newDoor = false;
+                break;
+            }
+        }
+        if (newDoor) {
+            ROS_INFO("new door found");
+            targetPoints[DOOR].push_back(door);
+            doorCount[door] = 1;
+            m_array.markers.push_back(CreateMarker(h, pose, std::to_string(doorCount[door]), 1, 0, 0, targetPoints[DOOR].size() - 1));
+            //m_target_array.markers.push_back(CreateMarker(h, pose, 0, 1, 0, targetPoints[DOOR].size()));
+        }
+    }
 }
 
 // Create a marker for our marker array
@@ -129,57 +138,66 @@ double Control::pointDist(Point a, Point b) {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
 
-int Control::findClosestDoorIndex(){
-	Point robotPos = poseToPoint(getRobotPose());
-	int closest = 0;
-  double closestDist = pointDist(robotPos, targetPoints[DOOR][0]);
-	for(int i = 1; i < targetPoints[DOOR].size(); i++){
-		double currDist = pointDist(robotPos, targetPoints[DOOR][i]);
-		if(currDist < closestDist && doorCount[targetPoints[DOOR][i]] > 10){
-			closest = i;
-			closestDist = currDist;
-		}
+int Control::findClosestDoorIndex() {
+    Point robotPos = poseToPoint(getRobotPose());
+    int closest = 0;
+    double closestDist = pointDist(robotPos, targetPoints[DOOR][0]);
+    for (int i = 1; i < targetPoints[DOOR].size(); i++) {
+        double currDist = pointDist(robotPos, targetPoints[DOOR][i]);
+        if (currDist < closestDist && doorCount[targetPoints[DOOR][i]] > 10) {
+            closest = i;
+            closestDist = currDist;
+        }
 	}
-	return closest;
+    return closest;
 }
 
-void Control::controlLoop(const nav_msgs::OccupancyGrid::ConstPtr& grid){
-	occGrid = *grid;
-	move_base_msgs::MoveBaseGoal goal;
-	RobotOp robotAction;
-	ROS_INFO("In control loop");
-	if(start && !gs.done){
-		//determine target and type based on occGrid and gameState
-    geometry_msgs::Pose target = findNextTarget(robotAction);
-		ROS_INFO("finished find next target: (%.2f, %.2f)", target.position.x, target.position.y);
+void Control::mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& grid) {
+    occGrid = *grid;
+}
+void Control::controlLoop() {
+    move_base_msgs::MoveBaseGoal goal;
+    RobotOp robotAction;
+    ROS_INFO("In control loop");
+    while(!start) { ros::spinOnce(); }
+    while (ros::ok() && !gs.done) {
+        ros::spinOnce();
+        seen_doors_pub.publish(m_array);
+        //determine target and type based on occGrid and gameState
+        geometry_msgs::Pose target = findNextTarget(robotAction);
+        ROS_INFO("finished find next target: (%.2f, %.2f)", target.position.x, target.position.y);
 		//translate occGrid coords into moveBase coords
 		//move moveBase
 		move_base_msgs::MoveBaseGoal goal;
-		goal.target_pose.header.frame_id = "/map";
-		goal.target_pose.header.stamp = ros::Time::now();
-		goal.target_pose.pose = target;
-		goal.target_pose.pose.orientation.w = 1;
-		geometry_msgs::PoseStamped psGoal;
-		psGoal.pose = target;
-		psGoal.header = goal.target_pose.header;
-		goal_pub.publish(psGoal);
-		ros::spinOnce();
-		//ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
-		//ROS_INFO("Found goal, publishing...");
-		char yn;
-		cout << "Accept this goal? (y/n)" << endl;
-		cin >> yn;
-		if(yn == 'y'){
-			ac->sendGoal(goal);
-			ac->waitForResult();
-			//TODO this is a temporary "solution".  Door code makes this obsolete
-			//robotAction = OP_SCANROOM;
-			//perform necessary action at targetLoc.
-			//if we entered a room, update robotAction accordingly
-			//`update robot action in case we entered a room
-			takeAction(robotAction);
-		}
-	}
+        goal.target_pose.header.frame_id = "/map";
+        goal.target_pose.header.stamp = ros::Time::now();
+        goal.target_pose.pose = target;
+        goal.target_pose.pose.orientation.w = getRobotPose().orientation.w;
+        ROS_INFO("set goal target orientation.w to %.2f", goal.target_pose.pose.orientation.w);
+        geometry_msgs::PoseStamped psGoal;
+        psGoal.pose = target;
+        psGoal.header = goal.target_pose.header;
+        goal_pub.publish(psGoal);
+        //ROS_INFO("goal pose: (%.2f, %.2f)", target.position.x, target.position.y);
+        //ROS_INFO("Found goal, publishing...");
+        //char yn;
+        //cout << "Accept this goal? (y/n)" << endl;
+        //cin >> yn;
+        //if (yn == 'y') {
+            ac->sendGoal(goal);
+            ac->waitForResult();
+            ros::spinOnce();
+            // Wait for map to update after we stop moving
+            //ros::Duration(1).sleep();
+            robotAction = OP_NOTHING; 
+            //TODO this is a temporary "solution".  Door code makes this obsolete
+            //robotAction = OP_SCANROOM;
+            //perform necessary action at targetLoc.
+            //if we entered a room, update robotAction accordingly
+            //`update robot action in case we entered a room
+            takeAction(robotAction);
+        //}
+    }
 }
 
 //modify this to return a pose instead of a point
@@ -210,16 +228,20 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction) {
                 targetPoints[EXPLORED_DOOR].push_back(closestTarget);
                 ROS_INFO("This door has been seen %d time(s)", doorCount[closestTarget]);
             }
-            ROS_INFO("Closest target: (%d, %d)", closestTarget.x, closestTarget.y);
-            return pointToPose(closestTarget);
+            ROS_INFO("Closest target: (%d, %d), occGrid value: %d", closestTarget.x, closestTarget.y, accessOccGrid(closestTarget.x, closestTarget.y));
+            
+            // Shift to nearest clear space in case we are too near a wall
+            Point closestOpen = (accessOccGrid(closestTarget.x, closestTarget.y) > 60 ? computeDistanceField(closestTarget, 60) : closestTarget);
+            ROS_INFO("Closest open: (%d, %d), occGrid value: %d", closestOpen.x, closestOpen.y, accessOccGrid(closestOpen.x, closestOpen.y));
+            return pointToPose(closestOpen);
         }
     }
     ROS_INFO("At end of find next target");
     //no important points already found, go to distance field and find an unknown
-    return pointToPose(computeDistanceField());
+    return pointToPose(computeDistanceField(poseToPoint(getRobotPose()), -1));
 }
 
-Point Control::computeDistanceField() {
+Point Control::computeDistanceField(Point initialPosition, int cellValue) {
     //does a breadth first search of the maze beginning at current robot position
     //until locating an unknown region of sufficient size
     //populates the distance field as it goes
@@ -233,13 +255,10 @@ Point Control::computeDistanceField() {
         }
     }
 
-    //get the robot position
-    Point robotPos = poseToPoint(getRobotPose());
-
     vector<Point> boundary;
-    boundary.push_back(robotPos);
+    boundary.push_back(initialPosition);
     vector<Point> neighbors;
-    distanceField[robotPos.x][robotPos.y] = 0;
+    distanceField[initialPosition.x][initialPosition.y] = 0;
     Point currentCell;
     int currentDistance;
 
@@ -247,15 +266,17 @@ Point Control::computeDistanceField() {
     while (ros::ok() && !boundary.empty()) {
         //ROS_INFO("Inside while loop");
         currentCell = boundary.front();
-        //ROS_INFO("Current cell: (%d, %d)", currentCell.x, currentCell.y);
-        //ROS_INFO("Cell value: %d", accessOccGrid(currentCell.x, currentCell.y));
+        ROS_INFO_COND(cellValue == 60, "Current cell: (%d, %d)", currentCell.x, currentCell.y);
+        ROS_INFO_COND(cellValue == 60, "Cell value: %d", accessOccGrid(currentCell.x, currentCell.y));
         neighbors = findOpenNeighbors(currentCell);
         currentDistance = distanceField[currentCell.x][currentCell.y];
+        ROS_INFO_COND(cellValue == 0, "Found %d open neightbors, current distance is %d", neighbors.size(), currentDistance);
         for (Point neighbor : neighbors) {
             if (distanceField[neighbor.x][neighbor.y] == -1) {  //neighbor not already indexed by function
+                ROS_INFO_COND(cellValue == 60, "(%d, %d) not indexed by function, occGrid value: %d", neighbor.x, neighbor.y, accessOccGrid(neighbor.x, neighbor.y));
                 // if point is unknown, check to see if local area is made up of unknowns as well
-                if (accessOccGrid(neighbor.x, neighbor.y) == -1 && unknownLargeEnough(neighbor)) {
-                    // this point actually does represent an unkown region`
+                if (accessOccGrid(neighbor.x, neighbor.y) <= cellValue && (cellValue == -1 ? groupLargeEnough(neighbor, cellValue, 30) : true)) {
+                    // this point actually does represent an unkown region
                     distanceField[neighbor.x][neighbor.y] = currentDistance + 1;
                     return neighbor;
                 }
@@ -407,9 +428,8 @@ void Control::extinguishCandle(geometry_msgs::Pose candlePose) {
     return;
 }
 
-bool Control::unknownLargeEnough(Point center) {
+bool Control::groupLargeEnough(Point center, int cellValue, int minSize) {
     int distFromWall = 2;
-    int minSize = 30;
 
     vector<Point> boundary;
     boundary.push_back(center);
@@ -432,7 +452,7 @@ bool Control::unknownLargeEnough(Point center) {
             }
             if (distanceField[neighbor.x][neighbor.y] == -1) {  //neighbor not already indexed by function
                 // if point is unknown, add to areaCount
-                if (accessOccGrid(neighbor.x, neighbor.y) == -1) {
+                if (accessOccGrid(neighbor.x, neighbor.y) == cellValue) {
                     distanceField[neighbor.x][neighbor.y] = currentDistance + 1;
                     boundary.push_back(neighbor);
                     areaCount++;

@@ -25,15 +25,15 @@ ros::Publisher walls_pub;
 ros::Publisher door_array_pub;
 int marker_index = 0;
 
-vector<std::Pair<int, int>> extractKeyIndices(const LaserScan& scan){
-  vector<int> keyPoints;
+vector<std::pair<int, int>> extractKeyIndices(const LaserScan& scan){
+  vector<std::pair<int, int>> keyPoints;
   for(int i = 0; i < scan.ranges.size(); i++){
     if(fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]) > spikeDist){
       //ROS_INFO("Found key point with spike of %g",fabs(scan.ranges[i] - scan.ranges[(i+1) % scan.ranges.size()]));
       if(scan.ranges[i] < scan.ranges[(i+1) % scan.ranges.size()])
-        keyPoints.push_back(std::Pair<int, int>(i, 1));
+        keyPoints.push_back(std::pair<int, int>(i, 1));
       else
-        keyPoints.push_back(std::Pair<int, int>((i+1) % scan.ranges.size(), -1));
+        keyPoints.push_back(std::pair<int, int>((i+1) % scan.ranges.size(), -1));
     }
   }
   return keyPoints;
@@ -119,7 +119,7 @@ void findDoors(const LaserScan& scan){
   DoorArray door_array;
 
   vector<Point> doors;
-  vector<std::Pair<int, int>> keyPoints = extractKeyIndices(scan);
+  vector<std::pair<int, int>> keyPoints = extractKeyIndices(scan);
   bool foundPair = false;
 
   // Create key point markers labelled with their number
@@ -148,7 +148,7 @@ void findDoors(const LaserScan& scan){
       else if (degDiff < -180)
         degDiff += 360;
       if(degDiff < 0 && keyPoints[j].second == 1 && keyPoints[i].second == -1
-        ||degDiff > 0 && keyPoitns[j].second == -1 && keyPoints[i].second == 1){
+        ||degDiff > 0 && keyPoints[j].second == -1 && keyPoints[i].second == 1){
           //good to go
         }
       else{
