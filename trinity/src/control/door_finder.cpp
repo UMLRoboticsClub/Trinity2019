@@ -85,6 +85,22 @@ Point findClosestWall(const LaserScan& scan, int ind){
   return closest;
 }
 
+Point getTargetPoint(Point d1, Point d2){
+  double distToGoIn = 7
+  Point midPoint = getPoint((d1.x + d2.x)/2, (d1.y+d2.y)/2);
+  double vecMag = pointDist(d1, d2);
+  Point vec = getPoint((d1.x-d2.x)/vecMag, (d1.y-d2.y)/vecMag);
+  Point perpVec = getPoint(-vec.y*distToGoIn, vec.x*distToGoIn);
+  Point target1 = midPoint + perpVec;
+  Point target2 = midPoint - perpVec;
+  if(pointDist(target1, getPoint(0, 0)) > pointDist(target2, getPoint(0, 0))){
+    return target1;
+  }
+  else{
+    return target2;
+  }
+}
+
 // Create a marker for our marker array
 visualization_msgs::Marker CreateMarker(std_msgs::Header h, Point p, string text, double r, double g, double b, int id){
   visualization_msgs::Marker m;
@@ -160,7 +176,9 @@ void findDoors(const LaserScan& scan){
       if(scanDist < doorDistMax && scanDist > doorDistMin){
         ROS_INFO("paired two key points with index %d and %d", keyPoints[i].first, keyPoints[j].first);
         // two edges of a door, mark their midpoint as a door.
-        doors.push_back(GetPoint((p1.x+p2.x)/2, (p1.y+p2.y)/2));
+
+        Point targetPoint = getTargetPoint(p1, p2);
+        doors.push_back(GetPoint(targetPoint));
 
         // Create marker for door labelled with the key points that it is between
         m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, marker_index++));
@@ -177,7 +195,8 @@ void findDoors(const LaserScan& scan){
       if(p2.x != -1 && p2.y != -1){
         walls[i] = p2;
         //ROS_INFO("Found door for key point with index %d", keyPoints[i].first);
-        doors.push_back(GetPoint((p1.x+p2.x)/2,(p1.y+p2.y)/2));
+        Point targetPoint = getTargetPoint(p1, p2);
+        doors.push_back(GetPoint(targetPoint));
 
         // Create marker for door labelled with its key point
         m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, marker_index++));
