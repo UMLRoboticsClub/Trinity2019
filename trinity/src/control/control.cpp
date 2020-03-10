@@ -12,6 +12,7 @@ using trinity::DoorArray;
 Control::Control(ros::NodeHandle* nodeHandle) {
     nh = *nodeHandle;
     ROS_INFO("initializing");
+    //boost::thread spin_thread(&Control::spinThread, this);
     initializeSubscribers();
     initializePublishers();
     initializeServices();
@@ -68,7 +69,7 @@ void Control::startFunc(const std_msgs::Bool::ConstPtr&) {
 
 void Control::getDoors(const DoorArray::ConstPtr& doors) {
     bool newDoor;
-    ROS_INFO("got doors with size: %d", doors->doors.size());
+    //ROS_INFO("got doors with size: %d", doors->doors.size());
     if (!listener.waitForTransform(occGrid.header.frame_id, doors->header.frame_id, doors->header.stamp, ros::Duration(1))) {
         ROS_INFO("Wait for transform failed, will retry...");
         return;
@@ -157,7 +158,7 @@ int Control::findClosestDoorIndex() {
             closest = i;
             closestDist = currDist;
         }
-	}
+    }
     return closest;
 }
 
@@ -167,7 +168,7 @@ void Control::mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& grid) {
 void Control::controlLoop() {
     move_base_msgs::MoveBaseGoal goal;
     RobotOp robotAction;
-    ROS_INFO("In control loop");
+    //ROS_INFO("In control loop");
     while(!start) { ros::spinOnce(); }
     while (ros::ok() && !gs.done) {
         ros::spinOnce();
@@ -175,9 +176,9 @@ void Control::controlLoop() {
         //determine target and type based on occGrid and gameState
         geometry_msgs::Pose target = findNextTarget(robotAction);
         ROS_INFO("finished find next target: (%.2f, %.2f)", target.position.x, target.position.y);
-		//translate occGrid coords into moveBase coords
-		//move moveBase
-		move_base_msgs::MoveBaseGoal goal;
+        //translate occGrid coords into moveBase coords
+        //move moveBase
+        move_base_msgs::MoveBaseGoal goal;
         goal.target_pose.header.frame_id = "/map";
         goal.target_pose.header.stamp = ros::Time::now();
         goal.target_pose.pose = target;
@@ -219,10 +220,10 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction) {
     //check if we have already found an important point where we need to go
     vector<int> primaryTargetTypes = gs.getTargetType();
     for (const int type : primaryTargetTypes) {
-        ROS_INFO("target type: %d, size: %d", type, targetPoints[type].size());
+        //ROS_INFO("target type: %d, size: %d", type, targetPoints[type].size());
         if (type == DOOR) {
             for (std::pair<Point, int> p : doorCount) {
-                ROS_INFO("Point (%d, %d): %d", p.first.x, p.first.y, p.second);
+                //ROS_INFO("Point (%d, %d): %d", p.first.x, p.first.y, p.second);
             }
         }
         // if we have a destination in mind
@@ -230,12 +231,12 @@ geometry_msgs::Pose Control::findNextTarget(RobotOp& robotAction) {
             //update robotOps
             robotAction = determineRobotOp(type);
             int targetIndex = type == DOOR ? findClosestDoorIndex() : 0;
-            ROS_INFO("Is door: %d, index: %d", type == DOOR, targetIndex);
+            //ROS_INFO("Is door: %d, index: %d", type == DOOR, targetIndex);
             Point closestTarget = targetPoints[type][targetIndex];
             targetPoints[type].erase(targetPoints[type].begin() + targetIndex);
             if (type == DOOR) {
                 targetPoints[EXPLORED_DOOR].push_back(closestTarget);
-                ROS_INFO("This door has been seen %d time(s)", doorCount[closestTarget]);
+                //ROS_INFO("This door has been seen %d time(s)", doorCount[closestTarget]);
             }
             ROS_INFO("Closest target: (%d, %d), occGrid value: %d", closestTarget.x, closestTarget.y, accessOccGrid(closestTarget.x, closestTarget.y));
 
@@ -279,7 +280,7 @@ Point Control::computeDistanceField(Point initialPosition, int cellValue) {
         ROS_INFO_COND(cellValue == 60, "Cell value: %d", accessOccGrid(currentCell.x, currentCell.y));
         neighbors = findOpenNeighbors(currentCell);
         currentDistance = distanceField[currentCell.x][currentCell.y];
-        ROS_INFO_COND(cellValue == 0, "Found %d open neightbors, current distance is %d", neighbors.size(), currentDistance);
+        //ROS_INFO_COND(cellValue == 0, "Found %d open neightbors, current distance is %d", neighbors.size(), currentDistance);
         for (Point neighbor : neighbors) {
             if (distanceField[neighbor.x][neighbor.y] == -1) {  //neighbor not already indexed by function
                 ROS_INFO_COND(cellValue == 60, "(%d, %d) not indexed by function, occGrid value: %d", neighbor.x, neighbor.y, accessOccGrid(neighbor.x, neighbor.y));

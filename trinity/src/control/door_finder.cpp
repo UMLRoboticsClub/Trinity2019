@@ -25,6 +25,10 @@ ros::Publisher walls_pub;
 ros::Publisher door_array_pub;
 int marker_index = 0;
 
+double pointDist(Point a, Point b) {
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+}
+
 vector<std::pair<int, int>> extractKeyIndices(const LaserScan& scan){
   vector<std::pair<int, int>> keyPoints;
   for(int i = 0; i < scan.ranges.size(); i++){
@@ -81,24 +85,27 @@ Point findClosestWall(const LaserScan& scan, int ind){
       closestIndex = ind2; // Saving index for debug purposes
     }
   }
-  ROS_INFO("Closest index for %d is %d", ind, closestIndex);
+  //ROS_INFO("Closest index for %d is %d", ind, closestIndex);
   return closest;
 }
 
-Point getTargetPoint(Point d1, Point d2){
-  double distToGoIn = 7
-  Point midPoint = getPoint((d1.x + d2.x)/2, (d1.y+d2.y)/2);
+std::pair<Point, Point> getTargetPoint(Point d1, Point d2){
+  std::pair<Point, Point> ret;
+  double distToGoIn = .14;
+  Point midPoint = GetPoint((d1.x + d2.x)/2, (d1.y+d2.y)/2);
+  ret.first = midPoint;
   double vecMag = pointDist(d1, d2);
-  Point vec = getPoint((d1.x-d2.x)/vecMag, (d1.y-d2.y)/vecMag);
-  Point perpVec = getPoint(-vec.y*distToGoIn, vec.x*distToGoIn);
-  Point target1 = midPoint + perpVec;
-  Point target2 = midPoint - perpVec;
-  if(pointDist(target1, getPoint(0, 0)) > pointDist(target2, getPoint(0, 0))){
-    return target1;
+  Point vec = GetPoint((d1.x-d2.x)/vecMag, (d1.y-d2.y)/vecMag);
+  Point perpVec = GetPoint(-vec.y*distToGoIn, vec.x*distToGoIn);
+  Point target1 = GetPoint(midPoint.x + perpVec.x, midPoint.y + perpVec.y);
+  Point target2 = GetPoint(midPoint.x - perpVec.x, midPoint.y - perpVec.y);
+  if(pointDist(target1, GetPoint(0, 0)) > pointDist(target2, GetPoint(0, 0))){
+    ret.second = target1;
   }
   else{
-    return target2;
+    ret.second = target2;
   }
+  return ret;
 }
 
 // Create a marker for our marker array
@@ -134,7 +141,8 @@ void findDoors(const LaserScan& scan){
   vector<Point> walls;
   DoorArray door_array;
 
-  vector<Point> doors;
+  //vector<Point> doors;
+  //vector<Point> targets;
   vector<std::pair<int, int>> keyPoints = extractKeyIndices(scan);
   bool foundPair = false;
 
@@ -174,14 +182,15 @@ void findDoors(const LaserScan& scan){
       p2 = scanToPoint(scan, keyPoints[j].first);
       double scanDist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
       if(scanDist < doorDistMax && scanDist > doorDistMin){
-        ROS_INFO("paired two key points with index %d and %d", keyPoints[i].first, keyPoints[j].first);
+        //ROS_INFO("paired two key points with index %d and %d", keyPoints[i].first, keyPoints[j].first);
         // two edges of a door, mark their midpoint as a door.
 
-        Point targetPoint = getTargetPoint(p1, p2);
-        doors.push_back(GetPoint(targetPoint));
+        std::pair<Point, Point> targetPoint = getTargetPoint(p1, p2);
+        door_array.doors.push_back(targetPoint.first);
+        door_array.targets.push_back(targetPoint.second);
 
         // Create marker for door labelled with the key points that it is between
-        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, marker_index++));
+        m.markers.push_back(CreateMarker(scan.header, door_array.doors.back(), std::to_string(i) + "/" + std::to_string(j), 1, 0, 1, marker_index++));
         //ROS_INFO("Key point %d matched with %d (%g apart), marked as -1", i, j, scanDist);
         //ROS_INFO("Added door. Total doors: %d", doors.size());
         keyPoints[i].first = keyPoints[j].first = -1;
@@ -195,11 +204,12 @@ void findDoors(const LaserScan& scan){
       if(p2.x != -1 && p2.y != -1){
         walls[i] = p2;
         //ROS_INFO("Found door for key point with index %d", keyPoints[i].first);
-        Point targetPoint = getTargetPoint(p1, p2);
-        doors.push_back(GetPoint(targetPoint));
+        std::pair<Point, Point> targetPoint = getTargetPoint(p1, p2);
+        door_array.doors.push_back(targetPoint.first);
+        door_array.targets.push_back(targetPoint.second);
 
         // Create marker for door labelled with its key point
-        m.markers.push_back(CreateMarker(scan.header, doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, marker_index++));
+        m.markers.push_back(CreateMarker(scan.header, door_array.doors.back(), std::to_string(i) + "/" + std::to_string(i), 1, 0, 1, marker_index++));
         //ROS_INFO("Added door. Total doors: %d", doors.size());
       } else {
         //ROS_INFO("Discarded door because the closest wall wasn't door distance away");
@@ -214,11 +224,10 @@ void findDoors(const LaserScan& scan){
     }
   }
 
-  door_array.doors = doors;
   door_array.header = scan.header;
 
-  ROS_INFO("Publishing %d key point markers", k.markers.size());
-  ROS_INFO("Publishing %d door markers", m.markers.size());
+  //ROS_INFO("Publishing %d key point markers", k.markers.size());
+  //ROS_INFO("Publishing %d door markers", m.markers.size());
   doors_pub.publish(m);
   points_pub.publish(k);
   walls_pub.publish(w);

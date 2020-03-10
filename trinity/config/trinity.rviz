@@ -11,10 +11,11 @@ Panels:
         - /Local Planner1/LocalPath1
         - /Global Planner1
         - /Global Planner1/GlobalPath1
+        - /Global Planner1/GlobalCostmap1
         - /TF1/Frames1
         - /Odometry1/Shape1
         - /Polygon1
-      Splitter Ratio: 0.5
+      Splitter Ratio: 0.533769071
     Tree Height: 714
   - Class: rviz/Selection
     Name: Selection
@@ -191,12 +192,12 @@ Visualization Manager:
           Class: rviz/Map
           Color Scheme: costmap
           Draw Behind: false
-          Enabled: true
+          Enabled: false
           Name: LocalCostmap
           Topic: /move_base/local_costmap/costmap
           Unreliable: false
           Use Timestamp: false
-          Value: true
+          Value: false
       Enabled: true
       Name: Local Planner
     - Class: rviz/Group
@@ -226,14 +227,14 @@ Visualization Manager:
           Value: true
         - Alpha: 0.699999988
           Class: rviz/Map
-          Color Scheme: map
+          Color Scheme: costmap
           Draw Behind: false
-          Enabled: false
+          Enabled: true
           Name: GlobalCostmap
           Topic: /move_base/global_costmap/costmap
           Unreliable: false
           Use Timestamp: false
-          Value: false
+          Value: true
       Enabled: true
       Name: Global Planner
     - Class: rviz/TF
@@ -325,21 +326,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /seen_doors_control
       Name: MarkerArray
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /target_doors_control
       Name: MarkerArray
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
