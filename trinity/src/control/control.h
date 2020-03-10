@@ -56,6 +56,7 @@ public:
     vector<double> parseIrReadings(vector<double>);
 	bool start;
 	void getDoors(const trinity::DoorArray::ConstPtr& doors);
+	void seeBlob(const std_msgs::Empty::ConstPtr&);
 	double pointDist(Point a, Point b);
 	int findClosestDoorIndex();
 	visualization_msgs::Marker CreateMarker(std_msgs::Header h, geometry_msgs::Pose p, std::string text, float r, float g, float b, int id);
@@ -83,6 +84,8 @@ private:
     ros::ServiceClient solenoidClient;
 	ros::ServiceClient inRoomClient;
 	vector<Point> foundDoors;
+	bool crossedDoorway;
+
 		void initializeSubscribers();
 	void initializePublishers();
 	void initializeServices();
