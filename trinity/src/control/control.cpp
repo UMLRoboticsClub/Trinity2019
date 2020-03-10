@@ -98,12 +98,16 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
         Point realTarget = poseToPoint(pose);
 
         //check if the new door is unique
+        bool newDoor = true;
         for (Point foundDoor : foundDoors) {
             if (pointDist(foundDoor, door) < NEW_DOOR_THRESH) {
                 //not a new door, continue.
-                continue;
+                newDoor = false;
+                break;
             }
         }
+        if(!newDoor)
+          continue;
             //code is obsolete.
         /*for (int oldDoor = 0; oldDoor < targetPoints[DOOR].size(); oldDoor++) {
             if (pointDist(targetPoints[DOOR][oldDoor], door) < NEW_DOOR_THRESH) {
