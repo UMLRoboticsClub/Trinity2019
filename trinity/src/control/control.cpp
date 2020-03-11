@@ -31,7 +31,7 @@ Control::Control(ros::NodeHandle* nodeHandle) {
         }
     }
 
-    foundDoors = vector<Point>();
+    foundDoors = vector<std::pair<Point, Point>>();
 
     //ros::Duration(7).sleep();
     start = true;
@@ -40,10 +40,11 @@ Control::Control(ros::NodeHandle* nodeHandle) {
 }
 
 void Control::initializeSubscribers() {
-    map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::mapCallback, this);
+    map_sub = nh.subscribe("/move_base/global_costmap/costmap", 10, &Control::mapCallback, this);
     wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
-    get_doors = nh.subscribe("doors_array", 100, &Control::getDoors, this);
-    nh.subscribe("c_blob", 100, &Control::seeBlob, this);
+    get_doors = nh.subscribe("doors_array", 1000, &Control::getDoors, this);
+    blob_sub = nh.subscribe("see_blob", 100, &Control::seeBlob, this);
+    candle_sub = nh.subscribe("fiducials", 100, &Control::candleCb, this);
     ROS_INFO("done initializing subscribers");
 }
 
@@ -64,12 +65,17 @@ void Control::initializeServices() {
     ROS_INFO("done initializing services");
 }
 
+void Control::candleCb(const sensor_msgs::Range::ConstPtr& candle){
+    ROS_INFO("I saw a candle");
+}
+
 void Control::startFunc(const std_msgs::Bool::ConstPtr&) {
     start = true;
 }
 
 void Control::seeBlob(const std_msgs::Empty::ConstPtr& a){
-  crossedDoorway = true;
+    ROS_INFO("Crossed a doorway (?)");
+    crossedDoorway = true;
 }
 
 void Control::getDoors(const DoorArray::ConstPtr& doors) {
@@ -103,10 +109,13 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
         Point realTarget = poseToPoint(pose);
 
         //check if the new door is unique
+        
         bool newDoor = true;
-        for (Point foundDoor : foundDoors) {
-            if (pointDist(foundDoor, door) < NEW_DOOR_THRESH) {
-                //not a new door, continue.
+        for (int oldDoor = 0; oldDoor < foundDoors.size(); oldDoor++) {
+            if (pointDist(foundDoors[oldDoor].first, door) < NEW_DOOR_THRESH) {
+                //ROS_INFO("door is the same as a current door");
+                doorCount[foundDoors[oldDoor].second]++;
+                m_array.markers.push_back(CreateMarker(h, pose, std::to_string(doorCount[foundDoors[oldDoor].second]), 1, 0, 0, oldDoor));
                 newDoor = false;
                 break;
             }
@@ -123,10 +132,10 @@ void Control::getDoors(const DoorArray::ConstPtr& doors) {
                 break;
             }
         }*/
-            ROS_INFO("new door found");
+            //ROS_INFO("new door found");
             targetPoints[DOOR].push_back(realTarget);
-            foundDoors.push_back(door);
-            doorCount[door] = 1;
+            foundDoors.push_back(std::pair<Point, Point>(door, realTarget));
+            doorCount[realTarget] = 1;
             m_array.markers.push_back(CreateMarker(h, pose, std::to_string(doorCount[door]), 1, 0, 0, targetPoints[DOOR].size() - 1));
             //m_target_array.markers.push_back(CreateMarker(h, pose, 0, 1, 0, targetPoints[DOOR].size()));
     }
@@ -205,15 +214,17 @@ void Control::controlLoop() {
         //if (yn == 'y') {
             crossedDoorway = false;
             ac->sendGoal(goal);
-            ac->waitForResult();
+            //ac->waitForResult();
+            while(ros::ok() && !ac->getState().isDone()) { ros::spinOnce(); }
+          //  ros::spinOnce();
             robotAction = OP_NOTHING;
             if(crossedDoorway){
+                ROS_INFO("Crossed a doorway, scan the room");
               robotAction = OP_SCANROOM;
             }
-            ros::spinOnce();
             // Wait for map to update after we stop moving
             //ros::Duration(1).sleep();
-            robotAction = OP_NOTHING;
+            //robotAction = OP_NOTHING;
             //TODO this is a temporary "solution".  Door code makes this obsolete
             //robotAction = OP_SCANROOM;
             //perform necessary action at targetLoc.
@@ -345,6 +356,7 @@ void Control::takeAction(RobotOp robotAction) {
             //this should ahve a ROS rate
             ros::Rate rate(10);
             while (ros::ok() && delta < 2 * M_PI) {
+                ros::spinOnce();
                 irReadings.push_back(irSense());
                 cmd_vel_pub.publish(rotCommand);
                 newRobotPose = getRobotPose();

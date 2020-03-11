@@ -91,7 +91,7 @@ Point findClosestWall(const LaserScan& scan, int ind){
 
 std::pair<Point, Point> getTargetPoint(Point d1, Point d2){
   std::pair<Point, Point> ret;
-  double distToGoIn = .14;
+  double distToGoIn = .25;
   Point midPoint = GetPoint((d1.x + d2.x)/2, (d1.y+d2.y)/2);
   ret.first = midPoint;
   double vecMag = pointDist(d1, d2);

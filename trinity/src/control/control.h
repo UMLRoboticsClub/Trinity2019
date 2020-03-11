@@ -15,6 +15,7 @@
 #include <trinity/DoorArray.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <sensor_msgs/Range.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -36,6 +37,7 @@ class Control{
 public:
     Control(ros::NodeHandle* nodehandle);
 	void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& grid);
+	void candleCb(const sensor_msgs::Range::ConstPtr& candle);
 	void controlLoop();
 	void startFunc(const std_msgs::Bool::ConstPtr&);
     geometry_msgs::Pose findNextTarget(RobotOp& op);
@@ -69,6 +71,8 @@ private:
 	ros::Subscriber map_sub;
     ros::Subscriber get_doors;
 	ros::Subscriber wait_for_signal;
+	ros::Subscriber blob_sub;
+	ros::Subscriber candle_sub;
 	ros::NodeHandle nh;
 	tf::TransformListener listener;
     GameState gs;
@@ -83,9 +87,8 @@ private:
     ros::ServiceClient irClient;
     ros::ServiceClient solenoidClient;
 	ros::ServiceClient inRoomClient;
-	vector<Point> foundDoors;
 	bool crossedDoorway;
-
+	vector<std::pair<Point, Point>> foundDoors;
 		void initializeSubscribers();
 	void initializePublishers();
 	void initializeServices();
