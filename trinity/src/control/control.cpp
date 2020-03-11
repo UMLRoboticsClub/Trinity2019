@@ -43,6 +43,7 @@ void Control::initializeSubscribers() {
     map_sub = nh.subscribe("/move_base/global_costmap/costmap", 1, &Control::mapCallback, this);
     wait_for_signal = nh.subscribe("startSignal", 100, &Control::startFunc, this);
     get_doors = nh.subscribe("doors_array", 100, &Control::getDoors, this);
+    nh.subscribe("c_blob", 100, &Control::seeBlob, this);
     ROS_INFO("done initializing subscribers");
 }
 
@@ -65,6 +66,10 @@ void Control::initializeServices() {
 
 void Control::startFunc(const std_msgs::Bool::ConstPtr&) {
     start = true;
+}
+
+void Control::seeBlob(const std_msgs::Empty::ConstPtr& a){
+  crossedDoorway = true;
 }
 
 void Control::getDoors(const DoorArray::ConstPtr& doors) {
@@ -198,8 +203,13 @@ void Control::controlLoop() {
         //cout << "Accept this goal? (y/n)" << endl;
         //cin >> yn;
         //if (yn == 'y') {
+            crossedDoorway = false;
             ac->sendGoal(goal);
             ac->waitForResult();
+            robotAction = OP_NOTHING;
+            if(crossedDoorway){
+              robotAction = OP_SCANROOM;
+            }
             ros::spinOnce();
             // Wait for map to update after we stop moving
             //ros::Duration(1).sleep();
