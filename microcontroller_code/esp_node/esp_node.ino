@@ -13,6 +13,25 @@ ros::Publisher encPub3("encoder3", &encoders[3].ticks);
 
 ros::Subscriber<geometry_msgs::Twist> twistSub("motorTwist", &twistToMotors);
 
+void solenoidCallback(const solenoidSrv::Request& req, solenoidSrv::Response& resp){
+  digitalWrite(SOLENOID_PIN, req.trigger ? HIGH : LOW);  
+}
+ros::ServiceServer<SolenoidSrv::Request, solenoidSrv::Response> solenoidServer("solenoid_srv", solenoidCallback);
+
+void irCallback(const irSrv::Request& req, irSrv resp){
+  resp.reading = digitalRead(IR_PIN);  
+}
+ros::ServiceServer<irSrv::Request, irSrv::Response> irServer("ir_server", irCallback);
+
+bool inRoom;
+void inRoomCallback(const inRoomSrv::Request& req, inRoomSrv::Response& resp){
+  resp.inRoom = inRoom;
+}
+
+ros::ServiceServer<inRoomSrv::Request, inRoomSrv::Response> inRoomServer("inRoom_server", inRoomCallback);
+
+
+
 void setup() {
   // put your setup code here, to run once:
   nh.initNode();
