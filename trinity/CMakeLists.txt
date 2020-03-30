@@ -177,13 +177,15 @@ add_executable(control
     src/control/control_node.cpp
     src/control/control.cpp
     )
+ add_dependencies(control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_executable(fake_node
-	src/control/fake_node.cpp
-	)
-
+        src/control/fake_node.cpp
+        )
+ add_dependencies(fake_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_executable(door_finder
     src/control/door_finder.cpp
-	)
+        )
+ add_dependencies(door_finder ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 ## Add cmake target dependencies of the executable
